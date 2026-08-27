@@ -6,9 +6,10 @@ what the next session should pick up. Facts that outlive a session belong in
 
 ---
 
-## 2026-08-27 — Stage 0 built, awaiting Paul's in-game test
+## 2026-08-27 — Stage 0 works in game
 
-**State: code complete and statically verified. Not yet witnessed in the running game.**
+**State: Stage 0 confirmed by Paul in the running game. Ten plates per cycle on the home
+planet.** The off-planet negative case is still deferred, as `SPIKE.md` always intended.
 
 ### Done
 
@@ -39,14 +40,44 @@ what the next session should pick up. Facts that outlive a session belong in
   It passes. This is the automated guard against a game update silently breaking the patch.
 - **Installed** into the Gale profile `gs run`.
 
-### Not done / not proven
+### The bug that cost us the first in-game run — worth not repeating
 
-- **No in-game test has been run.** Compilation and reference verification are not evidence
-  that ten plates appear in a smelter. Stage 0 is not complete until Paul plays it.
-- The off-planet negative case remains deferred, as `SPIKE.md` anticipated — the guard is live
-  and logged, but early in a new game there is nowhere else to stand.
-- The exact four-part game version is not yet recorded in `docs/inspection.md`; the plugin logs
-  it at startup, so fill the table in from the first real run.
+The first build hooked `FactorySystem.GameTick`. It loaded cleanly, logged nothing, and changed
+nothing. Cause: `GameLogic.OnGameLogicFrame` dispatches most factory phases as a *pair* — a
+sequential method and a `_Parallel` twin — chosen on thread count, and
+`FactorySystemFacilityGameTick` (the only caller of `FactorySystem.GameTick`) runs **only when
+threadCount <= 1**. Multithreading is the default, so the hook never fired.
+
+The irony is that the inspection had already identified this exact trap one level down, for
+`InternalUpdate`, and the design was built around it — then the *attachment hook* was chosen
+without applying the same test. **Lesson: for any per-tick hook in DSP, check whether the method
+has a `_Parallel` sibling before trusting it.**
+
+Fix: hook `PlanetFactory.BeforeGameTick()` instead. `GameLogic.FactoryBeforeGameTick` has no
+`_Parallel` twin, is gated only on "am I the main thread", and walks every factory — so it runs
+in both modes, and earlier in the frame than the facility phase.
+
+`scripts/verify.ps1` now asserts this specific property, so the mistake cannot recur silently.
+
+### Confirmed in game
+
+Home planet `Theta Phoenicis III` (id 103), galaxy seed 3664027, recipe `Iron Ingot` (id 1):
+
+- Output slot rises in steps of **10** per cycle.
+- Machine pauses at 95 and resumes at 90 — the vanilla cap
+  (`produced[0] + productCounts[0] > 100`) scaling with the anomalous count instead of being
+  bypassed. No deadlock, no duplication, no overflow.
+- Inserters drain the anomalous output normally.
+- Real game version captured: **`0.10.34.28529`**.
+
+### Not proven / still open
+
+- **The off-planet negative case.** The guard is live and logged, but there is nowhere else to
+  stand yet. First off-planet test is the remaining Stage 0 acceptance item.
+- **Production statistics** were not read during this run. `SPIKE.md` says to observe and record
+  them but does not let a mismatch block Stage 0. Expectation from the IL is that they *match*,
+  since `productRegister` is fed from the same `productCounts` as the buffer — worth confirming.
+- **Input consumption** was not explicitly counted; it should be 1 ore per cycle.
 
 ### Known rough edges, deliberately accepted for Stage 0
 
@@ -56,13 +87,23 @@ what the next session should pick up. Facts that outlive a session belong in
 - The recipe id is hard-coded to `1` and *verified at runtime* rather than trusted, because DSP
   keeps its proto database inside Unity assets and recipe ids cannot be read off disk. If the
   id turns out to be something else, the plugin falls back and says so in the log.
-- `gs run` has 11 other mods, one of which (BlueprintTweaks) already fails to load on this
+- `gs run` has other mods, one of which (`Common API Nebula Compatibility`) fails to load on this
   build for reasons unrelated to us. A dedicated clean Gale profile would be a better test bed.
+- The plugin is copied into the Gale profile by `install.ps1` rather than installed through Gale,
+  so **it does not appear in Gale's mod list** (Gale reads its own `data.sqlite3`). It still
+  loads. A Gale repair/re-sync of the profile could remove it; re-run `install.ps1` if the
+  startup lines vanish.
+- The log line still prints `(build 0)`. `GameConfig.build` is not the build number —
+  `gameVersion.ToFullString()` already carries `28529`. Cosmetic; drop the suffix.
+- A large multiplier makes a machine spend most of its time stalled on its own output cap, so
+  ×10 output is not ×10 throughput unless the buffer is drained fast. Relevant to later balance
+  thinking, though `SPEC.md` explicitly does not want balance yet.
 
 ### Next session
 
-1. Read the BepInEx log from Paul's run and record the real version + chosen recipe.
-2. If ten plates appear: preserve the receipt per `SPIKE.md`'s stop condition, then Stage 1
-   (random eligible single-output recipe) is a separate change.
-3. If they do not: the first thing to check is whether the anomaly was ever attached — the log
-   line `Anomaly attached to assembler #N` only prints when the swap actually happened.
+1. Answer the two open observations above — production statistics, and input consumed per cycle.
+2. First off-planet test once travel is available: same recipe, another planet, normal output.
+   That closes the last Stage 0 acceptance item.
+3. Then Stage 1 (random eligible single-output recipe on the home planet) is a separate change.
+4. Consider replacing the per-tick pool sweep with a reaction to `SetRecipe`/`Import` before the
+   anomaly count grows beyond one.

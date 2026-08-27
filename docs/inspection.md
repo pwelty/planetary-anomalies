@@ -19,16 +19,16 @@ static, and a value type — because the patch depends on all three.
 | --- | --- |
 | Game | Dyson Sphere Program, Steam app `1366540` |
 | Install path | `C:\Program Files (x86)\Steam\steamapps\common\Dyson Sphere Program` |
-| Game version | `0.10.34` (string embedded in `DSPGAME_Data/globalgamemanagers`) |
+| Game version | `0.10.34.28529` (confirmed at runtime from `GameConfig.gameVersion.ToFullString()`) |
 | Steam build id | `23109513` |
 | Unity | `2022.3.62f3c1` (`DSPGAME.exe` file version `2022.3.62.1451004`) |
 | Managed assemblies | `DSPGAME_Data/Managed` |
 | CLR runtime target | `Net_4_0` |
 
-The exact four-part game version is logged at runtime by the plugin from
-`GameConfig.gameVersion.ToFullString()` and `GameConfig.build`. Record it into this table on
-the first successful in-game run — the embedded `0.10.34` string is the major/minor/release
-only.
+`globalgamemanagers` embeds only `0.10.34`; the four-part version above was read at runtime on
+2026-08-27 and matches the `0.10.34.28529` that CommonAPI independently reports. Note that
+`GameConfig.build` is **not** that build number — it reads `0` at runtime and is something else
+entirely. Use `gameVersion.ToFullString()`.
 
 ### Assembly hashes (SHA-256)
 
@@ -212,8 +212,9 @@ System.Int32          PlanetData::id
 System.String         PlanetData::displayName   // property
 ```
 
-And `FactorySystem.GameTick(long, bool)` has exactly one caller, which runs it for **every**
-factory, every tick, with no multithreading guard:
+### The dispatch trap — read this before choosing any per-tick hook
+
+`FactorySystem.GameTick(long, bool)` has exactly one caller:
 
 ```
 GameLogic::FactorySystemFacilityGameTick
@@ -221,7 +222,64 @@ GameLogic::FactorySystemFacilityGameTick
         factories[i].factorySystem.GameTick(timei, factories[i] == localLoadedFactory)
 ```
 
-That makes it a dependable per-planet, per-tick hook regardless of the multithreading setting.
+**That method does not run on a multithreaded game.** `GameLogic.OnGameLogicFrame(int iTask,
+int threadOrdinal, int threadCount)` is a phase dispatcher, and most factory phases exist as a
+*pair* — a sequential method and a `_Parallel` twin — selected on thread count:
+
+```
+IL_000e: V_4 = !(threadCount > 1)          // single-threaded
+IL_0017: V_5 = !(threadCount < 2)          // multithreaded
+IL_0020: V_6 = V_4 && (threadOrdinal == -1)   // run sequential phases
+IL_0026: V_7 = V_5 && (threadOrdinal != -1)   // run parallel phases
+IL_0009: V_2 = (threadOrdinal == -1)          // main thread, either mode
+
+IL_052c: ldloc.s V_6 ; brfalse.s IL_053b
+IL_0531: call GameLogic::FactorySystemFacilityGameTick            // sequential only
+IL_053b: ldloc.s V_7 ; brfalse IL_0854
+IL_0545: call GameLogic::FactorySystemFacilityGameTick_Parallel   // multithreaded only
+```
+
+Multithreading is the default on a multi-core machine, so a hook on `FactorySystem.GameTick`
+silently never fires for most players. This was found the hard way: the first build hooked it,
+loaded cleanly, logged nothing, and changed nothing.
+
+Paired phases to be wary of include `FactoryBeforePowerGameTick`, `FactoryPowerSystemGameTick`,
+`FactoryStationInput`, `FactorySystemFacilityGameTick`, `FactorySystemInserterGameTick`,
+`FactoryTransportGameTick`, `FactoryCargoPathGameTick`, `FactorySplitterGameTick`,
+`StatisticsGameTick` — each has a `_Parallel` twin.
+
+### A hook that runs in both modes
+
+`GameLogic.FactoryBeforeGameTick` has **no `_Parallel` twin** and is guarded only by `V_2`
+("am I the main thread"), so it runs in both modes:
+
+```
+IL_0474: ldloc.2 ; brfalse IL_0854
+IL_047b: call GameLogic::FactoryBeforeGameTick
+```
+
+and it walks every factory:
+
+```
+GameLogic::FactoryBeforeGameTick()
+    for (i = 0; i < factoryCount; i++) factories[i].ConstructionBeforeGameTick()
+    for (i = 0; i < factoryCount; i++) factories[i].BeforeGameTick()
+```
+
+```
+System.Void PlanetFactory::BeforeGameTick()          // public, no parameters
+FactorySystem  PlanetFactory::factorySystem          // public instance field
+PlanetData     PlanetFactory::planet    { get; }
+System.Int32   PlanetFactory::planetId  { get; }
+```
+
+`PlanetFactory.BeforeGameTick` is therefore a dependable per-planet, per-tick, main-thread hook,
+and it runs at IL_047b — earlier in the frame than the facility phase at IL_0531/IL_0545 — so
+anything it attaches is in place before production runs that tick.
+
+`scripts/verify.ps1` asserts all of this: that the target exists, that
+`FactoryBeforeGameTick` still calls it, and that no `FactoryBeforeGameTick_Parallel` has
+appeared. A future update adding that twin would silently reintroduce the bug.
 
 ### Identifying the home planet
 
@@ -258,15 +316,17 @@ names it actually resolved. See "Recipe selection" in the README.
 
 Once per galaxy the plugin builds one new `RecipeExecuteData` — a copy of the shared one for
 the target recipe, with every array copied and `productCounts` multiplied by 10. A Harmony
-**prefix on `FactorySystem.GameTick(long, bool)`** checks `planet.id` against the home planet
-and, for matching assemblers, swaps that private instance into `pool[i].recipeExecuteData`.
+**prefix on `PlanetFactory.BeforeGameTick()`** checks `planet.id` against the home planet and,
+for matching assemblers in `factorySystem.assemblerPool`, swaps that private instance into
+`pool[i].recipeExecuteData`.
 
 Why this seam and not a patch on `InternalUpdate`:
 
 - **It covers both execution paths.** The anomaly is data hanging off the component, so it
   applies whether `FactorySystem.GameTick` or `GameLogic._assembler_parallel` runs the machine.
   A prefix/postfix on `InternalUpdate` would have to be duplicated and, worse, could not see
-  the planet from inside the call.
+  the planet from inside the call. Note this property is about where the *output* is computed;
+  it does not excuse choosing the attachment hook carelessly, as the dispatch trap above shows.
 - **Nothing global is mutated.** The shared dictionary and every array in it are untouched;
   only one component field — a reference — is reassigned, and only on the home planet.
 - **No transpiler.** `AGENTS.md` allows one only when inspection proves no safer seam exists.
@@ -277,6 +337,22 @@ Why this seam and not a patch on `InternalUpdate`:
   `productCounts` the buffer is.
 - **It cannot leak into a save.** `Export` persists only `recipeId`, and `Import` reassigns the
   shared instance, so a save written with the mod loads vanilla without it.
+
+### Observed in game (2026-08-27, DSP 0.10.34.28529)
+
+Confirmed by Paul on the home planet `Theta Phoenicis III` (planet id 103, galaxy seed
+3664027), recipe `Iron Ingot` (id 1):
+
+- The smelter's output slot rises in steps of **10** per completed cycle.
+- The machine **pauses at 95 and resumes once the buffer drains back to 90**, which is the
+  vanilla cap `produced[0] + productCounts[0] > 100` scaling with the anomalous count rather
+  than being bypassed. No deadlock, no duplication loop, and the buffer never overflows.
+- Inserters remove the anomalous output normally — that is what drains the buffer and lets the
+  machine resume.
+
+The pause behaviour is worth keeping in mind for later stages: a large multiplier makes a
+machine spend most of its time stalled on its own output cap, so a ×10 recipe is not ×10
+throughput unless the output is drained fast enough.
 
 Known costs, accepted for Stage 0 and recorded rather than hidden:
 

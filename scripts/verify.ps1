@@ -77,20 +77,52 @@ foreach ($memberRef in $module.GetMemberReferences()) {
 
 # The Harmony target is named in an attribute, so the compiler cannot check it. Do it here.
 $gameAsm = [Mono.Cecil.AssemblyDefinition]::ReadAssembly((Join-Path $managed 'Assembly-CSharp.dll'), $readerParams)
-$factorySystem = $gameAsm.MainModule.GetType('FactorySystem')
-if ($null -eq $factorySystem) {
-    $failures.Add("Harmony target type 'FactorySystem' does not exist in the installed game.")
+$planetFactory = $gameAsm.MainModule.GetType('PlanetFactory')
+if ($null -eq $planetFactory) {
+    $failures.Add("Harmony target type 'PlanetFactory' does not exist in the installed game.")
 } else {
-    $gameTick = $factorySystem.Methods | Where-Object {
-        $_.Name -eq 'GameTick' -and
-        $_.Parameters.Count -eq 2 -and
-        $_.Parameters[0].ParameterType.FullName -eq 'System.Int64' -and
-        $_.Parameters[1].ParameterType.FullName -eq 'System.Boolean'
-    }
-    if (-not $gameTick) {
-        $failures.Add("Harmony target 'FactorySystem.GameTick(System.Int64, System.Boolean)' does not exist in the installed game.")
+    $beforeTick = $planetFactory.Methods | Where-Object { $_.Name -eq 'BeforeGameTick' -and $_.Parameters.Count -eq 0 }
+    if (-not $beforeTick) {
+        $failures.Add("Harmony target 'PlanetFactory.BeforeGameTick()' does not exist in the installed game.")
     } else {
-        Write-Host "OK  Harmony target: FactorySystem.GameTick(System.Int64, System.Boolean)"
+        Write-Host "OK  Harmony target: PlanetFactory.BeforeGameTick()"
+    }
+
+    $fsField = $planetFactory.Fields | Where-Object { $_.Name -eq 'factorySystem' }
+    if (-not $fsField -or -not $fsField.IsPublic) {
+        $failures.Add("PlanetFactory.factorySystem is missing or no longer public.")
+    } else {
+        Write-Host "OK  PlanetFactory.factorySystem is public"
+    }
+}
+
+# The hook must run in BOTH the sequential and multithreaded dispatch paths. GameLogic pairs most
+# factory phases with a _Parallel twin and picks between them on thread count, so a phase that has
+# a twin is only half the story. FactoryBeforeGameTick having no twin is what makes it safe --
+# assert that, because a future update adding one would silently break multithreaded games.
+$gameLogic = $gameAsm.MainModule.GetType('GameLogic')
+if ($null -eq $gameLogic) {
+    $failures.Add("GameLogic does not exist in the installed game.")
+} else {
+    $twin = $gameLogic.Methods | Where-Object { $_.Name -eq 'FactoryBeforeGameTick_Parallel' }
+    if ($twin) {
+        $failures.Add("GameLogic.FactoryBeforeGameTick_Parallel now exists, so FactoryBeforeGameTick is probably no longer run in multithreaded games. The hook needs re-checking against OnGameLogicFrame.")
+    } else {
+        Write-Host "OK  GameLogic.FactoryBeforeGameTick still has no _Parallel twin"
+    }
+
+    $callsBefore = $false
+    $fbgt = $gameLogic.Methods | Where-Object { $_.Name -eq 'FactoryBeforeGameTick' }
+    if ($fbgt -and $fbgt.HasBody) {
+        foreach ($ins in $fbgt.Body.Instructions) {
+            $op = $ins.Operand
+            if ($op -is [Mono.Cecil.MethodReference] -and $op.Name -eq 'BeforeGameTick' -and $op.DeclaringType.Name -eq 'PlanetFactory') { $callsBefore = $true }
+        }
+    }
+    if (-not $callsBefore) {
+        $failures.Add("GameLogic.FactoryBeforeGameTick no longer calls PlanetFactory.BeforeGameTick; the hook would never fire.")
+    } else {
+        Write-Host "OK  GameLogic.FactoryBeforeGameTick still calls PlanetFactory.BeforeGameTick"
     }
 }
 

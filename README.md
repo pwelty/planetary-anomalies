@@ -92,10 +92,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\verify.ps1
 ```
 
 Re-resolves every type, field and method the built DLL references against the assemblies
-*currently installed*, and asserts that the Harmony target `FactorySystem.GameTick(long, bool)`
-still exists with that exact signature, that `AssemblerComponent` is still a struct, and that
-`recipeExecuteData` is still there. A game update that moves any of this fails here rather than
-becoming a silent no-op in game.
+*currently installed*, and asserts that the Harmony target `PlanetFactory.BeforeGameTick()`
+still exists, that `AssemblerComponent` is still a struct, that `recipeExecuteData` is still
+there, and that `GameLogic.FactoryBeforeGameTick` still calls the hook and still has no
+`_Parallel` twin. A game update that moves any of this fails here rather than becoming a silent
+no-op in game — which is not hypothetical: an earlier hook did exactly that (see below).
 
 This is a static check. **It is not evidence the anomaly works.** Only playing the game is.
 
@@ -115,7 +116,7 @@ On startup you should see:
 [Info   :Planetary Anomalies] Planetary Anomalies v0.0.1 loaded
 [Info   :Planetary Anomalies] Stage 0: one hard-coded smelting recipe produces x10 output on the home planet only.
 [Info   :Planetary Anomalies] Game version: 0.10.34.xxxxx (build xxxxx)
-[Info   :Planetary Anomalies] Patched FactorySystem.GameTick(long, bool). Waiting for a game to load.
+[Info   :Planetary Anomalies] Patched PlanetFactory.BeforeGameTick(). Idle until a planet has a factory (i.e. until something is built).
 ```
 
 Once a game is loaded, the anomaly is resolved and logged in full:
@@ -210,5 +211,13 @@ Two consequences worth knowing:
 - It covers **both** execution paths. `InternalUpdate` is called from `FactorySystem.GameTick`
   *and* from `GameLogic._assembler_parallel` when multithreading is on. Because the anomaly is
   data hanging off the component, neither path needs patching.
+
+**A trap worth knowing before you add any per-tick hook here.** `GameLogic.OnGameLogicFrame`
+dispatches most factory phases as a *pair* — a sequential method and a `_Parallel` twin — and
+picks between them on thread count. Multithreading is the default, so hooking a sequential-only
+phase produces a mod that loads cleanly, logs nothing, and does nothing. The first version of
+this mod hooked `FactorySystem.GameTick` and did exactly that. Before trusting any per-tick
+method, check whether a `_Parallel` sibling exists; `PlanetFactory.BeforeGameTick` is safe
+because `GameLogic.FactoryBeforeGameTick` has none and is gated only on being the main thread.
 - It **cannot leak into a save**. DSP persists only the recipe id and reassigns the shared
   instance on load, so a save written with the mod installed loads vanilla without it.

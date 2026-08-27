@@ -26,12 +26,14 @@ namespace PlanetaryAnomalies
             Log.LogInfo(PluginName + " v" + PluginVersion + " loaded");
             Log.LogInfo("Stage 0: one hard-coded smelting recipe produces x" +
                         AnomalyManager.OutputMultiplier + " output on the home planet only.");
-            LogGameVersion();
 
             _harmony = new Harmony(PluginGuid);
-            _harmony.PatchAll(typeof(FactorySystemGameTickPatch));
+            _harmony.PatchAll(typeof(PlanetFactoryBeforeGameTickPatch));
 
-            Log.LogInfo("Patched FactorySystem.GameTick(long, bool). Waiting for a game to load.");
+            // The hook only fires once a planet has a factory to tick, which does not happen until
+            // something is built on that planet -- not merely when a save is loaded.
+            Log.LogInfo("Patched PlanetFactory.BeforeGameTick(). " +
+                        "Idle until a planet has a factory (i.e. until something is built).");
         }
 
         private void OnDestroy()
@@ -43,23 +45,6 @@ namespace PlanetaryAnomalies
             }
 
             AnomalyManager.Reset();
-        }
-
-        /// <summary>
-        /// Records the build this run actually executed against, so a log can be matched back to
-        /// the signatures in docs/inspection.md.
-        /// </summary>
-        private static void LogGameVersion()
-        {
-            try
-            {
-                Version version = GameConfig.gameVersion;
-                Log.LogInfo("Game version: " + version.ToFullString() + " (build " + GameConfig.build + ")");
-            }
-            catch (System.Exception e)
-            {
-                Log.LogWarning("Could not read the game version: " + e.Message);
-            }
         }
     }
 }

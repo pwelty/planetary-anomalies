@@ -28,6 +28,11 @@ namespace PlanetaryAnomalies
         private static int _resolvedPlanetId = -1;
         private static bool _resolveFailed;
         private static bool _applicationLogged;
+        private static bool _versionLogged;
+
+        // Why the last Resolve() call came back empty. Logged only when it changes, so the
+        // reason is visible without spamming a line every tick.
+        private static string _waitReason;
 
         /// <summary>Drops all state. Called when the plugin unloads.</summary>
         internal static void Reset()
@@ -37,6 +42,23 @@ namespace PlanetaryAnomalies
             _resolvedPlanetId = -1;
             _resolveFailed = false;
             _applicationLogged = false;
+            _versionLogged = false;
+            _waitReason = null;
+        }
+
+        /// <summary>
+        /// Records what the plugin is still waiting for, once per distinct reason. Without this a
+        /// silent Resolve() is indistinguishable from a hook that never fires.
+        /// </summary>
+        private static void Waiting(string reason)
+        {
+            if (_waitReason == reason)
+            {
+                return;
+            }
+
+            _waitReason = reason;
+            Plugin.Log.LogInfo("Waiting: " + reason);
         }
 
         /// <summary>
@@ -49,18 +71,21 @@ namespace PlanetaryAnomalies
             GameData data = GameMain.data;
             if (data == null)
             {
+                Waiting("no game data yet (no save loaded).");
                 return null;
             }
 
             GalaxyData galaxy = data.galaxy;
             if (galaxy == null)
             {
+                Waiting("game data exists but the galaxy is not generated yet.");
                 return null;
             }
 
             int birthPlanetId = galaxy.birthPlanetId;
             if (birthPlanetId <= 0)
             {
+                Waiting("galaxy exists but birthPlanetId is not set yet.");
                 return null;
             }
 
@@ -128,6 +153,7 @@ namespace PlanetaryAnomalies
             if (recipes == null || recipes.dataArray == null || recipes.dataArray.Length == 0)
             {
                 // Proto database not loaded yet. Not a failure.
+                Waiting("the recipe database (LDB.recipes) is not loaded yet.");
                 return null;
             }
 
@@ -143,6 +169,7 @@ namespace PlanetaryAnomalies
 
             if (RecipeProto.recipeExecuteData == null)
             {
+                Waiting("RecipeProto.recipeExecuteData is null (InitRecipeItems has not run).");
                 return null;
             }
 
@@ -150,6 +177,7 @@ namespace PlanetaryAnomalies
             if (!RecipeProto.recipeExecuteData.TryGetValue(recipe.ID, out shared) || shared == null)
             {
                 // RecipeProto.InitRecipeItems has not run yet.
+                Waiting("no execute data cached for recipe " + recipe.ID + " yet.");
                 return null;
             }
 
@@ -166,6 +194,10 @@ namespace PlanetaryAnomalies
 
             PlanetData planet = galaxy.PlanetById(birthPlanetId);
             string planetName = planet != null ? planet.displayName : "<not generated yet>";
+
+            // Logged here rather than at plugin startup: GameConfig.build is still 0 during Awake,
+            // so logging it there reports a version that does not exist.
+            LogGameVersionOnce();
 
             LogAnomaly(recipe, shared, anomalousData, birthPlanetId, planetName, seed);
 
@@ -241,6 +273,32 @@ namespace PlanetaryAnomalies
                 && recipe.ItemCounts != null && recipe.ItemCounts.Length == 1
                 && recipe.Results != null && recipe.Results.Length == 1
                 && recipe.ResultCounts != null && recipe.ResultCounts.Length == 1;
+        }
+
+        /// <summary>
+        /// Records the build this run actually executed against, so a log can be matched back to
+        /// the signatures in docs/inspection.md.
+        /// </summary>
+        private static void LogGameVersionOnce()
+        {
+            if (_versionLogged)
+            {
+                return;
+            }
+
+            _versionLogged = true;
+
+            try
+            {
+                // GameConfig.build is not the build number -- it reads 0 at runtime.
+                // gameVersion.ToFullString() already carries the full four-part version.
+                Version version = GameConfig.gameVersion;
+                Plugin.Log.LogInfo("Game version: " + version.ToFullString());
+            }
+            catch (System.Exception e)
+            {
+                Plugin.Log.LogWarning("Could not read the game version: " + e.Message);
+            }
         }
 
         private static void LogAnomaly(

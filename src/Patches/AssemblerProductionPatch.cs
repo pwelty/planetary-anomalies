@@ -1,4 +1,3 @@
-using System;
 using HarmonyLib;
 
 namespace PlanetaryAnomalies
@@ -9,21 +8,46 @@ namespace PlanetaryAnomalies
     /// This does not patch production. DSP adds a completed cycle's output from
     /// <c>AssemblerComponent.recipeExecuteData.productCounts</c>, and that field is a per-component
     /// reference into a static, shared dictionary. So instead of intercepting the output code --
-    /// which runs on two different paths, single-threaded and parallel, neither of which can see
-    /// the planet -- we hand the affected machines a private copy of that data with the counts
-    /// already multiplied. Both execution paths then produce the anomalous amount on their own,
-    /// and nothing shared is touched.
+    /// which runs on two different paths, neither of which can see the planet -- we hand the
+    /// affected machines a private copy of that data with the counts already multiplied. Both
+    /// execution paths then produce the anomalous amount on their own, and nothing shared is
+    /// touched.
     ///
-    /// <c>FactorySystem.GameTick</c> is the hook because it is the one place that runs once per
-    /// planet per tick, knows its own planet, and is called for every factory regardless of the
-    /// multithreading setting. See docs/inspection.md.
+    /// The hook is <c>PlanetFactory.BeforeGameTick</c>, called once per factory per tick from
+    /// <c>GameLogic.FactoryBeforeGameTick</c>.
+    ///
+    /// Choosing this hook matters more than it looks. <c>GameLogic.OnGameLogicFrame</c> dispatches
+    /// most factory work through paired methods -- a sequential one and a <c>_Parallel</c> one --
+    /// and picks between them on thread count:
+    ///
+    ///     V_6 = threadCount &lt;= 1      -> calls FactorySystemFacilityGameTick
+    ///     V_7 = threadCount &gt;= 2      -> calls FactorySystemFacilityGameTick_Parallel
+    ///
+    /// So a hook on <c>FactorySystem.GameTick</c> silently never fires on a multithreaded game,
+    /// which is the default. <c>FactoryBeforeGameTick</c> has no <c>_Parallel</c> twin and is
+    /// guarded only by "is this the main thread", so it runs in both modes. It also runs earlier
+    /// in the frame than the facility phase, so the swap is in place before production for that
+    /// tick. See docs/inspection.md.
     /// </summary>
-    [HarmonyPatch(typeof(FactorySystem), "GameTick", new Type[] { typeof(long), typeof(bool) })]
-    internal static class FactorySystemGameTickPatch
+    [HarmonyPatch(typeof(PlanetFactory), "BeforeGameTick")]
+    internal static class PlanetFactoryBeforeGameTickPatch
     {
+        // Proves the hook itself fires. Without this, "nothing happened" cannot be told apart from
+        // "the patch never ran", which are very different bugs -- and were, once.
+        private static bool _hookProven;
+
         [HarmonyPrefix]
-        internal static void Prefix(FactorySystem __instance)
+        internal static void Prefix(PlanetFactory __instance)
         {
+            if (!_hookProven)
+            {
+                _hookProven = true;
+                PlanetData first = __instance.planet;
+                Plugin.Log.LogInfo(
+                    "PlanetFactory.BeforeGameTick prefix is running (first seen on " +
+                    (first != null ? first.displayName + ", planet id " + first.id : "<no planet>") + ").");
+            }
+
             PlanetAnomaly anomaly = AnomalyManager.Resolve();
             if (anomaly == null)
             {
@@ -39,13 +63,19 @@ namespace PlanetaryAnomalies
                 return;
             }
 
-            AssemblerComponent[] pool = __instance.assemblerPool;
+            FactorySystem system = __instance.factorySystem;
+            if (system == null)
+            {
+                return;
+            }
+
+            AssemblerComponent[] pool = system.assemblerPool;
             if (pool == null)
             {
                 return;
             }
 
-            int cursor = __instance.assemblerCursor;
+            int cursor = system.assemblerCursor;
             if (cursor > pool.Length)
             {
                 cursor = pool.Length;
