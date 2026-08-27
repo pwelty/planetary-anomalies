@@ -1,0 +1,38 @@
+# Build outputs
+bin/
+obj/
+*.dll
+*.pdb
+*.deps.json
+*.runtimeconfig.json
+
+# Game/BepInEx/Unity assemblies and decompilation
+assemblies/
+lib/game/
+BepInEx/
+DSPGAME_Data/
+decompiled/
+*.csproj.user
+
+# Saves and runtime logs
+saves/
+*.dsv
+LogOutput.log
+logs/
+
+# Local paths/config
+.env
+.env.*
+!.env.example
+local.props
+Directory.Build.user.props
+
+# Editors/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Agent scratch
+.claude/
+.codex/
