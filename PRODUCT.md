@@ -30,17 +30,21 @@ The interesting decision is meant to be *what to do about* an anomalous planet â
 worth reorganizing production around â€” not whether the player can be bothered to find it. Making
 discovery cheap protects that decision instead of burying it.
 
-### The early-game hole
+### Home planets never have anomalies
 
 The rule above assumes the player can reach the planet detail panel. Early in a game they cannot: the star map (`V`) is not available yet, and the panel is only reachable through it.
 
 That produces the worst version of the problem the rule exists to prevent. The first anomaly a player ever encounters would be the one they are least equipped to understand -- a machine behaving strangely, with the only explanation locked behind tech they do not have. Unexplained weirdness with no path to an answer is exactly the "suffering" this design is meant to avoid.
 
-Likely resolution: **the home planet should not be anomalous.** Anomalies are meant to be sparse, and most planets should have none. The home planet is anomalous today only because it is the one planet a spike can reach -- a testing artifact, not the design. Skipping the birth planet during generation closes the hole with no new UI, and it fits the intended experience better anyway: anomalies should be something found out *there*, a reason to look at other worlds, not a property of the world the player starts on.
+**Decided: home planets never have anomalies.** Not "rarely" and not "unless the roll says so" -- never. "Home planet" means the galaxy birth planet, the world the player starts on.
 
-If the home planet is ever allowed to roll an anomaly, it needs a disclosure surface reachable before the star map -- `UIPlanetGlobe.geoInfoText` in the `M` view, or a one-time notification when an anomalous recipe first completes.
+Three things fall out of that, all of them good:
 
-This is a constraint on stage 4's generation rule, not something to solve now.
+- The early-game hole closes with no new UI. The player cannot encounter an unexplainable anomaly before the star map exists, because the only planet they can reach does not have one.
+- It fits the intended experience better. Anomalies should be a reason to look at *other* worlds. Making the starting world special works against the pull outward that the whole mod exists to create.
+- It is a principle rather than a tuning knob. No rarity value to balance, no edge case where an unlucky seed produces a confusing first hour.
+
+The cost is that **the current test rig depends on the opposite.** Every in-game test so far puts the anomaly on the home planet, and `SPIKE.md` is framed as "ten plates, home planet only". That is a deliberate spike exception, and it has to be retired at stage 4 along with the hard-coded recipe -- generation and the test approach change together, so neither should be done blind to the other. Testing then moves to a developed multi-planet save, on whichever non-home planet the hash selects.
 
 ### How precisely the anomaly is described
 
