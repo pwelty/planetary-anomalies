@@ -30,6 +30,18 @@ The interesting decision is meant to be *what to do about* an anomalous planet �
 worth reorganizing production around — not whether the player can be bothered to find it. Making
 discovery cheap protects that decision instead of burying it.
 
+### The early-game hole
+
+The rule above assumes the player can reach the planet detail panel. Early in a game they cannot: the star map (`V`) is not available yet, and the panel is only reachable through it.
+
+That produces the worst version of the problem the rule exists to prevent. The first anomaly a player ever encounters would be the one they are least equipped to understand -- a machine behaving strangely, with the only explanation locked behind tech they do not have. Unexplained weirdness with no path to an answer is exactly the "suffering" this design is meant to avoid.
+
+Likely resolution: **the home planet should not be anomalous.** Anomalies are meant to be sparse, and most planets should have none. The home planet is anomalous today only because it is the one planet a spike can reach -- a testing artifact, not the design. Skipping the birth planet during generation closes the hole with no new UI, and it fits the intended experience better anyway: anomalies should be something found out *there*, a reason to look at other worlds, not a property of the world the player starts on.
+
+If the home planet is ever allowed to roll an anomaly, it needs a disclosure surface reachable before the star map -- `UIPlanetGlobe.geoInfoText` in the `M` view, or a one-time notification when an anomalous recipe first completes.
+
+This is a constraint on stage 4's generation rule, not something to solve now.
+
 ### How precisely the anomaly is described
 
 For now, **state it exactly**: "Iron Ingot: 1 → 10". Precision is what makes the thing testable
