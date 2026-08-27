@@ -263,8 +263,11 @@ namespace PlanetaryAnomalies
                 return null;
             }
 
-            uint choice = Hash(_galaxySeed, planetId, AnomalySystemVersion, SaltRecipe);
-            RecipeProto recipe = _eligible[(int)(choice % (uint)_eligible.Length)];
+            RecipeProto recipe = ChooseRecipe(planetId);
+            if (recipe == null)
+            {
+                return null;
+            }
 
             RecipeExecuteData shared;
             if (!RecipeProto.recipeExecuteData.TryGetValue(recipe.ID, out shared) || shared == null)
@@ -302,6 +305,70 @@ namespace PlanetaryAnomalies
                 h = MixBytes(h, (uint)planetId);
                 h = MixBytes(h, (uint)version);
                 h = MixBytes(h, salt);
+
+                h ^= h >> 16;
+                h *= 2246822507u;
+                h ^= h >> 13;
+                h *= 3266489909u;
+                h ^= h >> 16;
+                return h;
+            }
+        }
+
+        /// <summary>
+        /// Picks the planet's recipe by rendezvous hashing: every eligible recipe is weighted for
+        /// this planet, and the heaviest wins.
+        ///
+        /// The obvious alternative -- hash once and index into the list -- makes the choice depend
+        /// on the list's *length and order*. Adding or removing a single recipe then shifts the
+        /// index for every planet in the galaxy, silently rewriting anomalies people had already
+        /// discovered. That is not hypothetical: LDBTool and CommonAPI exist to add protos, and a
+        /// DSP update can too.
+        ///
+        /// Weighting each recipe independently removes that coupling. A newly added recipe wins
+        /// only on the planets where its weight happens to be highest, roughly one in N, and every
+        /// other planet keeps exactly what it had. Removing one only affects the planets that had
+        /// chosen it.
+        ///
+        /// O(N) per planet, N being the eligible recipe count, and computed once per planet then
+        /// cached -- so it costs nothing that matters.
+        /// </summary>
+        private static RecipeProto ChooseRecipe(int planetId)
+        {
+            RecipeProto best = null;
+            uint bestWeight = 0;
+
+            for (int i = 0; i < _eligible.Length; i++)
+            {
+                RecipeProto candidate = _eligible[i];
+                uint weight = RecipeWeight(_galaxySeed, planetId, AnomalySystemVersion, candidate.ID);
+
+                // Ties broken by lower id, so the result never depends on iteration order.
+                if (best == null || weight > bestWeight || (weight == bestWeight && candidate.ID < best.ID))
+                {
+                    best = candidate;
+                    bestWeight = weight;
+                }
+            }
+
+            return best;
+        }
+
+        /// <summary>
+        /// How strongly one recipe is drawn to one planet. Same construction as
+        /// <see cref="Hash"/>, with the recipe's proto id mixed in -- so the weight follows the
+        /// recipe itself rather than where it sits in a list.
+        /// </summary>
+        private static uint RecipeWeight(int seed, int planetId, int version, int recipeId)
+        {
+            unchecked
+            {
+                uint h = 2166136261u;
+                h = MixBytes(h, (uint)seed);
+                h = MixBytes(h, (uint)planetId);
+                h = MixBytes(h, (uint)version);
+                h = MixBytes(h, SaltRecipe);
+                h = MixBytes(h, (uint)recipeId);
 
                 h ^= h >> 16;
                 h *= 2246822507u;
@@ -352,9 +419,9 @@ namespace PlanetaryAnomalies
                 }
             }
 
-            // Ascending id, so the list order does not depend on how the game happened to load its
-            // protos. The recipe choice indexes into this, so its order is part of the seed
-            // contract: reordering it silently changes every galaxy.
+            // Ascending id, so the list does not depend on how the game happened to load its
+            // protos. Selection no longer depends on this order -- see ChooseRecipe -- but a
+            // stable order keeps logs and diagnostics reproducible.
             eligible.Sort(delegate(RecipeProto a, RecipeProto b) { return a.ID.CompareTo(b.ID); });
 
             return eligible.ToArray();
