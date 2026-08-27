@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using HarmonyLib;
 
 namespace PlanetaryAnomalies
@@ -36,6 +37,11 @@ namespace PlanetaryAnomalies
         // "the patch never ran", which are very different bugs -- and were, once.
         private static bool _hookProven;
 
+        // Planets already reported on by the guard, so the report costs one pool scan per planet
+        // per galaxy rather than one per tick. Cleared when the anomaly changes.
+        private static readonly HashSet<int> _guardReported = new HashSet<int>();
+        private static PlanetAnomaly _reportedFor;
+
         [HarmonyPrefix]
         internal static void Prefix(PlanetFactory __instance)
         {
@@ -54,11 +60,14 @@ namespace PlanetaryAnomalies
                 return;
             }
 
-            // The planet guard. Stage 0 cannot fully witness the negative case yet -- early in a
-            // new game the player is only ever on the home planet -- but the guard is live from
-            // the first build, and this is where it fires.
+            if (!ReferenceEquals(_reportedFor, anomaly))
+            {
+                _reportedFor = anomaly;
+                _guardReported.Clear();
+            }
+
             PlanetData planet = __instance.planet;
-            if (planet == null || planet.id != anomaly.PlanetId)
+            if (planet == null)
             {
                 return;
             }
@@ -66,6 +75,16 @@ namespace PlanetaryAnomalies
             FactorySystem system = __instance.factorySystem;
             if (system == null)
             {
+                return;
+            }
+
+            // The planet guard. On a fresh game this cannot be witnessed -- the player is only
+            // ever on the home planet -- but on a save with several developed planets it can, so
+            // report once per planet when a non-home planet runs the anomalous recipe and is
+            // deliberately left alone. That turns "the guard is implemented" into evidence.
+            if (planet.id != anomaly.PlanetId)
+            {
+                ReportGuardedPlanet(planet, system, anomaly);
                 return;
             }
 
@@ -107,6 +126,48 @@ namespace PlanetaryAnomalies
                 pool[i].recipeExecuteData = anomalousData;
 
                 AnomalyManager.NoteApplied(planet, i);
+            }
+        }
+
+        /// <summary>
+        /// Logs, once per planet, that a non-home planet running the anomalous recipe was left
+        /// vanilla. Costs one pool scan per planet per galaxy, not one per tick.
+        /// </summary>
+        private static void ReportGuardedPlanet(PlanetData planet, FactorySystem system, PlanetAnomaly anomaly)
+        {
+            if (_guardReported.Contains(planet.id))
+            {
+                return;
+            }
+
+            _guardReported.Add(planet.id);
+
+            AssemblerComponent[] pool = system.assemblerPool;
+            if (pool == null)
+            {
+                return;
+            }
+
+            int cursor = system.assemblerCursor;
+            if (cursor > pool.Length)
+            {
+                cursor = pool.Length;
+            }
+
+            int matching = 0;
+            for (int i = 1; i < cursor; i++)
+            {
+                if (pool[i].id == i && pool[i].recipeId == anomaly.RecipeId)
+                {
+                    matching++;
+                }
+            }
+
+            if (matching > 0)
+            {
+                Plugin.Log.LogInfo(
+                    "Guard: " + planet.displayName + " (planet id " + planet.id + ") runs the anomalous recipe on " +
+                    matching + " machine(s) but is not the home planet, so it keeps vanilla output.");
             }
         }
     }
