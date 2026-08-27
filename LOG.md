@@ -8,6 +8,10 @@ what the next session should pick up. Facts that outlive a session belong in
 
 ## 2026-08-27 (later) — anomalies derived across the galaxy from the seed
 
+**Released as v0.1.0 on Thunderstore:**
+https://thunderstore.io/c/dyson-sphere-program/p/pwelty/PlanetaryAnomalies/ --
+categories Assembling Machines, Logistics, Resources. Icon is still the generated placeholder.
+
 **State: confirmed in game, end to end.**
 
 Replaced the single hard-coded home-planet anomaly with per-planet generation from
@@ -328,11 +332,14 @@ If that ever needs revisiting, the cheap option found while looking is `UIPlanet
    an anomaly there is impossible to miss.
 4. Replace the per-tick pool sweep with a reaction to `SetRecipe`/`Import` before the anomaly count
    grows beyond one.
-5. **Coach Paul through uploading the mod.** He has not published a DSP mod before, so this needs
+5. ~~Coach Paul through uploading the mod.~~ **Done** -- published 2026-08-27 as
+   https://thunderstore.io/c/dyson-sphere-program/p/pwelty/PlanetaryAnomalies/ (v0.1.0).
+   Original note: He has not published a DSP mod before, so this needs
    to be explicit: what Thunderstore expects (manifest, icon, README, version), how the package is
    assembled, what the DSP community conventions are, and what to check before a first release.
    `AGENTS.md` requires explicit approval before any publish, so this is preparation, not release.
-6. **Write the mod description for him** -- the Thunderstore listing and README aimed at players
+6. ~~Write the mod description for him~~ **Done** -- `packaging/README.md` is the listing page.
+   Original note: -- the Thunderstore listing and README aimed at players
    rather than developers: what the mod does, what it feels like to play with, the config options,
    and honest notes on what it does not do yet.
 

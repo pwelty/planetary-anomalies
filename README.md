@@ -2,6 +2,11 @@
 
 A Dyson Sphere Program mod exploring planets whose local industrial physics differs from the rest of the galaxy.
 
+**Released on Thunderstore:** https://thunderstore.io/c/dyson-sphere-program/p/pwelty/PlanetaryAnomalies/
+
+Install it with a mod manager (Gale, r2modman) rather than by hand. The rest of this file is for
+working on the mod; the player-facing description is [`packaging/README.md`](packaging/README.md).
+
 ## What it does
 
 Most non-home planets carry an **anomaly**: one ordinary recipe produces ten times its normal
