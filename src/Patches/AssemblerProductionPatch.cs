@@ -4,7 +4,7 @@ using HarmonyLib;
 namespace PlanetaryAnomalies
 {
     /// <summary>
-    /// Attaches the anomaly to the machines it applies to.
+    /// Attaches each planet's anomaly to the machines it applies to.
     ///
     /// This does not patch production. DSP adds a completed cycle's output from
     /// <c>AssemblerComponent.recipeExecuteData.productCounts</c>, and that field is a per-component
@@ -33,68 +33,76 @@ namespace PlanetaryAnomalies
     [HarmonyPatch(typeof(PlanetFactory), "BeforeGameTick")]
     internal static class PlanetFactoryBeforeGameTickPatch
     {
+        /// <summary>
+        /// Ticks between full sweeps of a planet's assembler pool.
+        ///
+        /// Most planets are anomalous now, so a sweep every tick would walk every assembler on
+        /// every developed planet, sixty times a second, almost always finding nothing to do. A
+        /// sweep is also triggered immediately whenever the pool's cursor moves, which is what
+        /// happens when a machine is built or removed, so the only case this delays is an existing
+        /// machine being switched to the anomalous recipe in place. Half a second late on that is
+        /// invisible: the machine has to fill with ingredients before it can produce anything.
+        /// </summary>
+        private const int SweepIntervalTicks = 30;
+
         // Proves the hook itself fires. Without this, "nothing happened" cannot be told apart from
         // "the patch never ran", which are very different bugs -- and were, once.
         private static bool _hookProven;
 
-        // Planets already reported on by the guard, so the report costs one pool scan per planet
-        // per galaxy rather than one per tick. Cleared when the anomaly changes.
-        private static readonly HashSet<int> _guardReported = new HashSet<int>();
-        private static PlanetAnomaly _reportedFor;
+        // Per planet: ticks until the next unconditional sweep, and the pool cursor as of the last
+        // sweep, so a change can trigger one immediately.
+        private static readonly Dictionary<int, int> _countdown = new Dictionary<int, int>();
+        private static readonly Dictionary<int, int> _lastCursor = new Dictionary<int, int>();
+
+        // Planets whose first successful attachment has been logged, so the log carries evidence
+        // without one line per machine.
+        private static readonly HashSet<int> _attachLogged = new HashSet<int>();
+
+        /// <summary>Drops per-planet state. Called when the plugin unloads.</summary>
+        internal static void Reset()
+        {
+            _hookProven = false;
+            _countdown.Clear();
+            _lastCursor.Clear();
+            _attachLogged.Clear();
+        }
 
         [HarmonyPrefix]
         internal static void Prefix(PlanetFactory __instance)
         {
-            if (!_hookProven)
-            {
-                _hookProven = true;
-                PlanetData first = __instance.planet;
-                Plugin.Log.LogInfo(
-                    "PlanetFactory.BeforeGameTick prefix is running (first seen on " +
-                    (first != null ? first.displayName + ", planet id " + first.id : "<no planet>") + ").");
-            }
-
-            PlanetAnomaly anomaly = AnomalyManager.Resolve();
-            if (anomaly == null)
-            {
-                return;
-            }
-
-            if (!ReferenceEquals(_reportedFor, anomaly))
-            {
-                _reportedFor = anomaly;
-                _guardReported.Clear();
-            }
-
             PlanetData planet = __instance.planet;
             if (planet == null)
             {
                 return;
             }
 
+            if (!_hookProven)
+            {
+                _hookProven = true;
+                Plugin.Log.LogInfo(
+                    "PlanetFactory.BeforeGameTick prefix is running (first seen on " +
+                    planet.displayName + ", planet id " + planet.id + ").");
+            }
+
+            PlanetAnomaly anomaly = AnomalyManager.AnomalyFor(planet.id);
+            if (anomaly == null)
+            {
+                return;
+            }
+
             FactorySystem system = __instance.factorySystem;
-            if (system == null)
-            {
-                return;
-            }
-
-            // The planet guard. On a fresh game this cannot be witnessed -- the player is only
-            // ever on the home planet -- but on a save with several developed planets it can, so
-            // report once per planet when a non-home planet runs the anomalous recipe and is
-            // deliberately left alone. That turns "the guard is implemented" into evidence.
-            if (planet.id != anomaly.PlanetId)
-            {
-                ReportGuardedPlanet(planet, system, anomaly);
-                return;
-            }
-
-            AssemblerComponent[] pool = system.assemblerPool;
-            if (pool == null)
+            if (system == null || system.assemblerPool == null)
             {
                 return;
             }
 
             int cursor = system.assemblerCursor;
+            if (!DueForSweep(planet.id, cursor))
+            {
+                return;
+            }
+
+            AssemblerComponent[] pool = system.assemblerPool;
             if (cursor > pool.Length)
             {
                 cursor = pool.Length;
@@ -102,21 +110,17 @@ namespace PlanetaryAnomalies
 
             RecipeExecuteData anomalousData = anomaly.AnomalousExecuteData;
             int recipeId = anomaly.RecipeId;
+            int attached = 0;
 
             for (int i = 1; i < cursor; i++)
             {
                 // DSP marks live pool slots by storing the index back into id; recycled slots do not.
-                if (pool[i].id != i)
+                if (pool[i].id != i || pool[i].recipeId != recipeId)
                 {
                     continue;
                 }
 
-                if (pool[i].recipeId != recipeId)
-                {
-                    continue;
-                }
-
-                // Already ours. This is the case on almost every tick, so it is the cheap path.
+                // Already ours. This is the case on almost every sweep, so it is the cheap path.
                 if (ReferenceEquals(pool[i].recipeExecuteData, anomalousData))
                 {
                     continue;
@@ -124,51 +128,46 @@ namespace PlanetaryAnomalies
 
                 // AssemblerComponent is a struct in an array, so this writes through to the pool.
                 pool[i].recipeExecuteData = anomalousData;
+                attached++;
+            }
 
-                AnomalyManager.NoteApplied(planet, i);
+            if (attached > 0 && _attachLogged.Add(planet.id))
+            {
+                AnomalyManager.NoteApplied(planet, attached);
             }
         }
 
         /// <summary>
-        /// Logs, once per planet, that a non-home planet running the anomalous recipe was left
-        /// vanilla. Costs one pool scan per planet per galaxy, not one per tick.
+        /// True when this planet's pool should be walked: either the cursor moved, meaning
+        /// machines were built or removed, or the interval has elapsed.
         /// </summary>
-        private static void ReportGuardedPlanet(PlanetData planet, FactorySystem system, PlanetAnomaly anomaly)
+        private static bool DueForSweep(int planetId, int cursor)
         {
-            if (_guardReported.Contains(planet.id))
+            int previousCursor;
+            bool cursorChanged = !_lastCursor.TryGetValue(planetId, out previousCursor) || previousCursor != cursor;
+
+            if (cursorChanged)
             {
-                return;
+                _lastCursor[planetId] = cursor;
+                _countdown[planetId] = SweepIntervalTicks;
+                return true;
             }
 
-            _guardReported.Add(planet.id);
-
-            AssemblerComponent[] pool = system.assemblerPool;
-            if (pool == null)
+            int remaining;
+            if (!_countdown.TryGetValue(planetId, out remaining))
             {
-                return;
+                _countdown[planetId] = SweepIntervalTicks;
+                return true;
             }
 
-            int cursor = system.assemblerCursor;
-            if (cursor > pool.Length)
+            if (remaining <= 0)
             {
-                cursor = pool.Length;
+                _countdown[planetId] = SweepIntervalTicks;
+                return true;
             }
 
-            int matching = 0;
-            for (int i = 1; i < cursor; i++)
-            {
-                if (pool[i].id == i && pool[i].recipeId == anomaly.RecipeId)
-                {
-                    matching++;
-                }
-            }
-
-            if (matching > 0)
-            {
-                Plugin.Log.LogInfo(
-                    "Guard: " + planet.displayName + " (planet id " + planet.id + ") runs the anomalous recipe on " +
-                    matching + " machine(s) but is not the home planet, so it keeps vanilla output.");
-            }
+            _countdown[planetId] = remaining - 1;
+            return false;
         }
     }
 }
