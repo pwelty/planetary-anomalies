@@ -191,8 +191,23 @@ If that ever needs revisiting, the cheap option found while looking is `UIPlanet
    reading the log.
 
    Constraint Paul noted: this needs a **late-game save**, since the star map (`V`) is not
-   available early, and the panel is only reachable through it. Reuse the developed multi-planet
-   save already used for the planet-locality test.
+   available early, and the panel is only reachable through it. Paul has one: the developed
+   multi-planet save already used for the planet-locality test (galaxy seed 40078654, home
+   planet `Alrami III` id 103).
+
+   That save is already a known-good test bed, and the guard log from this session says exactly
+   where. These non-home planets run the iron ingot recipe:
+
+   ~~~
+   Alrami IV          id 104    39 machines   (same system as home)
+   Theta Scorpii VI   id 5406    7 machines
+   Zeta Piscium I     id 1201    4 machines
+   73 Velorum IV      id 1704    2 machines
+   ~~~
+
+   Once "home planets never have anomalies" lands, testing moves onto these. `Alrami IV` is the
+   obvious first target: same star system as home, so it is quick to reach, and with 39 machines
+   an anomaly there is impossible to miss.
 4. Replace the per-tick pool sweep with a reaction to `SetRecipe`/`Import` before the anomaly count
    grows beyond one.
 
