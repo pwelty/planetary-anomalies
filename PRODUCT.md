@@ -14,23 +14,44 @@ Can Dyson Sphere Program's real machine output be modified safely at execution t
 4. Derive sparse anomalies deterministically from galaxy seed and planet ID.
 5. Add effect varieties, discovery, and UI only after the mechanism is stable.
 
-## Known design tension: discovery must not become brute force
+## Discovery: knowing the planet means knowing the anomaly
 
-Anomalies are meant to be hidden until discovered, but with many recipes across many planets a
-naive "hidden until you happen to build the right recipe here" rule degenerates into searching
-the whole cross-product. That is a chore, and it punishes the curiosity the mod exists to
-reward.
+**When the player learns about a planet, they are told its anomaly.** Landing on it counts;
+scanning it remotely counts. There is no separate hunt for the anomaly once the planet is known.
 
-The working constraint: the player should learn **that** a planet is anomalous cheaply, and
-**what** the anomaly is with effort. A planet-level signal — from scanning, landing, or a survey
-— narrows the search to one world and ideally to a category, leaving the specific recipe as the
-thing worth investigating. Whatever the eventual mechanism, no design should require trying
-every recipe on a planet, or visiting every planet with the same recipe, to find anything.
+This deliberately supersedes the staged, hidden-until-triggered sketch in `SPEC.md`. That model
+degenerates into brute force: with many recipes across many planets, "build the right recipe on
+the right world and find out" means searching the recipe × planet cross-product. That is a
+chore, and it punishes the curiosity the mod exists to reward.
 
-Documentation of a discovered anomaly matters as much as the discovery: once found, it should
-stay legible somewhere the player can consult, not live only in their memory or notes.
+The interesting decision is meant to be *what to do about* an anomalous planet — whether it is
+worth reorganizing production around — not whether the player can be bothered to find it. Making
+discovery cheap protects that decision instead of burying it.
 
-Not to be built until the mechanism is stable; recorded so the eventual design starts here.
+### How precisely the anomaly is described
+
+For now, **state it exactly**: "Iron Ingot: 1 → 10". Precision is what makes the thing testable
+and legible while the mechanism is young.
+
+Later this can soften to a qualitative description — "Improved iron ingot output" — that names
+*what* is affected without giving the number. Existence stays free, magnitude becomes the thing
+the player finds out by building it. That keeps a small discovery worth having without
+reintroducing the search problem, since the player already knows which planet and which recipe
+to look at.
+
+Both forms are the same mechanism with different text, so nothing about the implementation needs
+to anticipate the change beyond keeping the wording in one place.
+
+Consequences to respect whenever this is built:
+
+- An anomaly must be legible from the planet's own information, not only from watching a machine
+  behave oddly.
+- Once known, it stays consultable. The player should never have to keep notes to remember which
+  world was the graphene world.
+- An unknown planet reveals nothing, so unexplored space keeps its pull.
+
+Not to be built until the mechanism is stable, but the design starts here rather than from
+`SPEC.md`'s discovery section.
 
 ## Non-goals before Stage 0 passes
 

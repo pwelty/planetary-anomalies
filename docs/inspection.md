@@ -293,6 +293,29 @@ PlanetData    GalaxyData::PlanetById(System.Int32)
 reached as `GameMain.data.galaxy.birthPlanetId`. `GameMain.data` is a public static field, and
 `GameData.gameDesc.galaxySeed` distinguishes one galaxy from another.
 
+### Scanning (noted for the eventual discovery work, not used in Stage 0)
+
+`GalaxyData` already models scanning as a first-class, persisted concept:
+
+```
+System.Boolean  GalaxyData::get__need_auto_scanning() / set__need_auto_scanning(Boolean)
+System.Void     GalaxyData::StartAutoScanning()
+System.Boolean  GalaxyData::get_scan_preparing() / set_scan_preparing(Boolean)
+System.Void     GalaxyData::UpdateScanningProcedure(System.Int64, System.Int64)
+System.Void     GalaxyData::ExportScannedDatas(System.IO.BinaryWriter)
+System.Void     GalaxyData::ImportScannedDatas(System.IO.BinaryReader)
+System.Int32    GalaxyData::get_unscannedStarCount()
+```
+
+That the scan state is exported and imported means "has the player learned about this planet"
+is already a persisted game concept rather than something the mod would have to invent. The
+product rule in `PRODUCT.md` — knowing the planet means knowing its anomaly — can therefore key
+off the game's own notion of knowledge.
+
+Recorded only because it fell out of this inspection. Nothing in Stage 0 touches it, and the
+exact semantics (per star or per planet, what counts as scanned, when landing sets it) have
+**not** been verified — do that before relying on any of it.
+
 ### Recipe lookup
 
 ```

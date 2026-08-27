@@ -87,21 +87,34 @@ never mutated: had it been, all 52 would have gone anomalous.
   they *match* the anomalous amount, since `productRegister` is fed from the same `productCounts`
   as the output buffer. Worth a glance at the statistics panel next time a save is open.
 
-### Open design question (do not build yet)
+### Discovery decided (recorded, not built)
 
-How does the *player* learn what the anomaly on a planet is? Today the only answer is the
-BepInEx log, which is a developer answer. `SPEC.md` sketches hidden-until-discovered via
-`planet scanned` / `player lands` / `affected recipe executes`, and `PRODUCT.md` puts discovery
-and UI at stage 5, after the mechanism is stable.
+Paul settled the discovery model this session, and it **supersedes `SPEC.md`'s** staged
+hidden-until-triggered sketch:
 
-Paul raised the sharp version of this: hidden-until-discovered degenerates into brute force if
-the player must try every recipe on every planet. Written up as a standing constraint in
-`PRODUCT.md` — learn *that* a planet is anomalous cheaply, learn *what* with effort, and never
-require searching the recipe × planet cross-product. Discovered anomalies also need to stay
-documented somewhere the player can consult.
+> When the player learns about a planet — by landing or by scanning it remotely — they are told
+> its anomaly. No separate hunt.
 
-Recorded, not designed. Building any of it now would be the "don't skip ahead" failure the docs
-guard against.
+His reasoning: hidden-until-you-happen-to-build-it degenerates into searching the recipe ×
+planet cross-product. The interesting decision is what to *do* about an anomalous planet, not
+whether the player can be bothered to find it.
+
+Description fidelity: **precise for now** ("Iron Ingot: 1 → 10"), with room to soften later to
+"Improved iron ingot output" — naming what is affected without the number, so existence is free
+but magnitude is still worth discovering.
+
+Written up in `PRODUCT.md`. Two supporting facts already in hand:
+
+- `docs/inspection.md` now records DSP's own scanning API (`GalaxyData.StartAutoScanning`,
+  `UpdateScanningProcedure`, `Export/ImportScannedDatas`, `unscannedStarCount`). Scan state is
+  persisted by the game, so "has the player learned about this planet" does not need inventing —
+  though the exact semantics are unverified.
+- Displaying an anomaly only becomes meaningful once it survives a restart, so **persistence
+  (stage 3) should land before any discovery UI**, or the panel would show a different anomaly
+  every launch.
+
+Recorded, not designed. Building it now would be the "don't skip ahead" failure the docs guard
+against — but it is no longer an open question, just unbuilt.
 
 ### Known rough edges, deliberately accepted for Stage 0
 
