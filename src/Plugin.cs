@@ -29,10 +29,12 @@ namespace PlanetaryAnomalies
 
             _harmony = new Harmony(PluginGuid);
             _harmony.PatchAll(typeof(PlanetFactoryBeforeGameTickPatch));
+            _harmony.PatchAll(typeof(UIPlanetDetailPatch));
 
             // The hook only fires once a planet has a factory to tick, which does not happen until
             // something is built on that planet -- not merely when a save is loaded.
-            Log.LogInfo("Patched PlanetFactory.BeforeGameTick(). " +
+            Log.LogInfo("Patched PlanetFactory.BeforeGameTick() for production, and " +
+                        "UIPlanetDetail.OnPlanetDataSet() to disclose the anomaly in the planet panel. " +
                         "Idle until a planet has a factory (i.e. until something is built).");
         }
 

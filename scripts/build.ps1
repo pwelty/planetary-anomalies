@@ -55,6 +55,8 @@ $references = @(
     (Join-Path $managed 'Assembly-CSharp.dll')
     (Join-Path $managed 'UnityEngine.dll')
     (Join-Path $managed 'UnityEngine.CoreModule.dll')
+    # UnityEngine.UI: the planet detail panel's brief is a UnityEngine.UI.Text.
+    (Join-Path $managed 'UnityEngine.UI.dll')
     (Join-Path $BepInExDir 'core\BepInEx.dll')
     (Join-Path $BepInExDir 'core\0Harmony.dll')
 )

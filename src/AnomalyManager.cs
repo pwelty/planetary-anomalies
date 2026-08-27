@@ -371,5 +371,74 @@ namespace PlanetaryAnomalies
 
             return shown + " [id " + id + "]";
         }
+
+        /// <summary>
+        /// A short, player-facing description of the anomaly on a planet, or null if that planet
+        /// has none. Deliberately not the log format: the log carries raw proto names and numeric
+        /// ids so it stays reproducible across languages, and none of that belongs in the UI.
+        ///
+        /// Precise for now -- "Iron Ingot: 1 -> 10". PRODUCT.md notes this may later soften to a
+        /// qualitative phrase that names what is affected without the number, so keep the wording
+        /// in this one place.
+        /// </summary>
+        internal static string DescribeForPlanet(int planetId)
+        {
+            PlanetAnomaly anomaly = Resolve();
+            if (anomaly == null || anomaly.PlanetId != planetId)
+            {
+                return null;
+            }
+
+            RecipeProtoSet recipes = LDB.recipes;
+            if (recipes == null || !recipes.Exist(anomaly.RecipeId))
+            {
+                return null;
+            }
+
+            RecipeProto recipe = recipes.Select(anomaly.RecipeId);
+            if (recipe == null || recipe.Results == null || recipe.ResultCounts == null)
+            {
+                return null;
+            }
+
+            string body = "";
+            for (int i = 0; i < recipe.Results.Length && i < recipe.ResultCounts.Length; i++)
+            {
+                if (i > 0)
+                {
+                    body += "\n";
+                }
+
+                int normal = recipe.ResultCounts[i];
+
+                // \u2192 is a right arrow, written escaped so the source file stays pure ASCII and
+                // cannot be mangled by the compiler's source encoding.
+                body += PlayerFacingItemName(recipe.Results[i]) + ": " +
+                        normal + " \u2192 " + (normal * anomaly.OutputMultiplier);
+            }
+
+            if (body.Length == 0)
+            {
+                return null;
+            }
+
+            return "ANOMALY\n" + body;
+        }
+
+        /// <summary>Localized item name with no ids, for display to the player.</summary>
+        private static string PlayerFacingItemName(int itemId)
+        {
+            ItemProtoSet items = LDB.items;
+            if (items != null && items.Exist(itemId))
+            {
+                ItemProto item = items.Select(itemId);
+                if (item != null && !string.IsNullOrEmpty(item.name))
+                {
+                    return item.name;
+                }
+            }
+
+            return "item " + itemId;
+        }
     }
 }

@@ -8,11 +8,13 @@ Can Dyson Sphere Program's real machine output be modified safely at execution t
 
 ## Stage progression
 
-1. Hard-coded smelter recipe produces ×10 on the dynamically identified home planet only, proving the output seam and planet-locality together.
+1. Hard-coded smelter recipe produces ×10 on the dynamically identified home planet only, proving the output seam and planet-locality together. **Done 2026-08-27.**
 2. Random eligible single-output recipe on the home planet.
 3. Persist the anomaly.
 4. Derive sparse anomalies deterministically from galaxy seed and planet ID.
 5. Add effect varieties, discovery, and UI only after the mechanism is stable.
+
+**Disclosure landed early, out of this order.** Showing the anomaly in the planet detail panel came straight after stage 1 rather than waiting for stage 5, because it needed nothing the intervening stages provide: the stage 0 anomaly is hard-coded and so identical on every launch, meaning a panel showing it is honest without persistence, and DSP already tracks discovery itself through `PlanetData.scanned`. Revisit when stage 2 makes anomalies vary per launch -- at that point the panel needs persistence behind it, or stage 4 determinism in front of it, to stay truthful.
 
 ## Discovery: knowing the planet means knowing the anomaly
 
@@ -53,6 +55,12 @@ Consequences to respect whenever this is built:
 Not to be built until the mechanism is stable, but the design starts here rather than from
 `SPEC.md`'s discovery section.
 
-## Non-goals before Stage 0 passes
+## Non-goals
 
-No UI, persistence, scanning, random recipe selection, generalized effect framework, CommonAPI, GalacticScale, balance system, or content expansion. The home-planet guard is in scope; nothing beyond it is.
+Stage 0 has passed, so the original "nothing beyond the home-planet guard" bar has been met and lifted. What remains out of scope, and why:
+
+- **Custom UI objects.** The earlier blanket "no UI" meant: build no anomaly screens, planet panels, icons, localization, scanning UI, or discovery popups. That still holds. Disclosing the anomaly in the planet detail panel does not breach it -- it appends to a `Text` the game already creates and draws, and re-runs the game's own height calculation. No new GameObjects, prefabs, assets, or localization. Bespoke UI remains out of scope; borrowing existing UI does not.
+- **Persistence.** Not needed yet, and stage 4 may remove most of the need entirely -- see `LOG.md`. Only the anomaly-system version genuinely has to reach a save.
+- **Random recipe selection.** Stage 2, not started.
+- **Generalized effect framework, balance system, content expansion.** Still premature. There is one effect type, and it should stay that way until the shape of several is actually known.
+- **CommonAPI, GalacticScale, or any other mod dependency.** The plugin has none, and the smallest possible dependency surface remains the goal. `DSPModSave` becomes worth reconsidering only when something genuinely must be written to a save.

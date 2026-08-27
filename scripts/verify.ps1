@@ -96,6 +96,46 @@ if ($null -eq $planetFactory) {
     }
 }
 
+# The planet panel disclosure depends on three public members and one method. Assert them, since
+# a rename would otherwise surface as a silently missing line in the UI rather than an error.
+$planetDetail = $gameAsm.MainModule.GetType('UIPlanetDetail')
+if ($null -eq $planetDetail) {
+    $failures.Add("Harmony target type 'UIPlanetDetail' does not exist in the installed game.")
+} else {
+    $onSet = $planetDetail.Methods | Where-Object { $_.Name -eq 'OnPlanetDataSet' -and $_.Parameters.Count -eq 0 }
+    if (-not $onSet) {
+        $failures.Add("Harmony target 'UIPlanetDetail.OnPlanetDataSet()' does not exist in the installed game.")
+    } else {
+        Write-Host "OK  Harmony target: UIPlanetDetail.OnPlanetDataSet()"
+    }
+
+    foreach ($needed in @('planetBrief', 'briefContentRect')) {
+        $fld = $planetDetail.Fields | Where-Object { $_.Name -eq $needed }
+        if (-not $fld -or -not $fld.IsPublic) {
+            $failures.Add("UIPlanetDetail.$needed is missing or no longer public.")
+        } else {
+            Write-Host "OK  UIPlanetDetail.$needed is public"
+        }
+    }
+
+    $planetProp = $planetDetail.Properties | Where-Object { $_.Name -eq 'planet' }
+    if (-not $planetProp -or -not $planetProp.GetMethod -or -not $planetProp.GetMethod.IsPublic) {
+        $failures.Add("UIPlanetDetail.planet has no public getter.")
+    } else {
+        Write-Host "OK  UIPlanetDetail.planet getter is public"
+    }
+}
+
+# The discovery gate. PlanetData.scanned is DSP's own record of whether the player has learned
+# about a planet; if it disappears, the disclosure rule needs rethinking, not patching.
+$planetData = $gameAsm.MainModule.GetType('PlanetData')
+$scanned = $planetData.Fields | Where-Object { $_.Name -eq 'scanned' }
+if (-not $scanned -or -not $scanned.IsPublic) {
+    $failures.Add("PlanetData.scanned is missing or no longer public; the discovery gate is gone.")
+} else {
+    Write-Host "OK  PlanetData.scanned is public (discovery gate)"
+}
+
 # The hook must run in BOTH the sequential and multithreaded dispatch paths. GameLogic pairs most
 # factory phases with a _Parallel twin and picks between them on thread count, so a phase that has
 # a twin is only half the story. FactoryBeforeGameTick having no twin is what makes it safe --
