@@ -21,7 +21,12 @@ First release.
 
 Thunderstore community: **Dyson Sphere Program**.
 
-Categories chosen for 0.1.0: **Assembling Machines**, **Logistics**.
+Categories chosen for 0.1.0: **Assembling Machines**, **Logistics**, **Resources**.
+
+*Resources* is the loosest of the three -- in DSP it usually signals ore and veins (PlanetFinder
+is tagged that way for vein search), so browsers there are often after extraction tooling. Kept
+because the mod does change what a planet is worth travelling to, which is the same question.
+Categories are editable after publishing, so this is cheap to revisit.
 
 Deliberately not chosen:
 
