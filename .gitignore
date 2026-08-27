@@ -36,3 +36,9 @@ Thumbs.db
 # Agent scratch
 .claude/
 .codex/
+
+# Build output
+build/
+
+# Local path overrides
+scripts/local.paths.ps1
