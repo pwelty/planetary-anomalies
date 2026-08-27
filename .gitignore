@@ -42,3 +42,6 @@ build/
 
 # Local path overrides
 scripts/local.paths.ps1
+
+# Packaged releases
+dist/
