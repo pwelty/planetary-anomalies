@@ -4,17 +4,19 @@ Planetary Anomalies should make exploration industrially surprising: occasionall
 
 ## Current product question
 
-Can Dyson Sphere Program's real machine output be modified safely at execution time, on one planet only, without permanently mutating global recipe definitions?
+Does stable, place-specific industrial variation make players explore more, reconsider globally
+optimal factory doctrine, and build logistics around particular worlds?
 
-## Stage progression
+## Current state and roadmap
 
-1. Hard-coded smelter recipe produces ×10 on the dynamically identified home planet only, proving the output seam and planet-locality together. **Done 2026-08-27.**
-2. Random eligible single-output recipe on the home planet.
-3. Persist the anomaly.
-4. Derive sparse anomalies deterministically from galaxy seed and planet ID.
-5. Add effect varieties, discovery, and UI only after the mechanism is stable.
+The original staged progression was overtaken during the first working session: v0.1.0 already
+derives anomalies deterministically across the galaxy, excludes home planets, discloses anomalies
+through existing game surfaces, and has been published to Thunderstore. The obsolete intermediate
+stages remain in `SPEC.md` as design history rather than current instructions.
 
-**Disclosure landed early, out of this order.** Showing the anomaly in the planet detail panel came straight after stage 1 rather than waiting for stage 5, because it needed nothing the intervening stages provide: the stage 0 anomaly is hard-coded and so identical on every launch, meaning a panel showing it is honest without persistence, and DSP already tracks discovery itself through `PlanetData.scanned`. Revisit when stage 2 makes anomalies vary per launch -- at that point the panel needs persistence behind it, or stage 4 determinism in front of it, to stay truthful.
+The canonical forward plan is [`ROADMAP.md`](ROADMAP.md). Its immediate phase is observation and
+hardening of the one-effect release, followed by bounded experiments rather than a prebuilt
+modifier framework.
 
 ## Discovery: knowing the planet means knowing the anomaly
 
@@ -44,7 +46,9 @@ Three things fall out of that, all of them good:
 - It fits the intended experience better. Anomalies should be a reason to look at *other* worlds. Making the starting world special works against the pull outward that the whole mod exists to create.
 - It is a principle rather than a tuning knob. No rarity value to balance, no edge case where an unlucky seed produces a confusing first hour.
 
-The cost is that **the current test rig depends on the opposite.** Every in-game test so far puts the anomaly on the home planet, and `SPIKE.md` is framed as "ten plates, home planet only". That is a deliberate spike exception, and it has to be retired at stage 4 along with the hard-coded recipe -- generation and the test approach change together, so neither should be done blind to the other. Testing then moves to a developed multi-planet save, on whichever non-home planet the hash selects.
+The original home-planet test rig in `SPIKE.md` is now historical. v0.1.0 excludes the birth
+planet, and end-to-end testing uses a developed multi-planet save and whichever non-home worlds the
+generator selects.
 
 ### Always say "anomaly"
 
@@ -91,7 +95,8 @@ Not to be built until the mechanism is stable, but the design starts here rather
 Stage 0 has passed, so the original "nothing beyond the home-planet guard" bar has been met and lifted. What remains out of scope, and why:
 
 - **Custom UI objects.** The earlier blanket "no UI" meant: build no anomaly screens, planet panels, icons, localization, scanning UI, or discovery popups. That still holds. Disclosing the anomaly in the planet detail panel does not breach it -- it appends to a `Text` the game already creates and draws, and re-runs the game's own height calculation. No new GameObjects, prefabs, assets, or localization. Bespoke UI remains out of scope; borrowing existing UI does not.
-- **Persistence.** Not needed yet, and stage 4 may remove most of the need entirely -- see `LOG.md`. Only the anomaly-system version genuinely has to reach a save.
-- **Random recipe selection.** Stage 2, not started.
+- **Anomaly state persistence.** Current anomalies need none: planet and recipe are derived from
+  the seed and stable identifiers. Save integration becomes necessary only for generator-version
+  pinning or future stateful anomalies.
 - **Generalized effect framework, balance system, content expansion.** Still premature. There is one effect type, and it should stay that way until the shape of several is actually known.
 - **CommonAPI, GalacticScale, or any other mod dependency.** The plugin has none, and the smallest possible dependency surface remains the goal. `DSPModSave` becomes worth reconsidering only when something genuinely must be written to a save.

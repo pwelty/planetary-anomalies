@@ -17,9 +17,10 @@ Anomalies are shown in a planet's description tab once scanned, and machines run
 anomalous recipe are marked in their own window. The player-facing description is
 [`packaging/README.md`](packaging/README.md).
 
-Design intent and decisions are in [`PRODUCT.md`](PRODUCT.md). [`SPEC.md`](SPEC.md) is the
-original brief and is now partly superseded -- where they disagree, `PRODUCT.md` and `LOG.md`
-are current.
+Design intent and decisions are in [`PRODUCT.md`](PRODUCT.md). Future directions, sequencing,
+and the tests proposed features must pass are in [`ROADMAP.md`](ROADMAP.md). [`SPEC.md`](SPEC.md)
+is the original brief and is now partly superseded -- where they disagree, `PRODUCT.md`,
+`ROADMAP.md`, and `LOG.md` are current.
 
 Session-by-session history is in [`LOG.md`](LOG.md). What was read out of the installed game — versions, hashes, signatures, the chosen seam and why — is in [`docs/inspection.md`](docs/inspection.md).
 

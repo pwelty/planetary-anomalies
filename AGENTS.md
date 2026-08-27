@@ -2,21 +2,24 @@
 
 ## Aim
 
-Work only toward the current milestone in `SPIKE.md`. `SPEC.md` describes later intent; it is not permission to build ahead.
+Maintain the accepted, published release and work only toward the milestone Paul explicitly selects.
+`ROADMAP.md` records directions and sequencing; it is not blanket permission to build ahead.
+`SPIKE.md` and `SPEC.md` are design history unless a current task points back to them.
 
 ## Hard boundaries
 
 - Dolphin's installed DSP assemblies are the source of truth. Inspect before using method names, signatures, local-variable positions, recipe IDs, or offsets.
 - Never commit game DLLs, BepInEx binaries, saves, Steam files, generated decompilation trees, credentials, or user paths.
 - Never permanently mutate global `RecipeProto` data to simulate local output.
-- Begin with the hard-coded ×10 smelter proof, guarded to the home planet. No random anomaly, UI, persistence, CommonAPI, GalacticScale, or framework generalization.
+- Do not infer the next feature from the roadmap. The default after v0.1.0 is observation and bounded hardening until Paul selects another vertical slice.
+- Do not build a generalized effect framework before multiple implemented effects demonstrate a shared contract.
 - Use a copied/new test save. Never claim manual game acceptance from compilation or unit tests.
 - Prefer a small Harmony prefix/postfix/wrapper. Use a transpiler only when inspection proves no safer seam.
 - Keep build/install steps explicit for a developer new to C# modding.
 
 ## Workflow
 
-1. Read `README.md`, `PRODUCT.md`, `SPIKE.md`, `LOG.md`, and only then `SPEC.md`.
+1. Read `README.md`, `PRODUCT.md`, `ROADMAP.md`, and `LOG.md`. Read `SPIKE.md` and `SPEC.md` when historical rationale or a current task requires them.
 2. Inspect current repository state and public precedent.
 3. Produce the exact Dolphin assembly-access requirement if the assemblies are unavailable; do not code against guesses.
 4. When assemblies are available, record game version, file hashes, and relevant signatures in `docs/inspection.md`.
