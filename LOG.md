@@ -109,9 +109,25 @@ Written up in `PRODUCT.md`. Two supporting facts already in hand:
   `UpdateScanningProcedure`, `Export/ImportScannedDatas`, `unscannedStarCount`). Scan state is
   persisted by the game, so "has the player learned about this planet" does not need inventing —
   though the exact semantics are unverified.
-- Displaying an anomaly only becomes meaningful once it survives a restart, so **persistence
-  (stage 3) should land before any discovery UI**, or the panel would show a different anomaly
-  every launch.
+- **What actually needs saving is narrower than it first looks.** Stage 0's anomaly is
+  hard-coded, so it is identical on every launch and nothing needs recording; a save touched by
+  the mod today is unchanged by it. The problem appears at stage 2, where a *random* pick would
+  differ every launch. But stage 4 — deriving anomalies deterministically from
+  `hash(galaxy seed, planet id, anomaly-system version)` — dissolves it again: the anomaly is
+  reproducible from data the save already contains, so the anomalies themselves never need
+  storing. Persistence as a stage may largely evaporate if stage 4 lands before any UI does.
+
+  What genuinely must be recorded even then is the **anomaly-system version**. If the generator
+  ever changes and a galaxy is not pinned to the version it was generated under, every existing
+  save silently re-rolls: someone's Graphene World quietly becomes something else. That is the
+  one thing that has to survive in the save, and it is cheap — a single integer. `SPEC.md`
+  already anticipates it by putting the version inside the hash.
+
+  Discovery state may not need storing either, since DSP persists its own scan data — unverified.
+
+  Practical note: `DSPModSave` is already installed in the `gs run` profile and is the
+  conventional way to attach mod data to a DSP save. `AGENTS.md` bars CommonAPI, but that
+  constraint is explicitly scoped to Stage 0.
 
 Recorded, not designed. Building it now would be the "don't skip ahead" failure the docs guard
 against — but it is no longer an open question, just unbuilt.
