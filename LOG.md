@@ -101,6 +101,9 @@ was not a nice-to-have; without it, most anomalies would be undiscoverable in pr
   `_OnUpdate()`, so the same append-to-text-the-game-already-draws approach used for the planet
   panel would apply. Not built yet; it is a decision about how loud the machine should be, not a
   technical problem.
+- ~~Machine marker not yet witnessed.~~ **Confirmed.** The assembler window shows the marker on a
+  machine running its planet's anomalous recipe, so the panel no longer contradicts the machine.
+
 - **Determinism is only as stable as the eligible recipe list.** Re-running without saving gives
   the identical galaxy, which is the point. But the recipe is chosen by *indexing into the sorted
   list of eligible recipes*, so if that list gains or loses an entry, every planet's recipe shifts.
