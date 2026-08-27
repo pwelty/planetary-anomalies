@@ -179,9 +179,20 @@ If that ever needs revisiting, the cheap option found while looking is `UIPlanet
 
 ### Next session
 
-1. Answer the two open observations above — production statistics, and input consumed per cycle.
-2. First off-planet test once travel is available: same recipe, another planet, normal output.
-   That closes the last Stage 0 acceptance item.
-3. Then Stage 1 (random eligible single-output recipe on the home planet) is a separate change.
-4. Consider replacing the per-tick pool sweep with a reaction to `SetRecipe`/`Import` before the
-   anomaly count grows beyond one.
+1. **Production statistics** — the one unobserved Stage 0 item. Non-blocking.
+2. **Decide the stage order: 2 then 3, or straight to 4.** Deriving anomalies from
+   `hash(galaxy seed, planet id, anomaly-system version)` makes them stable *and* removes the need
+   for a save subsystem, leaving only the version integer to persist. Going straight there may be
+   cleaner than doing random-then-persist first.
+3. **Stage 2 is independently testable before that decision.** Per-launch variation only harms a
+   *player* across sessions; inside one test session it is harmless. And the planet panel now
+   doubles as the test instrument: read the randomly chosen recipe off the planet's description
+   tab, then go check a machine running it. That verifies the way a player would, rather than by
+   reading the log.
+
+   Constraint Paul noted: this needs a **late-game save**, since the star map (`V`) is not
+   available early, and the panel is only reachable through it. Reuse the developed multi-planet
+   save already used for the planet-locality test.
+4. Replace the per-tick pool sweep with a reaction to `SetRecipe`/`Import` before the anomaly count
+   grows beyond one.
+
