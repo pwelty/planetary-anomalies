@@ -350,9 +350,33 @@ Confirmed by Paul on the home planet `Theta Phoenicis III` (planet id 103, galax
 - Inserters remove the anomalous output normally — that is what drains the buffer and lets the
   machine resume.
 
+- Input consumption is unchanged: 1 ore per cycle.
+
 The pause behaviour is worth keeping in mind for later stages: a large multiplier makes a
 machine spend most of its time stalled on its own output cap, so a ×10 recipe is not ×10
 throughput unless the output is drained fast enough.
+
+### Planet locality confirmed on a developed save
+
+Loaded on a copy of an established multi-planet save (galaxy seed 40078654), home planet
+`Alrami III` (id 103):
+
+```
+Anomaly attached to assembler #2 on Alrami III (planet id 103).
+Guard: Alrami IV (planet id 104) runs the anomalous recipe on 39 machine(s) but is not the home planet, so it keeps vanilla output.
+Guard: 73 Velorum IV (planet id 1704) runs the anomalous recipe on 2 machine(s) ...
+Guard: Theta Scorpii VI (planet id 5406) runs the anomalous recipe on 7 machine(s) ...
+Guard: Zeta Piscium I (planet id 1201) runs the anomalous recipe on 4 machine(s) ...
+```
+
+52 machines on four other planets kept vanilla output while the home planet was anomalous, and
+Paul confirmed the normal output in game on the other planet. `Alrami IV` is in the **same star
+system** as the home planet, which rules out the effect being keyed to anything at star level or
+to the locally loaded factory.
+
+This closes the criterion `SPIKE.md` deferred: *"The same recipe on any other planet produces
+its normal output."* It also demonstrates the shared `RecipeExecuteData` was never mutated — had
+it been, all 52 of those machines would have gone anomalous too.
 
 Known costs, accepted for Stage 0 and recorded rather than hidden:
 

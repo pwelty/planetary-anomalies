@@ -68,16 +68,40 @@ Home planet `Theta Phoenicis III` (id 103), galaxy seed 3664027, recipe `Iron In
   (`produced[0] + productCounts[0] > 100`) scaling with the anomalous count instead of being
   bypassed. No deadlock, no duplication, no overflow.
 - Inserters drain the anomalous output normally.
+- Input consumption unchanged: 1 ore per cycle.
 - Real game version captured: **`0.10.34.28529`**.
 
-### Not proven / still open
+**Planet locality confirmed** on a copy of an established multi-planet save (seed 40078654,
+home planet `Alrami III` id 103). The anomaly attached on the home planet while the guard left
+four other planets — 52 machines running the same recipe — on vanilla output, including
+`Alrami IV` in the *same star system*. Paul confirmed normal output in game there. That closes
+the criterion `SPIKE.md` deferred, and incidentally proves the shared `RecipeExecuteData` was
+never mutated: had it been, all 52 would have gone anomalous.
 
-- **The off-planet negative case.** The guard is live and logged, but there is nowhere else to
-  stand yet. First off-planet test is the remaining Stage 0 acceptance item.
-- **Production statistics** were not read during this run. `SPIKE.md` says to observe and record
-  them but does not let a mismatch block Stage 0. Expectation from the IL is that they *match*,
-  since `productRegister` is fed from the same `productCounts` as the buffer — worth confirming.
-- **Input consumption** was not explicitly counted; it should be 1 ore per cycle.
+**Stage 0 acceptance is therefore complete**, with one non-blocking exception below.
+
+### Still open
+
+- **Production statistics** have not been read. `SPIKE.md` asks for them to be observed and
+  recorded but explicitly does not let a mismatch block Stage 0. Expectation from the IL is that
+  they *match* the anomalous amount, since `productRegister` is fed from the same `productCounts`
+  as the output buffer. Worth a glance at the statistics panel next time a save is open.
+
+### Open design question (do not build yet)
+
+How does the *player* learn what the anomaly on a planet is? Today the only answer is the
+BepInEx log, which is a developer answer. `SPEC.md` sketches hidden-until-discovered via
+`planet scanned` / `player lands` / `affected recipe executes`, and `PRODUCT.md` puts discovery
+and UI at stage 5, after the mechanism is stable.
+
+Paul raised the sharp version of this: hidden-until-discovered degenerates into brute force if
+the player must try every recipe on every planet. Written up as a standing constraint in
+`PRODUCT.md` — learn *that* a planet is anomalous cheaply, learn *what* with effort, and never
+require searching the recipe × planet cross-product. Discovered anomalies also need to stay
+documented somewhere the player can consult.
+
+Recorded, not designed. Building any of it now would be the "don't skip ahead" failure the docs
+guard against.
 
 ### Known rough edges, deliberately accepted for Stage 0
 
