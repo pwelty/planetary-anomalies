@@ -132,6 +132,33 @@ Written up in `PRODUCT.md`. Two supporting facts already in hand:
 Recorded, not designed. Building it now would be the "don't skip ahead" failure the docs guard
 against — but it is no longer an open question, just unbuilt.
 
+### Anomaly disclosed in the planet panel (confirmed in game)
+
+Implements the discovery rule decided above. A postfix on `UIPlanetDetail.OnPlanetDataSet`
+appends to `planetBrief`, gated on `PlanetData.scanned`.
+
+Confirmed by Paul: **galaxy view -> click the planet -> description tab** shows the anomaly.
+
+Two things the inspection caught that would otherwise have been bugs:
+
+- The game sizes the brief's container from `Text.preferredHeight` *immediately after* setting
+  the text, so that measurement predates the appended line. The postfix redoes the same
+  computation, or the added text would render into a box too short for it.
+- The game rewrites `planetBrief` from scratch on every call — it even re-picks the flavour text
+  with `Random.Range` — so appending cannot accumulate across refreshes.
+
+Using DSP's own `PlanetData.scanned` as the gate meant "landed or scanned remotely" needed no new
+machinery: the game sets it, persists it, and `UIPlanetDetail` already re-runs `OnPlanetDataSet`
+when it flips. Note it is set *on demand* — `OnPlanetDataSet` calls `RunScanThread()` for an
+unscanned planet — so opening the panel may itself trigger the scan. Whether that is the right
+discovery feel is a play question, not a code one.
+
+**Not shown in the `M` view.** Standing on a planet, the anomaly is not visible without going out
+to the galaxy view. Paul's call: fine, since `M` omits plenty of other things too. If that ever
+changes, the cheap option found while looking is `UIPlanetGlobe.geoInfoText` — the local planet
+info text in that view, the same kind of surface as `planetBrief`, so the same append-and-remeasure
+approach would apply. Recorded so it need not be rediscovered.
+
 ### Known rough edges, deliberately accepted for Stage 0
 
 - The patch rescans the home planet's assembler pool every tick. Cheap (two integer compares
