@@ -101,6 +101,19 @@ was not a nice-to-have; without it, most anomalies would be undiscoverable in pr
   `_OnUpdate()`, so the same append-to-text-the-game-already-draws approach used for the planet
   panel would apply. Not built yet; it is a decision about how loud the machine should be, not a
   technical problem.
+- **Determinism is only as stable as the eligible recipe list.** Re-running without saving gives
+  the identical galaxy, which is the point. But the recipe is chosen by *indexing into the sorted
+  list of eligible recipes*, so if that list gains or loses an entry, every planet's recipe shifts.
+
+  A DSP update could do that. So could another mod: `LDBTool` and `CommonAPI` are installed in the
+  `gs run` profile and exist precisely to add protos. Installing a recipe-adding mod would
+  silently reshuffle an existing galaxy's anomalies.
+
+  Worth fixing before anyone else plays it. Selecting by something intrinsic to the recipe --
+  hashing its proto id rather than its position -- would make an added recipe affect only the
+  planets that newly select it, instead of shifting everything. Not urgent while the only player
+  is Paul, but it undermines the "same galaxy forever" promise the design rests on.
+
 - **Balance.** Some anomalies are enormous: Mini Fusion Power Plant ×10, Annihilation Constraint
   Sphere ×10. SPEC says explicitly not to balance, but at 65% density with a flat ×10, late-game
   recipes may swing harder than intended. The config overrides exist for exactly this.
@@ -312,4 +325,11 @@ If that ever needs revisiting, the cheap option found while looking is `UIPlanet
    an anomaly there is impossible to miss.
 4. Replace the per-tick pool sweep with a reaction to `SetRecipe`/`Import` before the anomaly count
    grows beyond one.
+5. **Coach Paul through uploading the mod.** He has not published a DSP mod before, so this needs
+   to be explicit: what Thunderstore expects (manifest, icon, README, version), how the package is
+   assembled, what the DSP community conventions are, and what to check before a first release.
+   `AGENTS.md` requires explicit approval before any publish, so this is preparation, not release.
+6. **Write the mod description for him** -- the Thunderstore listing and README aimed at players
+   rather than developers: what the mod does, what it feels like to play with, the config options,
+   and honest notes on what it does not do yet.
 

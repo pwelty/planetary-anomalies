@@ -43,11 +43,13 @@ namespace PlanetaryAnomalies
             _harmony = new Harmony(PluginGuid);
             _harmony.PatchAll(typeof(PlanetFactoryBeforeGameTickPatch));
             _harmony.PatchAll(typeof(UIPlanetDetailPatch));
+            _harmony.PatchAll(typeof(UIAssemblerWindowPatch));
 
             // The production hook only fires once a planet has a factory to tick, which does not
             // happen until something is built there -- not merely when a save is loaded.
             Log.LogInfo("Patched PlanetFactory.BeforeGameTick() for production, and " +
-                        "UIPlanetDetail.OnPlanetDataSet() to disclose anomalies in the planet panel. " +
+                        "UIPlanetDetail.OnPlanetDataSet() and UIAssemblerWindow._OnUpdate() to disclose " +
+                        "anomalies in the planet panel and on the machine. " +
                         "Idle until a planet has a factory (i.e. until something is built).");
         }
 

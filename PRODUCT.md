@@ -46,6 +46,21 @@ Three things fall out of that, all of them good:
 
 The cost is that **the current test rig depends on the opposite.** Every in-game test so far puts the anomaly on the home planet, and `SPIKE.md` is framed as "ten plates, home planet only". That is a deliberate spike exception, and it has to be retired at stage 4 along with the hard-coded recipe -- generation and the test approach change together, so neither should be done blind to the other. Testing then moves to a developed multi-planet save, on whichever non-home planet the hash selects.
 
+### Always say "anomaly"
+
+Every player-facing surface uses the word **anomaly**, in that form, so that anything the mod
+says is instantly recognisable as coming from the mod rather than from the game. A player who
+sees something odd should be able to tell at a glance whether Planetary Anomalies caused it.
+
+Current surfaces, all consistent:
+
+- Planet detail panel: a block headed `ANOMALY`, then the affected recipe.
+- Assembler window: `ANOMALY ×10` appended to the machine state line.
+- BepInEx log: `ANOMALY` blocks, `No anomaly:`, `Anomaly attached to ...`.
+
+New surfaces must use the same word. Do not introduce synonyms -- no "irregularity", "quirk",
+"bonus", or "effect" in player-facing text -- and do not abbreviate it.
+
 ### How precisely the anomaly is described
 
 For now, **state it exactly**: "Iron Ingot: 1 → 10". Precision is what makes the thing testable

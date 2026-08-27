@@ -126,6 +126,36 @@ if ($null -eq $planetDetail) {
     }
 }
 
+# The machine-level marker. _assemblerId is private and reached by field reference, so a rename
+# there would throw at runtime rather than failing to compile -- assert it here instead.
+$asmWindow = $gameAsm.MainModule.GetType('UIAssemblerWindow')
+if ($null -eq $asmWindow) {
+    $failures.Add("Harmony target type 'UIAssemblerWindow' does not exist in the installed game.")
+} else {
+    $onUpdate = $asmWindow.Methods | Where-Object { $_.Name -eq '_OnUpdate' -and $_.Parameters.Count -eq 0 }
+    if (-not $onUpdate) {
+        $failures.Add("Harmony target 'UIAssemblerWindow._OnUpdate()' does not exist in the installed game.")
+    } else {
+        Write-Host "OK  Harmony target: UIAssemblerWindow._OnUpdate()"
+    }
+
+    foreach ($needed in @('stateText', 'factory', 'factorySystem')) {
+        $fld = $asmWindow.Fields | Where-Object { $_.Name -eq $needed }
+        if (-not $fld -or -not $fld.IsPublic) {
+            $failures.Add("UIAssemblerWindow.$needed is missing or no longer public.")
+        } else {
+            Write-Host "OK  UIAssemblerWindow.$needed is public"
+        }
+    }
+
+    $idField = $asmWindow.Fields | Where-Object { $_.Name -eq '_assemblerId' }
+    if (-not $idField) {
+        $failures.Add("UIAssemblerWindow._assemblerId is gone; the machine marker reaches it by field reference and would throw.")
+    } else {
+        Write-Host "OK  UIAssemblerWindow._assemblerId exists (reached by field reference)"
+    }
+}
+
 # The discovery gate. PlanetData.scanned is DSP's own record of whether the player has learned
 # about a planet; if it disappears, the disclosure rule needs rethinking, not patching.
 $planetData = $gameAsm.MainModule.GetType('PlanetData')
