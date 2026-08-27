@@ -8,7 +8,7 @@ what the next session should pick up. Facts that outlive a session belong in
 
 ## 2026-08-27 (later) — anomalies derived across the galaxy from the seed
 
-**State: generation confirmed in game. Attachment under the new build not yet witnessed.**
+**State: confirmed in game, end to end.**
 
 Replaced the single hard-coded home-planet anomaly with per-planet generation from
 `hash(galaxy seed, planet id, anomaly-system version)`. Effect stays at output ×10; effect
@@ -80,12 +80,27 @@ was not a nice-to-have; without it, most anomalies would be undiscoverable in pr
 
 ### Still open
 
-- **Attachment under the new build has not been witnessed.** The swap code is unchanged from
-  Stage 0, where it was proven, but the per-planet lookup feeding it is new. The `Anomaly
-  attached` line is the proof and has not yet appeared. Next test: build an assembler for the
-  planet's own anomalous recipe -- `Alrami I` (Titanium Crystal: 1 Organic Crystal + 3 Titanium
-  Ingot -> 10) is in the home system, or `Kappa Lyrae I` (Energetic Graphite, a plain smelt) is
-  the simplest possible.
+- ~~Attachment under the new build has not been witnessed.~~ **Confirmed.** Paul built an
+  assembler for Titanium Crystal on `Alrami I`, that planet's own anomalous recipe. The swap fired
+  as soon as the machine was placed -- `Anomaly attached to 1 machine on Alrami I (planet id 101)`
+  -- and the output slot took 10 Titanium Crystal per cycle instead of 1.
+
+  The chain is now witnessed end to end: seed -> per-galaxy density -> per-planet anomaly ->
+  recipe selection -> disclosure in the planet panel -> the swap onto a real machine -> anomalous
+  output in game.
+- **The machine's own panel does not say anything is different.** Paul's observation, standing at
+  the anomalous assembler: the recipe shown is the normal one -- 1 Organic Crystal + 3 Titanium
+  Ingot -> 1 Titanium Crystal -- while the machine visibly produces 10. This is worse than the
+  `M` view omission recorded in the previous session. There the information was merely absent;
+  here the UI contradicts what the machine is doing, right where the player is looking.
+
+  It follows directly from the design: we never touch `RecipeProto`, and the machine panel reads
+  the prototype, so it necessarily shows vanilla numbers. Correct mechanism, misleading display.
+
+  A surface exists. `UIAssemblerWindow` has public `titleText` and `stateText`, refreshed in
+  `_OnUpdate()`, so the same append-to-text-the-game-already-draws approach used for the planet
+  panel would apply. Not built yet; it is a decision about how loud the machine should be, not a
+  technical problem.
 - **Balance.** Some anomalies are enormous: Mini Fusion Power Plant ×10, Annihilation Constraint
   Sphere ×10. SPEC says explicitly not to balance, but at 65% density with a flat ×10, late-game
   recipes may swing harder than intended. The config overrides exist for exactly this.

@@ -552,8 +552,9 @@ namespace PlanetaryAnomalies
             int planetId = planet != null ? planet.id : -1;
 
             Plugin.Log.LogInfo(
-                "Anomaly attached to " + machineCount + " machine(s) on " + planetName +
-                " (planet id " + planetId + "). Their output is now x" + OutputMultiplier + ".");
+                "Anomaly attached to " + machineCount + (machineCount == 1 ? " machine on " : " machines on ") +
+                planetName + " (planet id " + planetId + "). " +
+                (machineCount == 1 ? "Its" : "Their") + " output is now x" + OutputMultiplier + ".");
         }
 
         private static string DescribeSide(int[] itemIds, int[] counts)
