@@ -1,6 +1,6 @@
 {
   "name": "PlanetaryAnomalies",
-  "version_number": "0.0.1",
+  "version_number": "0.1.0",
   "website_url": "https://github.com/pwelty/planetary-anomalies",
   "description": "Most planets have an industrial anomaly: one ordinary recipe produces ten times its normal output there. Derived from your galaxy seed, so every galaxy differs and always regenerates the same.",
   "dependencies": [

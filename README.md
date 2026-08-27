@@ -2,11 +2,19 @@
 
 A Dyson Sphere Program mod exploring planets whose local industrial physics differs from the rest of the galaxy.
 
-## Current milestone
+## What it does
 
-**Stage 0:** prove the production-output patch seam by making one ordinary smelter recipe produce 10 units instead of 1, on the home planet only. See [`SPIKE.md`](SPIKE.md).
+Most non-home planets carry an **anomaly**: one ordinary recipe produces ten times its normal
+output there. Which planets, and which recipe on each, is derived from the galaxy seed, so a
+galaxy always regenerates the same anomalies and nothing is written to saves.
 
-The complete intended v0.0.1 design is in [`SPEC.md`](SPEC.md). Do not begin the generalized anomaly system until Stage 0 works in the installed game.
+Anomalies are shown in a planet's description tab once scanned, and machines running an
+anomalous recipe are marked in their own window. The player-facing description is
+[`packaging/README.md`](packaging/README.md).
+
+Design intent and decisions are in [`PRODUCT.md`](PRODUCT.md). [`SPEC.md`](SPEC.md) is the
+original brief and is now partly superseded -- where they disagree, `PRODUCT.md` and `LOG.md`
+are current.
 
 Session-by-session history is in [`LOG.md`](LOG.md). What was read out of the installed game — versions, hashes, signatures, the chosen seam and why — is in [`docs/inspection.md`](docs/inspection.md).
 
@@ -113,84 +121,115 @@ Launch DSP **from Gale**, using the profile you installed into.
 On startup you should see:
 
 ```
-[Info   :Planetary Anomalies] Planetary Anomalies v0.0.1 loaded
-[Info   :Planetary Anomalies] Stage 0: one hard-coded smelting recipe produces x10 output on the home planet only.
-[Info   :Planetary Anomalies] Game version: 0.10.34.xxxxx (build xxxxx)
-[Info   :Planetary Anomalies] Patched PlanetFactory.BeforeGameTick(). Idle until a planet has a factory (i.e. until something is built).
+[Info   :Planetary Anomalies] Planetary Anomalies v0.1.0 loaded
+[Info   :Planetary Anomalies] Anomalies derived from the galaxy seed; output x10. Density drawn per galaxy, 25-75%.
+[Info   :Planetary Anomalies] Patched PlanetFactory.BeforeGameTick() for production, and UIPlanetDetail.OnPlanetDataSet() and UIAssemblerWindow._OnUpdate() to disclose anomalies in the planet panel and on the machine. Idle until a planet has a factory (i.e. until something is built).
 ```
 
-Once a game is loaded, the anomaly is resolved and logged in full:
+Once a save is loaded, the galaxy is characterised and each planet is decided as its factory
+first ticks:
 
 ```
+[Info   :Planetary Anomalies] Galaxy seed 40078654: 147 eligible recipes, 65% of non-home planets anomalous (derived from the seed), anomaly system v1.
+[Info   :Planetary Anomalies] No anomaly: Alrami III (planet id 103) (home planet -- never anomalous).
 [Info   :Planetary Anomalies] ANOMALY
-[Info   :Planetary Anomalies]   Galaxy seed:  <seed>
-[Info   :Planetary Anomalies]   Planet:       <name> (home planet, id <id>)
-[Info   :Planetary Anomalies]   Recipe:       Iron Ingot [铁块, id 1]
-[Info   :Planetary Anomalies]   Recipe type:  Smelt
-[Info   :Planetary Anomalies]   Normally:     1 x Iron Ore -> 1 x Iron Ingot
-[Info   :Planetary Anomalies]   Here:         1 x Iron Ore -> 10 x Iron Ingot
+[Info   :Planetary Anomalies]   Planet:       Zeta Piscium I (id 1201)
+[Info   :Planetary Anomalies]   Recipe:       Sorter Mk.III [极速分拣器, id 90]
+[Info   :Planetary Anomalies]   Recipe type:  Assemble
+[Info   :Planetary Anomalies]   Normally:     2 x Sorter Mk.II + 1 x Electromagnetic Turbine -> 2 x Sorter Mk.III
+[Info   :Planetary Anomalies]   Here:         2 x Sorter Mk.II + 1 x Electromagnetic Turbine -> 20 x Sorter Mk.III
 [Info   :Planetary Anomalies]   Effect:       output x10 on this planet only
 ```
 
-And, the first time a real machine is actually modified:
+And, the first time real machines are actually modified:
 
 ```
-[Info   :Planetary Anomalies] Anomaly attached to assembler #3 on <planet> (planet id <id>). This machine's output is now x10.
+[Info   :Planetary Anomalies] Anomaly attached to 1 machine on Alrami I (planet id 101). Its output is now x10.
 ```
 
 That last line is the one that matters. It only prints when the swap really happened, so if it
 is missing, nothing was modified.
 
-## Which recipe gets the anomaly
+## Which planets are anomalous, and which recipe
 
-Stage 0 hard-codes one recipe: the starting iron-ore-to-iron-ingot smelt, expected to be
-recipe id `1`.
+Everything is derived, nothing is stored:
 
-DSP keeps its proto database inside Unity assets, so recipe ids cannot be read off disk the way
-method signatures can. The id is therefore treated as a **guess that is verified at runtime**:
-before using it the plugin checks the loaded recipe really is a single-input, single-output
-`Smelt` recipe. If it is not, the plugin logs a warning and falls back to the lowest-id recipe
-that is. Either way the log states exactly which recipe, and which items, it settled on — so
-the run is reproducible without trusting the constant.
+- **Density.** `hash(seed, 0, version, saltDensity)` maps to 25-75%, so galaxies differ from one
+  another. `AnomalyChancePercent` in the config overrides it for playtesting.
+- **Presence.** A planet is anomalous when `hash(seed, planetId, version, saltPresence) % 100`
+  falls under that density. Home planets are excluded outright.
+- **Recipe.** Chosen by *rendezvous hashing*: every eligible recipe is weighted for the planet by
+  `hash(seed, planetId, version, saltRecipe, recipeId)` and the heaviest wins.
+
+That last one matters. Indexing into a sorted list would tie the choice to the list's length and
+order, so adding one recipe -- which `LDBTool` and `CommonAPI` exist to do -- would shift every
+planet in the galaxy. Measured over 4000 planets, adding one recipe to a list of 147 changed
+99.3% of planets under indexing and 0.9% under rendezvous weighting.
+
+Eligible recipes are `Smelt`, `Assemble` and `Chemical` with exactly one output *item*. A recipe
+producing 2 of something is eligible and becomes 20; recipes producing two different items are
+excluded.
+
+The hash is FNV-1a plus an avalanche step, deliberately not `String.GetHashCode` or `Random` --
+neither is guaranteed stable across runtimes, and this has to reproduce the same galaxy forever.
+The avalanche matters because planets in one system have consecutive ids.
 
 ## Test procedure
 
-1. Launch from Gale and confirm the four startup lines above.
-2. Start a **new game**, or load a **copy** of a save — never your only copy.
-3. Read the `ANOMALY` block to see the recipe and home planet.
-4. Build a smelter for that recipe on the home planet.
-5. Feed it enough ore for one cycle.
-6. Watch one cycle complete.
+1. Launch from Gale and confirm the startup lines above.
+2. Load a **copy** of a developed save -- never your only copy. A fresh game only has the home
+   planet, which is never anomalous, so nothing will be visible.
+3. Read the log for the density line and the per-planet verdicts.
+4. Open an anomalous planet in the star map (`V`), select it, and open its **description tab**.
+   The anomaly should be stated there.
+5. Build a machine for that planet's own anomalous recipe. `Anomaly attached to N machine(s)`
+   should appear in the log as soon as the machine is placed, and the machine's own window should
+   show the `ANOMALY` marker.
+6. Supply ingredients and watch one cycle complete.
 
-Expected: the smelter's output slot gains **10** ingots, not 1, while consuming the normal
-1 ore. An inserter should remove them normally, and the machine should keep cycling — no
-deadlock, no runaway duplication.
+Expected: the output slot gains the multiplied amount while consuming normal inputs, inserters
+remove it normally, and the machine keeps cycling -- no deadlock, no runaway duplication. It will
+pause when its output buffer cannot take another full batch and resume once something drains it;
+that is the vanilla cap scaling with the anomaly, not a bug.
+
+Non-anomalous planets, and anomalous planets running any other recipe, must be untouched.
 
 Production statistics are expected to match the anomalous amount, because DSP feeds the
-statistics register from the same counts as the output buffer. Confirm rather than assume; per
-[`SPIKE.md`](SPIKE.md) a statistics mismatch is recorded but does not block Stage 0.
+statistics register from the same counts as the output buffer. Confirm rather than assume.
 
-The negative case — the same recipe producing normally on another planet — cannot be witnessed
-until interplanetary travel is available. The planet guard is implemented and logged from this
-first build regardless.
+## Configuration
+
+BepInEx writes `BepInEx/config/com.planetaryanomalies.dsp.cfg` on first run. Edit and relaunch;
+values are read when a galaxy is first seen, so a change applies on the next load.
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `AnomalyChancePercent` | `-1` | `-1` derives density from the seed (25-75%). `0`-`100` forces a density, for playtesting. |
+| `OutputMultiplier` | `10` | Output multiplier for an anomalous recipe. |
 
 ## Project layout
 
 ```
 src/
-  Plugin.cs                          BepInEx entry point, Harmony setup, startup logging
+  Plugin.cs                          BepInEx entry point, Harmony setup, config binding
   Anomaly.cs                         the tiny PlanetAnomaly record
-  AnomalyManager.cs                  resolves home planet + recipe, builds the private recipe data
+  AnomalyManager.cs                  derives anomalies from the seed; per-planet cache
   Patches/
-    AssemblerProductionPatch.cs      the Harmony prefix that attaches the anomaly
+    AssemblerProductionPatch.cs      attaches anomalies to machines (PlanetFactory.BeforeGameTick)
+    PlanetDetailPatch.cs             discloses the anomaly in the planet description tab
+    AssemblerWindowPatch.cs          marks a machine running its planet's anomalous recipe
 scripts/
   common.ps1                         path discovery shared by the scripts
   build.ps1                          compile
   install.ps1                        copy into BepInEx plugins
-  verify.ps1                         re-check references against the installed game
+  launch.ps1                         start DSP against a Gale profile without Gale
+  verify.ps1                         re-check references and Harmony targets against the game
+  package.ps1                        build the Thunderstore zip (does not upload)
+packaging/                           what ships: manifest, player README, changelog, icon
 docs/
-  inspection.md                      what was read out of the installed assemblies, and why the seam was chosen
+  inspection.md                      what was read out of the installed assemblies, and why
 build/                               build output (gitignored)
+dist/                                packaged releases (gitignored)
 ```
 
 ## How the anomaly works
@@ -202,9 +241,10 @@ That field is a per-component **reference** into a static dictionary shared by e
 in the galaxy — so editing the array in place would change the recipe everywhere, which is
 exactly what this project forbids.
 
-Instead, the mod builds one private `RecipeExecuteData` (all arrays copied, product counts
-×10) and assigns it to just those assemblers that are on the home planet and running the target
-recipe. The game's own production code then produces the anomalous amount by itself.
+Instead, the mod builds one private `RecipeExecuteData` per anomalous planet (all arrays copied,
+product counts multiplied) and assigns it to just those assemblers on that planet running that
+planet's anomalous recipe. The game's own production code then produces the anomalous amount by
+itself, and nothing shared is ever modified.
 
 Two consequences worth knowing:
 

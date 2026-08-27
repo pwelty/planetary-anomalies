@@ -15,7 +15,7 @@ namespace PlanetaryAnomalies
     {
         public const string PluginGuid = "com.planetaryanomalies.dsp";
         public const string PluginName = "Planetary Anomalies";
-        public const string PluginVersion = "0.0.1";
+        public const string PluginVersion = "0.1.0";
 
         internal static ManualLogSource Log;
 
