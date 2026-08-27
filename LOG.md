@@ -153,11 +153,9 @@ when it flips. Note it is set *on demand* — `OnPlanetDataSet` calls `RunScanTh
 unscanned planet — so opening the panel may itself trigger the scan. Whether that is the right
 discovery feel is a play question, not a code one.
 
-**Not shown in the `M` view.** Standing on a planet, the anomaly is not visible without going out
-to the galaxy view. Paul's call: fine, since `M` omits plenty of other things too. If that ever
-changes, the cheap option found while looking is `UIPlanetGlobe.geoInfoText` — the local planet
-info text in that view, the same kind of surface as `planetBrief`, so the same append-and-remeasure
-approach would apply. Recorded so it need not be rediscovered.
+**Not shown in the `M` view, and that is correct.** Standing on a planet, the anomaly is not visible without going out to the galaxy view. But neither is the planet description, nor the memo field: DSP keeps all of that behind `V`. Putting the anomaly with the description therefore follows the game's own information architecture rather than cutting across it, which is a better outcome than surfacing it in a view the game deliberately keeps sparse.
+
+If that ever needs revisiting, the cheap option found while looking is `UIPlanetGlobe.geoInfoText`, the local planet info text in the `M` view. It is the same kind of surface as `planetBrief`, so the same append-and-remeasure approach would apply. Recorded so it need not be rediscovered.
 
 ### Known rough edges, deliberately accepted for Stage 0
 
