@@ -6,6 +6,93 @@ what the next session should pick up. Facts that outlive a session belong in
 
 ---
 
+## 2026-08-27 (later) — anomalies derived across the galaxy from the seed
+
+**State: generation confirmed in game. Attachment under the new build not yet witnessed.**
+
+Replaced the single hard-coded home-planet anomaly with per-planet generation from
+`hash(galaxy seed, planet id, anomaly-system version)`. Effect stays at output ×10; effect
+variety is a later step, one new variable at a time.
+
+Stages 2 and 3 as written in `PRODUCT.md` are now dead: stage 2 was "random recipe on the home
+planet", which contradicts home planets never being anomalous, and stage 3 (persist) is dissolved
+by determinism. This is effectively stage 4.
+
+### Decisions taken this session
+
+- **Density is itself drawn from the seed, 25-75%**, rather than being a fixed rate. Paul's idea,
+  and better than a constant: galaxies differ from one another, not just planets within a galaxy.
+  Some are anomaly-rich, some sparse, and that is one more thing a seed means.
+- **Most planets are anomalous**, superseding SPEC's "sparse distribution". Paul's reasoning: rare
+  anomalies are rarely worth reorganising production around, so the mechanic would barely touch
+  how the game is played. Common ones make most worlds a candidate for specialising something,
+  which is what makes exploration and interstellar logistics matter.
+- **Config overrides for playtesting**, not for design. `AnomalyChancePercent` (-1 derives from
+  the seed; 0-100 forces a density) and `OutputMultiplier`. BepInEx writes them to
+  `BepInEx/config/com.planetaryanomalies.dsp.cfg`; edit and relaunch rather than rebuilding.
+
+### Verified before running in game
+
+The generator was checked by compiling the same hash with the same compiler as the plugin, so
+`unchecked` arithmetic matched exactly:
+
+- Density spans 25-75 with mean 50.0 over 200k seeds.
+- Adjacent planet ids are uncorrelated -- the main risk, since planets in one system have
+  consecutive ids and a weak mix would make a whole system share a verdict.
+- 64.33% actual against a 65% target over 4000 planets.
+- All 120 recipe slots used; presence does not predict recipe (mean index 59.49 anomalous vs
+  59.42 overall, expected 59.5), so the two salts are genuinely independent.
+
+That produced a falsifiable prediction for the late-game save before the code had ever run.
+
+### Confirmed in game
+
+Two independently written implementations agreed on density for both saves: seed 22135963 gave
+58%, seed 40078654 gave 65%, matching the offline harness exactly. 147 eligible recipes.
+
+Every prediction held:
+
+~~~
+Zeta Piscium I   (1201)  predicted ANOMALOUS   -> Sorter Mk.III 2 -> 20
+Theta Scorpii VI (5406)  predicted ANOMALOUS   -> Mini Fusion Power Plant 1 -> 10
+73 Velorum IV    (1704)  predicted no anomaly  -> No anomaly
+Alrami IV        (104)   predicted no anomaly  -> No anomaly
+Alrami III       (103)   home                  -> No anomaly (home planet)
+~~~
+
+Observed rate across the save: 11 anomalous of 17 planets with factories = 64.7%, against the
+65% target. Paul confirmed the planet panel shows the correct anomaly on Theta Scorpii VI.
+
+Multi-count outputs are handled: `Conveyor Belt Mk.II 3 -> 30`, `Sorter Mk.III 2 -> 20`, not
+flattened to 10.
+
+### The finding that matters most: anomalies are latent
+
+**Zero machines were attached.** Not a bug -- the anomalies landed on recipes those planets do not
+currently build. Under the old build the anomaly was always iron ingot on the home planet, where
+machines obviously existed; now it is a random eligible recipe, so an anomaly only does anything
+if the player chooses to build that recipe there.
+
+That is the intended loop -- learn a world is good at something, then decide whether to move
+production -- but it changes what the mod feels like: the effect is invisible until acted upon,
+and the planet panel is the only thing making it actionable. It also means the disclosure work
+was not a nice-to-have; without it, most anomalies would be undiscoverable in practice.
+
+### Still open
+
+- **Attachment under the new build has not been witnessed.** The swap code is unchanged from
+  Stage 0, where it was proven, but the per-planet lookup feeding it is new. The `Anomaly
+  attached` line is the proof and has not yet appeared. Next test: build an assembler for the
+  planet's own anomalous recipe -- `Alrami I` (Titanium Crystal: 1 Organic Crystal + 3 Titanium
+  Ingot -> 10) is in the home system, or `Kappa Lyrae I` (Energetic Graphite, a plain smelt) is
+  the simplest possible.
+- **Balance.** Some anomalies are enormous: Mini Fusion Power Plant ×10, Annihilation Constraint
+  Sphere ×10. SPEC says explicitly not to balance, but at 65% density with a flat ×10, late-game
+  recipes may swing harder than intended. The config overrides exist for exactly this.
+- **Production statistics** still unread, from the previous session.
+
+---
+
 ## 2026-08-27 — Stage 0 works in game
 
 **State: Stage 0 confirmed by Paul in the running game. Ten plates per cycle on the home
