@@ -46,12 +46,13 @@ namespace PlanetaryAnomalies
             _harmony.PatchAll(typeof(UIPlanetDetailPatch));
             _harmony.PatchAll(typeof(UIAssemblerWindowPatch));
             _harmony.PatchAll(typeof(UIStarmapPlanetPatch));
+            _harmony.PatchAll(typeof(UIStarmapStarPatch));
 
             // The production hook only fires once a planet has a factory to tick, which does not
             // happen until something is built there -- not merely when a save is loaded.
             Log.LogInfo("Patched PlanetFactory.BeforeGameTick() for production, and " +
-                        "UIPlanetDetail.OnPlanetDataSet(), UIAssemblerWindow._OnUpdate() and UIStarmapPlanet._OnInit() to disclose " +
-                        "anomalies in the planet panel, on the machine, and on star map labels. " +
+                        "UIPlanetDetail, UIAssemblerWindow and the star map to disclose " +
+                        "anomalies in the planet panel, on the machine, and on star map planet and star labels. " +
                         "Idle until a planet has a factory (i.e. until something is built).");
         }
 

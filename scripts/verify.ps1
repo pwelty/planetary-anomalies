@@ -257,6 +257,54 @@ if ($null -eq $starmapPlanet) {
     }
 }
 
+# The star-level count, same shape and same assumption as the planet label.
+$starmapStar = $gameAsm.MainModule.GetType('UIStarmapStar')
+if ($null -eq $starmapStar) {
+    $failures.Add("Harmony target type 'UIStarmapStar' does not exist in the installed game.")
+} else {
+    foreach ($needed in @('_OnInit', 'OnStarDisplayNameChange')) {
+        if (-not ($starmapStar.Methods | Where-Object { $_.Name -eq $needed })) {
+            $failures.Add("Harmony target 'UIStarmapStar.$needed' does not exist in the installed game.")
+        } else {
+            Write-Host "OK  Harmony target: UIStarmapStar.$needed"
+        }
+    }
+
+    foreach ($needed in @('nameText', 'star')) {
+        $fld = $starmapStar.Fields | Where-Object { $_.Name -eq $needed }
+        if (-not $fld -or -not $fld.IsPublic) {
+            $failures.Add("UIStarmapStar.$needed is missing or no longer public.")
+        } else {
+            Write-Host "OK  UIStarmapStar.$needed is public"
+        }
+    }
+
+    $starWriters = @()
+    foreach ($m in $starmapStar.Methods) {
+        if (-not $m.HasBody) { continue }
+        foreach ($ins in $m.Body.Instructions) {
+            $op = $ins.Operand
+            if ($ins.OpCode.Name -eq 'stfld' -and $op -is [Mono.Cecil.FieldReference] -and
+                $op.Name -eq 'star' -and $op.DeclaringType.Name -eq 'UIStarmapStar') {
+                if ($starWriters -notcontains $m.Name) { $starWriters += $m.Name }
+            }
+        }
+    }
+    $unexpectedStar = $starWriters | Where-Object { $_ -notin @('_OnInit', '_OnFree') }
+    if ($unexpectedStar) {
+        $failures.Add("UIStarmapStar.star is now also written in: $($unexpectedStar -join ', '). A label may be rebound to a different star without _OnInit running, so the count could show against the wrong system.")
+    } else {
+        Write-Host "OK  UIStarmapStar.star still written only in _OnInit/_OnFree"
+    }
+
+    $planetsField = $gameAsm.MainModule.GetType('StarData').Fields | Where-Object { $_.Name -eq 'planets' }
+    if (-not $planetsField -or -not $planetsField.IsPublic) {
+        $failures.Add("StarData.planets is missing or no longer public; the star count cannot enumerate a system.")
+    } else {
+        Write-Host "OK  StarData.planets is public"
+    }
+}
+
 # The discovery gate. PlanetData.scanned is DSP's own record of whether the player has learned
 # about a planet; if it disappears, the disclosure rule needs rethinking, not patching.
 $planetData = $gameAsm.MainModule.GetType('PlanetData')
