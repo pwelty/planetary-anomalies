@@ -413,9 +413,23 @@ namespace PlanetaryAnomalies
         /// oil refining, are excluded, which is what SPEC's preferred option asks for: multiplying
         /// a single number is unambiguous, and multi-output semantics are not worth solving yet.
         ///
-        /// Types are restricted to those that actually run through AssemblerComponent.
-        /// fractionators, research, ray receivers and the rest use different machinery, so the
-        /// seam this mod relies on would not apply to them.
+        /// Types are restricted to those that actually run through AssemblerComponent:
+        /// Smelt, Assemble, Chemical, Refine and Particle. Fractionators, research, ray receivers
+        /// and the rest use different machinery, so this seam would not apply to them.
+        ///
+        /// Refine and Particle were excluded at first, on the assumption that only the three
+        /// obvious types used the assembler path. That was caution rather than evidence, and the
+        /// evidence was already in docs/inspection.md: `InternalUpdate`'s own output-cap logic has
+        /// a dedicated branch for `Particle` and a general branch covering `Refine`, which it could
+        /// not have if those machines ran elsewhere.
+        ///
+        /// The cost of excluding them was not neutral. Strange Matter is a Particle recipe, so no
+        /// galaxy could ever produce a Strange Matter anomaly -- one of the more interesting
+        /// late-game items, ruled out by an unexamined assumption rather than a decision.
+        ///
+        /// Widening the pool shifts roughly one planet in N per recipe added, which is the
+        /// accepted cost of a pool change. It does not affect the generator's arithmetic, so the
+        /// golden test correctly stays quiet.
         /// </summary>
         private static RecipeProto[] BuildEligibleRecipes(RecipeProtoSet recipes)
         {
@@ -447,7 +461,9 @@ namespace PlanetaryAnomalies
 
             if (recipe.Type != ERecipeType.Smelt &&
                 recipe.Type != ERecipeType.Assemble &&
-                recipe.Type != ERecipeType.Chemical)
+                recipe.Type != ERecipeType.Chemical &&
+                recipe.Type != ERecipeType.Refine &&
+                recipe.Type != ERecipeType.Particle)
             {
                 return false;
             }

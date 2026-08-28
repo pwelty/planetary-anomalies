@@ -6,6 +6,10 @@
   planet names its item and multiplier, marked with a compact "Å", so a system can be read
   without opening every planet's description tab. `StarmapLabel` chooses between that (Detail), bare counts and markers (Marker),
   or nothing (Off).
+- Refine and Particle recipes are now eligible for anomalies, alongside Smelt, Assemble and
+  Chemical. Particle recipes were excluded on an unexamined assumption, which meant Strange Matter
+  and other collider outputs could never be anomalous in any galaxy. This adds recipes to the pool,
+  so a small number of planets change which recipe they carry; most are unaffected.
 - Fixed: gas giants could receive an anomaly. They cannot host assemblers, so the anomaly could
   never be used and the star map advertised something unusable. Gas giants are now skipped.
   This removes anomalies from gas giants in existing galaxies; every other planet is unchanged.
