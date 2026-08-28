@@ -229,6 +229,12 @@ namespace PlanetaryAnomalies
 
             Plugin.Log.LogInfo("=== GALAXY SURVEY (spoils discovery; LogEveryAnomaly is on) ===");
 
+            // The eligible pool itself, because "no planet has X" has two very different causes:
+            // X is not eligible, or X is eligible and simply was not drawn. Without this the two
+            // are indistinguishable, and distinguishing them by inference wasted three loads.
+            LogEligiblePool();
+
+
             for (int s = 0; s < galaxy.stars.Length; s++)
             {
                 StarData star = galaxy.stars[s];
@@ -248,15 +254,31 @@ namespace PlanetaryAnomalies
                     planets++;
 
                     PlanetAnomaly anomaly = AnomalyFor(planet.id);
-                    if (anomaly == null)
+                    if (anomaly != null)
                     {
+                        anomalous++;
+                        Plugin.Log.LogInfo(
+                            "  SURVEY  " + star.displayName + " / " + planet.displayName +
+                            " (planet id " + planet.id + "): " + ShortDescribeForPlanet(planet.id));
                         continue;
                     }
 
-                    anomalous++;
-                    Plugin.Log.LogInfo(
-                        "  SURVEY  " + star.displayName + " / " + planet.displayName +
-                        " (planet id " + planet.id + "): " + ShortDescribeForPlanet(planet.id));
+                    // Planets that are not anomalous still *have* a recipe waiting for them: the
+                    // recipe is chosen from (seed, planet, version, pool) and never consults
+                    // density. Only whether the planet passes the presence roll depends on it.
+                    //
+                    // So reporting the would-be recipe alongside the roll answers a question that
+                    // is otherwise unanswerable: "is there a planet in this galaxy that would carry
+                    // X, and what density would surface it?" The roll is the threshold that planet
+                    // needs -- set AnomalyChancePercent above it and the planet becomes anomalous.
+                    string wouldBe = WouldBeRecipeName(planet.id);
+                    if (wouldBe != null)
+                    {
+                        Plugin.Log.LogInfo(
+                            "  LATENT  " + star.displayName + " / " + planet.displayName +
+                            " (planet id " + planet.id + "): " + wouldBe +
+                            "  [needs density > " + PresenceRoll(planet.id) + "%]");
+                    }
                 }
             }
 
@@ -266,7 +288,89 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>
+        /// Lists every recipe an anomaly could land on, so "is X eligible?" is answerable from the
+        /// log instead of by inference.
+        /// </summary>
+        private static void LogEligiblePool()
+        {
+            if (_eligible == null)
+            {
+                return;
+            }
+
+            string line = "";
+            int onLine = 0;
+
+            for (int i = 0; i < _eligible.Length; i++)
+            {
+                RecipeProto r = _eligible[i];
+                string name = (r.Results != null && r.Results.Length > 0)
+                    ? PlayerFacingItemName(r.Results[0])
+                    : r.name;
+
+                line += (onLine > 0 ? ", " : "") + name + " [" + r.Type + "]";
+                onLine++;
+
+                if (onLine == 6)
+                {
+                    Plugin.Log.LogInfo("  POOL  " + line);
+                    line = "";
+                    onLine = 0;
+                }
+            }
+
+            if (onLine > 0)
+            {
+                Plugin.Log.LogInfo("  POOL  " + line);
+            }
+
+            Plugin.Log.LogInfo("  POOL  (" + _eligible.Length + " eligible recipes)");
+        }
+
+        /// <summary>
+        /// The recipe a planet would carry if it were anomalous, ignoring the presence roll.
+        /// Null for planets that can never be anomalous at any density -- the home planet and gas
+        /// giants -- since reporting a latent recipe for those would be misleading.
+        /// </summary>
+        private static string WouldBeRecipeName(int planetId)
+        {
+            if (planetId == _birthPlanetId || IsUnbuildable(planetId) || _eligible == null)
+            {
+                return null;
+            }
+
+            int[] ids = new int[_eligible.Length];
+            for (int i = 0; i < _eligible.Length; i++)
+            {
+                ids[i] = _eligible[i].ID;
+            }
+
+            int chosen = AnomalyMath.ChooseRecipeId(_galaxySeed, planetId, AnomalySystemVersion, ids);
+            for (int i = 0; i < _eligible.Length; i++)
+            {
+                if (_eligible[i].ID != chosen || _eligible[i].Results == null || _eligible[i].Results.Length == 0)
+                {
+                    continue;
+                }
+
+                return PlayerFacingItemName(_eligible[i].Results[0]);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// The planet's presence roll, 0-99. It is anomalous when this is below the galaxy's
+        /// density, so the roll is exactly the density threshold that planet needs.
+        /// </summary>
+        private static int PresenceRoll(int planetId)
+        {
+            return (int)(AnomalyMath.Hash(_galaxySeed, planetId, AnomalySystemVersion, AnomalyMath.SaltPresence) % 100u);
+        }
+
+        /// <summary>
         /// Whether a planet cannot host the machines an anomaly would apply to.
+
 
         ///
         /// Only gas giants today. If the planet cannot be looked up we assume it is buildable:
