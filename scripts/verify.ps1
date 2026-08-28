@@ -97,8 +97,10 @@ if (-not (Test-Path $goldenFile)) {
     if ($LASTEXITCODE -ne 0) {
         $failures.Add("Could not compile the generator check: $cscOutput")
     } else {
-        $actual = & $goldenExe
-        $expected = Get-Content $goldenFile
+        # Compare only data lines. Comments are documentation, not part of the contract, and
+        # treating them as contract produces false alarms that teach people to ignore this check.
+        $actual = @(& $goldenExe | Where-Object { $_ -and -not $_.StartsWith('#') })
+        $expected = @(Get-Content $goldenFile | Where-Object { $_ -and -not $_.StartsWith('#') })
         Remove-Item $goldenExe -Force -ErrorAction SilentlyContinue
 
         $diffs = New-Object System.Collections.Generic.List[string]
