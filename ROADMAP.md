@@ -211,6 +211,51 @@ Remaining options:
 Success criterion: real players report changed factory placement or logistics, not merely larger
 numbers.
 
+### No duplicate recipes (under consideration)
+
+Two planets can currently receive the same recipe, which weakens the identity the mod trades on --
+"the sorter world" means less when there are three of them.
+
+Two things constrain it.
+
+**Galaxy-wide uniqueness may be impossible.** There are ~147 eligible recipes; a default galaxy has
+roughly 200-300 planets, and at 25-75% density that is ~50-200 anomalous ones. In the upper half of
+that range the recipes simply run out, so the rule can only ever be "unique where possible", and the
+exhaustion case needs a defined behaviour rather than an accident.
+
+**It is a generation change.** Uniqueness cannot be a per-planet decision -- choosing a planet's
+recipe requires knowing what others took -- so it becomes a galaxy-wide assignment. That moves
+recipes, trips the golden test, and needs an `AnomalySystemVersion` bump. Not a total scramble: with
+a deterministic assignment order a planet keeps its first choice unless an earlier planet took it,
+so perhaps 20-30% move. But every existing galaxy shifts.
+
+Options:
+
+- **Per-system uniqueness.** No two planets around the same star share a recipe. Always achievable,
+  and arguably where duplication actually grates, since a system is what you see on one screen.
+- **Galaxy-wide, best effort.** Strongest identity, largest reshuffle, needs the exhaustion rule.
+- **Defer to 1.0**, where a re-roll is already accepted, and bundle it with variable multipliers so
+  players pay one re-roll rather than two.
+
+The third is the current leaning, for that last reason alone.
+
+### Glyphs instead of words on labels (investigated, not feasible cheaply)
+
+Asked whether star map labels could show an item's icon rather than its name.
+
+Not without building UI objects. `ItemProto.iconTagString` exists -- `\` + IconTag + `;` -- but it
+is only ever written during `Preload` and never read at runtime; nothing in the game assembly parses
+that syntax. There are no `UnityEngine.UI.Text` subclasses and no TextMeshPro in the managed folder.
+DSP composes icons and text as *separate* `Image` and `Text` components, which is how `UIItemTip`
+and the planet panel's resource rows work.
+
+So an inline glyph means creating an `Image` per label, positioning it against variable-width text,
+and managing its lifetime with the label's pooling -- the "custom UI objects" category `PRODUCT.md`
+keeps out of scope, and more code than all the star map work so far.
+
+Cheaper if the words feel heavy: the existing `Marker` mode, or a Unicode symbol prefix, with the
+caveat that the label font may not carry the glyph.
+
 ### Phase B — A second static effect
 
 Choose the second effect to test the design grammar, not to fill a catalog. It should differ in kind
