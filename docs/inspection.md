@@ -293,6 +293,24 @@ PlanetData    GalaxyData::PlanetById(System.Int32)
 reached as `GameMain.data.galaxy.birthPlanetId`. `GameMain.data` is a public static field, and
 `GameData.gameDesc.galaxySeed` distinguishes one galaxy from another.
 
+### Star map planet labels (noted for the visibility work, not used in v0.1.0)
+
+`UIStarmapPlanet` is the floating label beside a planet in the star map:
+
+```
+UnityEngine.UI.Text  UIStarmapPlanet::nameText   public
+PlanetData           UIStarmapPlanet::planet     public
+```
+
+Its text is assigned in `_OnInit`, `_OnFree` and `OnPlanetDisplayNameChange` -- **not** in
+`_OnUpdate`. That makes it cheaper to mark than either surface already patched: an appended marker
+persists once written, with no per-frame work. `UIAssemblerWindow` by contrast rewrites `stateText`
+on every update in every branch, so its marker must be re-appended each frame.
+
+Unverified: whether the label object is pooled and rebound to a different planet without
+`_OnInit` running again. If it is, a marker could survive onto the wrong planet, so check that
+before relying on persistence.
+
 ### Scanning (noted for the eventual discovery work, not used in Stage 0)
 
 `GalaxyData` already models scanning as a first-class, persisted concept:

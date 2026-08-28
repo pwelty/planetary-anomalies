@@ -103,6 +103,30 @@ The first Reddit response understood the broader exploration problem and propose
 toward another system to learn what is there. Treat this as evidence that the premise invites
 world-native design thinking, not as an immediate feature commitment.
 
+The replies beneath it are stronger evidence than the suggestion itself. Three separate players
+described the same complaint without prompting: the star map gives no indication of what has been
+scanned, the 6 ly boundary is invisible in a 3D view, and exploration ends abruptly — "bam, done
+exploring." The mod currently discloses anomalies only after selecting a planet and opening its
+description tab, which means the screen people actually explore from shows nothing. This converges
+with the premise rather than merely sitting near it.
+
+The release thread also exposed a description failure rather than a balance one. Readers could not
+determine whether the effect altered output or speed, whether it applied to one recipe or to a
+production chain, or that it was configurable at all. "10x is insane" and "only 1 like ingots would
+be OK, but a full chain is really insane" are both answered by facts that were never stated: one
+recipe per planet, output only, inputs and cycle time unchanged, one planet's anomaly independent of
+its neighbours, and both multiplier and frequency configurable. Treat unclear communication as a
+defect with the same standing as a code defect; it produced objections to a mod that does not do
+what the objections describe.
+
+Two community suggestions were declined and the reasons are worth keeping. Adding drawbacks to
+compensate powerful anomalies — more aggressive dark fog on anomalous worlds, resource costs to
+discover — contradicts *Uneven value is the point*: an anomaly with a price becomes a trade to
+evaluate rather than something to find. Making anomalous planets carry only the resource they favour
+would cross an architectural boundary rather than a design one; veins are real save data, so writing
+them would end the property that the mod can be removed leaving an ordinary save. That property is
+why players could try v0.1.0 on established saves at all.
+
 ## Roadmap now
 
 ### Phase A — Learn from v0.1.x
@@ -123,13 +147,62 @@ Collect stories and failures:
 
 Near-term hardening belongs here:
 
+- state plainly what the mod does, in the listing and the README: one recipe per planet, output
+  only, inputs and cycle time unchanged, neighbours independent, multiplier and frequency
+  configurable. This is the cheapest change available and it answers most of the balance objection
+  without touching balance;
 - verify production statistics;
 - test proliferator deliberately;
 - test a clean Gale profile;
 - test uninstall/reinstall and game-update behavior;
 - document multiplayer as unsupported until actually tested;
 - pin the anomaly-system version when generator changes become plausible;
-- improve compatibility without adding dependencies unless evidence requires one.
+- improve compatibility without adding dependencies unless evidence requires one;
+- replace the placeholder icon shipped with v0.1.0;
+- make the mod appear as a real package in Gale, rather than a hand-copied folder.
+
+One visibility question belongs here rather than in a later phase, because three players raised it
+on release day and the mechanism is already understood. Should an anomalous planet be marked in the
+star map without being selected?
+
+`docs/inspection.md` records the surface: `UIStarmapPlanet` exposes a public `nameText` label and a
+public `planet`, and that text is assigned in `_OnInit` and `OnPlanetDisplayNameChange` rather than
+`_OnUpdate` — so an appended marker persists with no per-frame cost, unlike the assembler window,
+which must re-append every frame. Cheaper than either surface already built.
+
+The open questions are about restraint, not feasibility:
+
+- a marker only, or the affected recipe? A galaxy view carrying dozens of recipe names is noise;
+- it must respect `PlanetData.scanned`, or it reveals the existence of something the discovery rule
+  says the player has to earn;
+- whether a star system should also read as worth visiting before its planets are legible.
+
+### Appearing as a real package in Gale
+
+`scripts/install.ps1` copies the built DLL into a profile's `BepInEx/plugins/PlanetaryAnomalies/`.
+BepInEx loads it, but Gale never lists it, because Gale's mod list comes from its own
+`data.sqlite3` rather than from scanning the folder. A hand-copied plugin is invisible to the UI,
+cannot be toggled there, and could be removed by a profile repair or re-sync.
+
+Now that v0.1.0 is on Thunderstore this mostly stops being a packaging problem and becomes a
+workflow one: installing it through Gale from Thunderstore makes it a first-class package with no
+code change at all.
+
+The wrinkle is that development then collides with it. A Gale-installed `pwelty-PlanetaryAnomalies`
+and a hand-installed `PlanetaryAnomalies` both declare the same `BepInPlugin` GUID, so BepInEx will
+load one and refuse the other — and which one it refuses is not something to leave to chance while
+testing.
+
+Options, in rough order of preference:
+
+- **Two profiles.** A play profile carrying the Thunderstore package, and a dev profile that
+  `install.ps1` targets. Clean separation, no ambiguity about what is running, and `install.ps1`
+  already accepts `-ProfileName`.
+- **Have `install.ps1` refuse to install** alongside a Gale-managed copy of the same GUID, rather
+  than producing a silent conflict. Worth doing regardless of which option is chosen.
+- Overwriting the DLL inside Gale's own package folder. It keeps one profile, but Gale then
+  displays the Thunderstore version number for a build that is not it, which is exactly the kind of
+  quiet inaccuracy that wastes an hour later.
 
 Success criterion: real players report changed factory placement or logistics, not merely larger
 numbers.
