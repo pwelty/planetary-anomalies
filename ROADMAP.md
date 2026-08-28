@@ -159,7 +159,9 @@ Near-term hardening belongs here:
 - pin the anomaly-system version when generator changes become plausible;
 - improve compatibility without adding dependencies unless evidence requires one;
 - replace the placeholder icon shipped with v0.1.0;
-- make the mod appear as a real package in Gale, rather than a hand-copied folder.
+- make the mod appear as a real package in Gale. Deferred: installing the Thunderstore release is
+  the obvious route, but it cannot coexist with a local build in the same profile, and a separate
+  dev profile proved unworkable in practice. Revisit when iteration slows.
 
 One visibility question belongs here rather than in a later phase, because three players raised it
 on release day and the mechanism is already understood. Should an anomalous planet be marked in the
@@ -193,11 +195,13 @@ and a hand-installed `PlanetaryAnomalies` both declare the same `BepInPlugin` GU
 load one and refuse the other — and which one it refuses is not something to leave to chance while
 testing.
 
-Options, in rough order of preference:
+**Two profiles was tried on 2026-08-28 and abandoned.** A clean dev profile holding only BepInEx
+failed to run: launching it outside Gale skips setup Gale performs, and the other mods in the real
+profile -- ModFixerOne in particular -- are not optional in practice. Developing against the
+profile actually played is the working arrangement, with `scripts/local.paths.ps1` pinning it so no
+flag is needed.
 
-- **Two profiles.** A play profile carrying the Thunderstore package, and a dev profile that
-  `install.ps1` targets. Clean separation, no ambiguity about what is running, and `install.ps1`
-  already accepts `-ProfileName`.
+Remaining options:
 - **Have `install.ps1` refuse to install** alongside a Gale-managed copy of the same GUID, rather
   than producing a silent conflict. Worth doing regardless of which option is chosen.
 - Overwriting the DLL inside Gale's own package folder. It keeps one profile, but Gale then

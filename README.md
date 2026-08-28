@@ -76,29 +76,28 @@ If discovery ever fails or picks the wrong thing, override it, in this order of 
 2. `DSP_DIR` and `DSP_BEPINEX_DIR` environment variables
 3. `scripts\local.paths.ps1` — copy [`scripts\local.paths.example.ps1`](scripts/local.paths.example.ps1); it is gitignored
 
-## Two profiles: one to play, one to develop
+## The working loop
 
-Now that the mod is on Thunderstore, the two uses pull in different directions.
-
-| Profile | What it holds | How the mod gets there |
-| --- | --- | --- |
-| `gs run` | the other mods, for actually playing | install **through Gale** from Thunderstore, so it is a tracked package: listed, toggleable, updatable |
-| `dev` | BepInEx only, nothing else | `install.ps1 -ProfileName 'dev'` |
-
-The dev profile is deliberately clean. With none of the other eleven mods present, anything odd in
-the log is ours, and there is no question of another mod adding recipes and shifting which planets
-are anomalous.
-
-**Do not put both copies in one profile.** A Gale-installed package and a hand-installed build
-declare the same `BepInPlugin` GUID, so BepInEx loads one and refuses the other -- and which one it
-refuses is not worth guessing while testing. `install.ps1` checks for this and refuses rather than
-producing a profile whose behaviour depends on load order.
-
-Launch the dev profile without going through Gale:
+Gale launches the game; the scripts build into the profile Gale launches.
 
 ```bash
-powershell -ExecutionPolicy Bypass -File .\scripts\launch.ps1 -ProfileName dev
+powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1 -Install
 ```
+
+then launch from Gale as normal. Quit the game before installing -- DSP holds the plugin DLL open
+while it runs, and `install.ps1` will tell you so rather than failing obscurely.
+
+`scripts\local.paths.ps1` (gitignored) pins which profile the scripts target, so no `-ProfileName`
+flag is needed. Copy [`scripts\local.paths.example.ps1`](scripts/local.paths.example.ps1) if you
+need to change it.
+
+A separate clean `dev` profile was tried and abandoned: launching it outside Gale skips setup that
+Gale does, and the other mods this profile carries -- ModFixerOne in particular -- are not
+optional in practice. Develop against the profile you actually play.
+
+**Do not install the Thunderstore release into the same profile as a local build.** Both declare
+the same `BepInPlugin` GUID, so BepInEx loads one and refuses the other. `install.ps1` checks for
+this and refuses rather than producing a profile whose behaviour depends on load order.
 
 ## Build
 

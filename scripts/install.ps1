@@ -78,6 +78,13 @@ in Gale rather than by deleting the folder, so Gale's own record stays consisten
     }
 }
 
+# DSP holds the plugin DLL open while it runs, and the failure it produces otherwise is
+# "The requested operation cannot be performed on a file with a user-mapped section open",
+# which says nothing useful about the actual cause.
+if (Get-Process -Name DSPGAME -ErrorAction SilentlyContinue) {
+    throw "Dyson Sphere Program is running, and it holds the installed plugin open. Quit the game (returning to the main menu is not enough) and run this again."
+}
+
 if (-not (Test-Path $target)) { New-Item -ItemType Directory -Path $target -Force | Out-Null }
 
 Copy-Item $outDll $target -Force
