@@ -13,8 +13,11 @@ namespace PlanetaryAnomalies
     /// selecting a planet and opening its description tab, which meant the screen people actually
     /// explore from said nothing.
     ///
-    /// Deliberately a marker and not the recipe. A galaxy view carrying dozens of recipe names
-    /// would be noise; the detail stays one click away in the description tab.
+    /// What the label says is configurable. Naming the affected item is the point -- reading a
+    /// galaxy for what it is good at beats reading it for where something merely exists -- but at
+    /// high anomaly density a view full of recipe names may be noise, in which case a bare marker
+    /// or nothing at all reads better. That is a judgement only play can settle, so it is a
+    /// setting rather than a decision baked into the code.
     ///
     /// Gated on <c>PlanetData.scanned</c>, exactly like the planet panel. An unscanned planet must
     /// reveal nothing at all -- otherwise the marker gives away the existence of something the
@@ -69,19 +72,40 @@ namespace PlanetaryAnomalies
                     return;
                 }
 
+                StarmapLabelMode mode = Plugin.StarmapLabel != null
+                    ? Plugin.StarmapLabel.Value
+                    : StarmapLabelMode.Detail;
+
+                if (mode == StarmapLabelMode.Off)
+                {
+                    return;
+                }
+
                 if (AnomalyManager.AnomalyFor(planet.id) == null)
                 {
                     return;
                 }
 
+                string body = "ANOMALY";
+                if (mode == StarmapLabelMode.Detail)
+                {
+                    string what = AnomalyManager.ShortDescribeForPlanet(planet.id);
+                    if (!string.IsNullOrEmpty(what))
+                    {
+                        body = what;
+                    }
+                }
+
+                string suffix = "  <color=#FFC454>" + body + "</color>";
+
                 // Guards the rename path, and any future call that re-applies without the game
                 // having rewritten the label first.
-                if (label.text != null && label.text.EndsWith(Marker, StringComparison.Ordinal))
+                if (label.text != null && label.text.EndsWith(suffix, StringComparison.Ordinal))
                 {
                     return;
                 }
 
-                label.text = label.text + Marker;
+                label.text = label.text + suffix;
             }
             catch (Exception e)
             {
@@ -92,9 +116,18 @@ namespace PlanetaryAnomalies
                 }
             }
         }
+    }
 
-        // Rich text: DSP's own UI uses <color> tags in these labels, so this renders rather than
-        // showing as literal markup. The wording follows PRODUCT.md -- always the word "anomaly".
-        private const string Marker = "  <color=#FFC454>ANOMALY</color>";
+    /// <summary>How much an anomalous planet says about itself on its star map label.</summary>
+    internal enum StarmapLabelMode
+    {
+        /// <summary>No star map label. Anomalies stay visible in the planet panel.</summary>
+        Off,
+
+        /// <summary>Just the word ANOMALY, for a less crowded galaxy view.</summary>
+        Marker,
+
+        /// <summary>The affected item and multiplier, e.g. "Titanium Crystal x10".</summary>
+        Detail
     }
 }

@@ -35,15 +35,6 @@ namespace PlanetaryAnomalies
         internal const int AnomalySystemVersion = 1;
 
         /// <summary>
-        /// Percentage of non-home planets that carry an anomaly.
-        ///
-        /// Deliberately high, which supersedes SPEC's "sparse distribution". Rare anomalies are
-        /// rarely worth reorganising production around, so the mechanic would barely touch how the
-        /// game is played. Common ones make most worlds a candidate for specialising something,
-        /// which is what makes galaxy-wide exploration and interstellar logistics matter. Not 100:
-        /// ordinary planets are what give anomalous ones contrast.
-        /// </summary>
-        /// <summary>
         /// The range the per-galaxy anomaly density is drawn from, when it is not overridden.
         ///
         /// Density is itself derived from the seed, so galaxies differ from one another and not
@@ -509,8 +500,9 @@ namespace PlanetaryAnomalies
 
                 int normal = recipe.ResultCounts[i];
 
-                // → is a right arrow, written escaped so the source file stays pure ASCII and
-                // cannot be mangled by the compiler's source encoding.
+                // The arrow, multiplication sign and middot used in this project are literal UTF-8.
+                // csc reads them correctly and they render correctly in game -- both verified. Keep
+                // to characters already proven here rather than introducing untested ones.
                 body += PlayerFacingItemName(recipe.Results[i]) + ": " +
                         normal + " → " + (normal * anomaly.OutputMultiplier);
             }
@@ -523,7 +515,39 @@ namespace PlanetaryAnomalies
             return "ANOMALY\n" + body;
         }
 
+        /// <summary>
+        /// A one-line description for cramped surfaces such as star map labels: the affected item
+        /// and the multiplier, e.g. "Titanium Crystal ×10". Null when the planet has no anomaly.
+        ///
+        /// Separate from DescribeForPlanet, which is two lines and belongs where there is room.
+        /// </summary>
+        internal static string ShortDescribeForPlanet(int planetId)
+        {
+            PlanetAnomaly anomaly = AnomalyFor(planetId);
+            if (anomaly == null)
+            {
+                return null;
+            }
+
+            RecipeProtoSet recipes = LDB.recipes;
+            if (recipes == null || !recipes.Exist(anomaly.RecipeId))
+            {
+                return null;
+            }
+
+            RecipeProto recipe = recipes.Select(anomaly.RecipeId);
+            if (recipe == null || recipe.Results == null || recipe.Results.Length == 0)
+            {
+                return null;
+            }
+
+            // Only the first product is named. Eligible recipes have exactly one, and if that ever
+            // changes a star map label is not the place to explain it.
+            return PlayerFacingItemName(recipe.Results[0]) + " ×" + anomaly.OutputMultiplier;
+        }
+
         /// <summary>Localized item name with no ids, for display to the player.</summary>
+
         private static string PlayerFacingItemName(int itemId)
         {
             ItemProtoSet items = LDB.items;

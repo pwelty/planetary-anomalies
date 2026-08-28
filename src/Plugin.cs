@@ -25,6 +25,7 @@ namespace PlanetaryAnomalies
         // effect on the next load rather than mid-session.
         internal static ConfigEntry<int> AnomalyChancePercent;
         internal static ConfigEntry<int> OutputMultiplier;
+        internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
 
         private Harmony _harmony;
 
@@ -79,6 +80,16 @@ namespace PlanetaryAnomalies
                     "at a glance. Changing this affects neither which planets are anomalous nor " +
                     "which recipe each one affects.",
                     new AcceptableValueRange<int>(2, 1000)));
+
+            StarmapLabel = Config.Bind(
+                "Display",
+                "StarmapLabel",
+                StarmapLabelMode.Detail,
+                "How anomalous planets are labelled in the star map, for planets you have scanned.\n" +
+                "Detail: name the affected item and multiplier, e.g. \"Titanium Crystal x10\".\n" +
+                "Marker: just the word ANOMALY, for a less crowded galaxy view.\n" +
+                "Off: no star map label at all; anomalies remain visible in the planet panel.\n" +
+                "Unscanned planets never show anything, whichever setting is used.");
         }
 
         private void OnDestroy()
