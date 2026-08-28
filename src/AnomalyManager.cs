@@ -196,11 +196,78 @@ namespace PlanetaryAnomalies
                 (IsDensityOverridden() ? " (forced by config)" : " (derived from the seed)") +
                 ", anomaly system v" + AnomalySystemVersion + ".");
 
+            if (Plugin.LogEveryAnomaly != null && Plugin.LogEveryAnomaly.Value)
+            {
+                SurveyGalaxy(galaxy);
+            }
+
             return true;
         }
 
         /// <summary>
+        /// Logs every anomaly in the galaxy, star by star, ignoring whether the player has scanned
+        /// anything.
+        ///
+        /// This deliberately bypasses discovery, so it is off by default and gated behind a config
+        /// entry whose description says as much. It exists because "does this galaxy contain X
+        /// anywhere?" is a real question during development -- checking a distribution, hunting a
+        /// specific recipe, confirming a fix across a whole galaxy rather than the handful of
+        /// planets that happen to have factories.
+        ///
+        /// A player who turns this on is choosing to spoil their own galaxy. That is their call to
+        /// make, but it should be a deliberate one, which is why it is not a keybind.
+        /// </summary>
+        private static void SurveyGalaxy(GalaxyData galaxy)
+        {
+            if (galaxy.stars == null)
+            {
+                return;
+            }
+
+            int planets = 0;
+            int anomalous = 0;
+
+            Plugin.Log.LogInfo("=== GALAXY SURVEY (spoils discovery; LogEveryAnomaly is on) ===");
+
+            for (int s = 0; s < galaxy.stars.Length; s++)
+            {
+                StarData star = galaxy.stars[s];
+                if (star == null || star.planets == null)
+                {
+                    continue;
+                }
+
+                for (int p = 0; p < star.planets.Length; p++)
+                {
+                    PlanetData planet = star.planets[p];
+                    if (planet == null)
+                    {
+                        continue;
+                    }
+
+                    planets++;
+
+                    PlanetAnomaly anomaly = AnomalyFor(planet.id);
+                    if (anomaly == null)
+                    {
+                        continue;
+                    }
+
+                    anomalous++;
+                    Plugin.Log.LogInfo(
+                        "  SURVEY  " + star.displayName + " / " + planet.displayName +
+                        " (planet id " + planet.id + "): " + ShortDescribeForPlanet(planet.id));
+                }
+            }
+
+            Plugin.Log.LogInfo(
+                "=== SURVEY END: " + anomalous + " anomalous of " + planets + " planets (" +
+                (planets > 0 ? (anomalous * 100 / planets) : 0) + "%) ===");
+        }
+
+        /// <summary>
         /// Whether a planet cannot host the machines an anomaly would apply to.
+
         ///
         /// Only gas giants today. If the planet cannot be looked up we assume it is buildable:
         /// wrongly skipping a real planet is worse than the marker we are trying to avoid.

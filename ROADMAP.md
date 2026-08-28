@@ -146,6 +146,35 @@ threshold -- not truncation, which has now failed twice.
 The pattern across all three: guesses about legibility were wrong in the same direction every time,
 consistently underestimating how much information the player wants on screen.
 
+### Phase A success criterion: met, on the author
+
+A galaxy-wide survey of two saves (a diagnostic that ignores discovery, off by default) produced
+the clearest evidence yet.
+
+Seed 40078654: 146 anomalous of 252 planets. Paul went looking for a Quantum Chip anomaly and there
+was none -- in either surveyed galaxy. What that galaxy had instead was `Plane Filter ×10` on two
+worlds, one step upstream: `1 Casimir Crystal + 2 Titanium Glass -> 10 Plane Filter`, where Plane
+Filter is the expensive half of a Quantum Chip.
+
+**He relocated Plane Filter production.** Unprompted, on a galaxy he did not design, because the
+anomaly was not where he wanted it and building around where it actually was made more sense than
+not. That is the Phase A success criterion -- "changed factory placement or logistics, not merely
+larger numbers" -- met by the mechanic rather than by argument.
+
+The shape of it matters as much as the fact. A galaxy that granted the requested anomaly would have
+taught nothing; one that offered a neighbouring opportunity forced a decision. Design consequence:
+**do not make anomalies more grantable.** The temptation will be to raise density, or to weight
+selection toward what a player needs. Both would remove exactly the friction that produced this.
+
+Distribution notes from the same survey, useful for the duplicates question:
+
+- 147 eligible recipes, 145 anomalous planets, **91 distinct recipes used**. Expected distinct under
+  uniform independent draws is ~92.5, so selection is behaving correctly.
+- ~56 recipes appear nowhere in a given galaxy. That is a feature: a galaxy has things it simply
+  does not do, and Quantum Chip being one of them is what sent Paul upstream.
+- Any specific recipe has roughly a 37% chance of being absent from a galaxy this size. Absence is
+  ordinary, not a bug -- worth remembering when someone reports "my galaxy has no X".
+
 ## Roadmap now
 
 ### Phase A — Learn from v0.1.x
@@ -314,6 +343,32 @@ produce at ×10” describes an industrial place.
 
 Do not build a generalized effect framework before the second effect demonstrates what abstractions
 are actually shared. After two or three real effects, extract the smallest common contract.
+
+#### Candidate: does Icarus's replicator obey the anomaly?
+
+Paul's question. Today: no. The seam is `AssemblerComponent.recipeExecuteData`, which is factory
+machines only; the mecha replicator is `MechaForge`, an unrelated system with its own task queue.
+
+Technically cheap. `ForgeTask` exposes `recipeId`, `productCounts` and `produced`;
+`MechaForge.TaskDeliver` hands `produced` to the player via `Player.TryAddItemToPackage`; and
+`GameMain.localPlanet` says where Icarus is standing. Perhaps 40 lines on a separate seam.
+
+The argument for is consistency: an anomaly is a property of the *place*, not of a machine type. If
+local industrial physics are strange here, the replicator standing in that place should be strange
+too. A player who hand-crafts on an anomalous world and sees nothing has found an inconsistency.
+
+The argument against is stronger than it first looks. This is the application that least serves the
+thesis -- see *Create another logistics problem, not free items*. Hand-crafting creates no logistics
+at all: inputs are already in your pocket and the output goes straight back there. It is the closest
+this mod could come to simply granting items, and the version most likely to read as an exploit
+rather than a discovery. Home planets never being anomalous limits it, since you must travel to
+benefit, but that is a mitigation rather than an answer.
+
+If built, multiply when the task is created rather than at delivery, so the replicator window shows
+the real count. Patching `TaskDeliver` alone would show 1 and hand over 10, which is the same
+"UI lies" defect already fixed twice on other surfaces.
+
+Scheduled for consideration, not for the next release.
 
 #### Candidate: alternative production paths (Against the Storm)
 

@@ -26,6 +26,7 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<int> AnomalyChancePercent;
         internal static ConfigEntry<int> OutputMultiplier;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
+        internal static ConfigEntry<bool> LogEveryAnomaly;
 
         private Harmony _harmony;
 
@@ -91,6 +92,15 @@ namespace PlanetaryAnomalies
                 "Marker: just the word ANOMALY, for a less crowded galaxy view.\n" +
                 "Off: no star map label at all; anomalies remain visible in the planet panel.\n" +
                 "Unscanned planets never show anything, whichever setting is used.");
+
+            LogEveryAnomaly = Config.Bind(
+                "Diagnostics",
+                "LogEveryAnomaly",
+                false,
+                "Writes every anomaly in the galaxy to the BepInEx log when a save is loaded, " +
+                "including planets you have never scanned. This spoils discovery on purpose. It " +
+                "exists for development and for answering \"does this galaxy contain X anywhere?\". " +
+                "It changes nothing in game and shows nothing on screen -- it only writes to the log.");
         }
 
         private void OnDestroy()
