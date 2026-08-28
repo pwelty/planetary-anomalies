@@ -12,9 +12,11 @@ namespace PlanetaryAnomalies
     /// helps once you have arrived somewhere and does nothing for the decision the release thread
     /// was actually complaining about -- where to go next.
     ///
-    /// A count rather than recipe names. At galaxy scale the useful question is "is there anything
-    /// here", not "what exactly"; a view carrying a recipe name per planet would be unreadable, and
-    /// the detail is one click away on the planets themselves.
+    /// It started as a bare count, on the theory that at galaxy scale the useful question is "is
+    /// there anything here". Play disagreed: a count tells you a system has anomalies but not
+    /// whether it is worth the trip, and remembering which system held what is exactly the thing
+    /// players forget. So Detail lists the affected items, capped at MaxNamed with a "+N" tail, and
+    /// Marker keeps the count for when the galaxy view gets crowded.
     ///
     /// Gated on <c>PlanetData.scanned</c> per planet, like every other surface. A system the player
     /// knows nothing about stays blank, so this reports on what has been explored rather than
@@ -26,6 +28,13 @@ namespace PlanetaryAnomalies
     /// </summary>
     internal static class UIStarmapStarPatch
     {
+        /// <summary>
+        /// How many item names a star label will list before falling back to "+N". A system with
+        /// several anomalies would otherwise produce a label long enough to collide with its
+        /// neighbours in the galaxy view.
+        /// </summary>
+        private const int MaxNamed = 3;
+
         private static bool _errorLogged;
 
         [HarmonyPostfix]
@@ -58,12 +67,19 @@ namespace PlanetaryAnomalies
                     return;
                 }
 
-                if (Plugin.StarmapLabel != null && Plugin.StarmapLabel.Value == StarmapLabelMode.Off)
+                StarmapLabelMode mode = Plugin.StarmapLabel != null
+                    ? Plugin.StarmapLabel.Value
+                    : StarmapLabelMode.Detail;
+
+                if (mode == StarmapLabelMode.Off)
                 {
                     return;
                 }
 
                 int anomalous = 0;
+                string names = "";
+                int named = 0;
+
                 for (int i = 0; i < star.planets.Length; i++)
                 {
                     PlanetData planet = star.planets[i];
@@ -72,9 +88,21 @@ namespace PlanetaryAnomalies
                         continue;
                     }
 
-                    if (AnomalyManager.AnomalyFor(planet.id) != null)
+                    if (AnomalyManager.AnomalyFor(planet.id) == null)
                     {
-                        anomalous++;
+                        continue;
+                    }
+
+                    anomalous++;
+
+                    if (named < MaxNamed)
+                    {
+                        string item = AnomalyManager.AnomalousItemName(planet.id);
+                        if (!string.IsNullOrEmpty(item))
+                        {
+                            names += (named > 0 ? ", " : "") + item;
+                            named++;
+                        }
                     }
                 }
 
@@ -83,9 +111,26 @@ namespace PlanetaryAnomalies
                     return;
                 }
 
-                // "ANOMALY" / "3 ANOMALIES" -- the word is always present, per PRODUCT.md, so
-                // anything the mod says is recognisable as the mod's doing.
-                string body = anomalous == 1 ? "ANOMALY" : anomalous + " ANOMALIES";
+                // A bare count says something is here but not whether it is worth the trip, which
+                // in play turned out to be the more common question -- you remember that a system
+                // has anomalies and forget which. So Detail names them; Marker keeps the count for
+                // when the galaxy view gets crowded.
+                //
+                // The word "anomaly" always appears, per PRODUCT.md, so anything the mod says is
+                // recognisable as the mod's doing rather than the game's.
+                string body;
+                if (mode == StarmapLabelMode.Detail && named > 0)
+                {
+                    body = "ANOMALY: " + names;
+                    if (anomalous > named)
+                    {
+                        body += " +" + (anomalous - named);
+                    }
+                }
+                else
+                {
+                    body = anomalous == 1 ? "ANOMALY" : anomalous + " ANOMALIES";
+                }
 
                 if (!label.supportRichText)
                 {

@@ -499,7 +499,35 @@ namespace PlanetaryAnomalies
             return PlayerFacingItemName(recipe.Results[0]) + " ×" + anomaly.OutputMultiplier;
         }
 
+        /// <summary>
+        /// Just the affected item's name, with no multiplier -- for star labels, which list several
+        /// and have no room to repeat "×10" for each. Null when the planet has no anomaly.
+        /// </summary>
+        internal static string AnomalousItemName(int planetId)
+        {
+            PlanetAnomaly anomaly = AnomalyFor(planetId);
+            if (anomaly == null)
+            {
+                return null;
+            }
+
+            RecipeProtoSet recipes = LDB.recipes;
+            if (recipes == null || !recipes.Exist(anomaly.RecipeId))
+            {
+                return null;
+            }
+
+            RecipeProto recipe = recipes.Select(anomaly.RecipeId);
+            if (recipe == null || recipe.Results == null || recipe.Results.Length == 0)
+            {
+                return null;
+            }
+
+            return PlayerFacingItemName(recipe.Results[0]);
+        }
+
         /// <summary>Localized item name with no ids, for display to the player.</summary>
+
 
         private static string PlayerFacingItemName(int itemId)
         {
