@@ -296,6 +296,39 @@ produce at ×10” describes an industrial place.
 Do not build a generalized effect framework before the second effect demonstrates what abstractions
 are actually shared. After two or three real effects, extract the smallest common contract.
 
+#### Candidate: alternative production paths (Against the Storm)
+
+Paul's framing: some items should have more than one recipe, the way Against the Storm gives a
+settlement a particular subset of production paths and makes "which route is available here" the
+interesting question.
+
+This fits the thesis better than most modifier ideas. It is not "more stuff" -- it changes *where
+production belongs* by changing what a place can do, which is the mod's stated purpose. It also
+differs in kind from output multiplication, which is what Phase B asks for. And DSP already
+establishes the concept: graphene from fire ice, diamonds from kimberlite.
+
+There are two versions, and they are very different in cost.
+
+**Substitution — reachable with the seam already built.** Same recipe, different inputs on that
+planet. Inspection confirms `AssemblerComponent.UpdateNeeds` computes `needs` from
+`recipeExecuteData.requires` and `requireCounts`, and `InternalUpdate` consumes from the same
+arrays (IL_0394, IL_03a1). We already hand affected machines a private `RecipeExecuteData`, so
+changing `requires` there would make the machine consume something else -- and because `needs`
+derives from it, inserters and logistics would fetch the substituted ingredient on their own. No
+new machinery.
+
+**Additional recipes in the picker — much harder.** Recipes are global protos and the picker lists
+what is unlocked; making a recipe available on one planet only is not something this seam touches.
+Do not assume the cheap version generalises to this.
+
+The design cost is UI honesty, and it is worse for inputs than for outputs. The machine panel reads
+the prototype, so it would list the vanilla ingredients while the machine wants different ones. A
+player feeding copper into something that silently ignores it reads as a bug, not a discovery.
+Output multiplication is forgiving here -- you get more than promised -- but substitution must be
+stated plainly on the machine before it ships, not merely in the planet panel.
+
+Worth prototyping as the Phase B effect if it survives that constraint.
+
 ### Phase C — Planet-conditioned industrial personalities
 
 Explore weighted relationships between planet type and anomaly family:
