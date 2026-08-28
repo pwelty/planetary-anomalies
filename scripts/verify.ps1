@@ -75,6 +75,62 @@ foreach ($memberRef in $module.GetMemberReferences()) {
     }
 }
 
+# --- the generator is a compatibility contract, so prove it has not moved -----------------------
+#
+# A galaxy's identity is whatever AnomalyMath returns. Change any of it and every existing galaxy
+# silently becomes a different galaxy -- which happened once, when recipe selection moved from list
+# indexing to rendezvous hashing. The rule since: a mod update must never move an existing galaxy.
+#
+# AnomalyMath deliberately touches no game types, so it compiles and runs on its own here.
+
+$goldenFile = Join-Path $repoRoot 'tests\golden-generator.txt'
+$runnerFile = Join-Path $repoRoot 'tests\GoldenRunner.cs'
+$mathFile = Join-Path $repoRoot 'src\AnomalyMath.cs'
+
+if (-not (Test-Path $goldenFile)) {
+    $failures.Add("tests\golden-generator.txt is missing; the generator is unprotected.")
+} elseif ((Test-Path $runnerFile) -and (Test-Path $mathFile)) {
+    $goldenExe = Join-Path ([System.IO.Path]::GetTempPath()) ("pa-golden-" + [System.Guid]::NewGuid().ToString('N') + ".exe")
+    $csc = Get-CscPath
+    $cscOutput = & $csc /nologo /optimize+ /out:$goldenExe $mathFile $runnerFile 2>&1
+
+    if ($LASTEXITCODE -ne 0) {
+        $failures.Add("Could not compile the generator check: $cscOutput")
+    } else {
+        $actual = & $goldenExe
+        $expected = Get-Content $goldenFile
+        Remove-Item $goldenExe -Force -ErrorAction SilentlyContinue
+
+        $diffs = New-Object System.Collections.Generic.List[string]
+        $max = [Math]::Max($actual.Count, $expected.Count)
+        for ($i = 0; $i -lt $max; $i++) {
+            $a = if ($i -lt $actual.Count) { $actual[$i] } else { '<missing>' }
+            $e = if ($i -lt $expected.Count) { $expected[$i] } else { '<missing>' }
+            if ($a -ne $e) { $diffs.Add("      line $($i + 1): expected '$e' but got '$a'") }
+        }
+
+        if ($diffs.Count -gt 0) {
+            $shown = ($diffs | Select-Object -First 5) -join "`n"
+            $more = if ($diffs.Count -gt 5) { "`n      ... and $($diffs.Count - 5) more" } else { '' }
+            $failures.Add(@"
+THE GENERATOR HAS CHANGED. $($diffs.Count) of $max results moved.
+
+$shown$more
+
+    Every existing galaxy would silently become a different galaxy: planets would gain or lose
+    anomalies, or keep an anomaly on a different recipe. A mod update must never do this.
+
+    If this was accidental, revert the change to src\AnomalyMath.cs.
+    If it was deliberate, it needs an AnomalySystemVersion bump and a changelog entry saying
+    existing galaxies will be re-rolled -- then regenerate tests\golden-generator.txt.
+    See ROADMAP.md on version pinning.
+"@)
+        } else {
+            Write-Host "OK  Generator unchanged ($max results match tests\golden-generator.txt)"
+        }
+    }
+}
+
 # The Harmony target is named in an attribute, so the compiler cannot check it. Do it here.
 $gameAsm = [Mono.Cecil.AssemblyDefinition]::ReadAssembly((Join-Path $managed 'Assembly-CSharp.dll'), $readerParams)
 $planetFactory = $gameAsm.MainModule.GetType('PlanetFactory')

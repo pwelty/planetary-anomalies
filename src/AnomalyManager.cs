@@ -34,16 +34,8 @@ namespace PlanetaryAnomalies
         /// </summary>
         internal const int AnomalySystemVersion = 1;
 
-        /// <summary>
-        /// The range the per-galaxy anomaly density is drawn from, when it is not overridden.
-        ///
-        /// Density is itself derived from the seed, so galaxies differ from one another and not
-        /// just planet-by-planet: some are anomaly-rich, some sparse. That is one more thing a
-        /// seed means. The floor is well above zero because a galaxy with almost no anomalies is
-        /// a galaxy where this mod does nothing.
-        /// </summary>
-        internal const int DensityMinPercent = 25;
-        internal const int DensityMaxPercent = 75;
+        internal const int DensityMinPercent = AnomalyMath.DensityMinPercent;
+        internal const int DensityMaxPercent = AnomalyMath.DensityMaxPercent;
 
         /// <summary>
         /// Percentage of non-home planets carrying an anomaly in the loaded galaxy. Derived from
@@ -53,11 +45,6 @@ namespace PlanetaryAnomalies
 
         private static int _densityPercent = DensityMaxPercent;
 
-        // Distinct salts so "is this planet anomalous" and "which recipe" do not correlate. Two
-        // draws from one hash would tie the choice of recipe to the fact of having one.
-        private const uint SaltPresence = 0x9E3779B9u;
-        private const uint SaltRecipe = 0x85EBCA6Bu;
-        private const uint SaltDensity = 0xC2B2AE35u;
 
         // Which galaxy the cache below belongs to. A different seed or birth planet means a
         // different game, so everything is recomputed.
@@ -223,10 +210,7 @@ namespace PlanetaryAnomalies
                 return Plugin.AnomalyChancePercent.Value;
             }
 
-            uint span = (uint)(DensityMaxPercent - DensityMinPercent + 1);
-
-            // Planet id 0 is not a real planet, so it is free to use as the "whole galaxy" key.
-            return DensityMinPercent + (int)(Hash(seed, 0, AnomalySystemVersion, SaltDensity) % span);
+            return AnomalyMath.DensityFor(seed, AnomalySystemVersion);
         }
 
         private static bool IsDensityOverridden()
@@ -248,8 +232,7 @@ namespace PlanetaryAnomalies
                 return null;
             }
 
-            uint presence = Hash(_galaxySeed, planetId, AnomalySystemVersion, SaltPresence);
-            if (presence % 100u >= (uint)_densityPercent)
+            if (!AnomalyMath.IsAnomalous(_galaxySeed, planetId, AnomalySystemVersion, _densityPercent))
             {
                 return null;
             }
@@ -280,33 +263,6 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>
-        /// A deterministic hash. Deliberately not String.GetHashCode or Random: neither is
-        /// guaranteed stable across runtimes or versions, and this value must produce the same
-        /// galaxy forever.
-        ///
-        /// FNV-1a over the four inputs, then an avalanche step, so that neighbouring planet ids --
-        /// which is exactly what planets in one system are -- do not produce related results.
-        /// </summary>
-        private static uint Hash(int seed, int planetId, int version, uint salt)
-        {
-            unchecked
-            {
-                uint h = 2166136261u;
-                h = MixBytes(h, (uint)seed);
-                h = MixBytes(h, (uint)planetId);
-                h = MixBytes(h, (uint)version);
-                h = MixBytes(h, salt);
-
-                h ^= h >> 16;
-                h *= 2246822507u;
-                h ^= h >> 13;
-                h *= 3266489909u;
-                h ^= h >> 16;
-                return h;
-            }
-        }
-
-        /// <summary>
         /// Picks the planet's recipe by rendezvous hashing: every eligible recipe is weighted for
         /// this planet, and the heaviest wins.
         ///
@@ -326,62 +282,27 @@ namespace PlanetaryAnomalies
         /// </summary>
         private static RecipeProto ChooseRecipe(int planetId)
         {
-            RecipeProto best = null;
-            uint bestWeight = 0;
+            int[] ids = new int[_eligible.Length];
+            for (int i = 0; i < _eligible.Length; i++)
+            {
+                ids[i] = _eligible[i].ID;
+            }
+
+            int chosen = AnomalyMath.ChooseRecipeId(_galaxySeed, planetId, AnomalySystemVersion, ids);
+            if (chosen < 0)
+            {
+                return null;
+            }
 
             for (int i = 0; i < _eligible.Length; i++)
             {
-                RecipeProto candidate = _eligible[i];
-                uint weight = RecipeWeight(_galaxySeed, planetId, AnomalySystemVersion, candidate.ID);
-
-                // Ties broken by lower id, so the result never depends on iteration order.
-                if (best == null || weight > bestWeight || (weight == bestWeight && candidate.ID < best.ID))
+                if (_eligible[i].ID == chosen)
                 {
-                    best = candidate;
-                    bestWeight = weight;
+                    return _eligible[i];
                 }
             }
 
-            return best;
-        }
-
-        /// <summary>
-        /// How strongly one recipe is drawn to one planet. Same construction as
-        /// <see cref="Hash"/>, with the recipe's proto id mixed in -- so the weight follows the
-        /// recipe itself rather than where it sits in a list.
-        /// </summary>
-        private static uint RecipeWeight(int seed, int planetId, int version, int recipeId)
-        {
-            unchecked
-            {
-                uint h = 2166136261u;
-                h = MixBytes(h, (uint)seed);
-                h = MixBytes(h, (uint)planetId);
-                h = MixBytes(h, (uint)version);
-                h = MixBytes(h, SaltRecipe);
-                h = MixBytes(h, (uint)recipeId);
-
-                h ^= h >> 16;
-                h *= 2246822507u;
-                h ^= h >> 13;
-                h *= 3266489909u;
-                h ^= h >> 16;
-                return h;
-            }
-        }
-
-        private static uint MixBytes(uint h, uint value)
-        {
-            unchecked
-            {
-                for (int i = 0; i < 4; i++)
-                {
-                    h ^= (value >> (i * 8)) & 0xFFu;
-                    h *= 16777619u;
-                }
-
-                return h;
-            }
+            return null;
         }
 
         /// <summary>
