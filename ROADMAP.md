@@ -239,22 +239,41 @@ Options:
 
 The third is the current leaning, for that last reason alone.
 
-### Glyphs instead of words on labels (investigated, not feasible cheaply)
+### Icons instead of names (investigated; viable in the panel, not the star map)
 
-Asked whether star map labels could show an item's icon rather than its name.
+Paul: "I don't know the names of a lot of things, just the images." That is not a small point. If
+players recognise items by icon, a name is not merely more verbose than an icon -- it is harder to
+read. It moves showing icons from polish toward correctness.
 
-Not without building UI objects. `ItemProto.iconTagString` exists -- `\` + IconTag + `;` -- but it
-is only ever written during `Preload` and never read at runtime; nothing in the game assembly parses
-that syntax. There are no `UnityEngine.UI.Text` subclasses and no TextMeshPro in the managed folder.
-DSP composes icons and text as *separate* `Image` and `Text` components, which is how `UIItemTip`
-and the planet panel's resource rows work.
+**Star map labels: not feasible cheaply.** `ItemProto.iconTagString` exists -- `\` + IconTag + `;`
+-- but it is only written during `Preload` and never read; nothing in the game assembly parses that
+syntax. There are no `UnityEngine.UI.Text` subclasses and no TextMeshPro. DSP composes icons and
+text as *separate* `Image` and `Text` components. So an inline glyph in a star map label means
+creating an `Image` per label, positioning it against variable-width text, and managing its lifetime
+with the label's pooling -- the "custom UI objects" category `PRODUCT.md` keeps out of scope.
 
-So an inline glyph means creating an `Image` per label, positioning it against variable-width text,
-and managing its lifetime with the label's pooling -- the "custom UI objects" category `PRODUCT.md`
-keeps out of scope, and more code than all the star map work so far.
+**The planet panel: viable, using the game's own components.** It already instantiates icon rows for
+the resource list, and the API is public:
 
-Cheaper if the words feel heavy: the existing `Marker` mode, or a Unicode symbol prefix, with the
-caveat that the label font may not carry the glyph.
+~~~
+UIResAmountEntry.SetInfo(int index, string label, Sprite icon, string tip,
+                         bool highlightLabel, bool highlightValue, string strBuilderFormat)
+UIPlanetDetail.GetEntry()      // pooled, or instantiated from entryPrafab
+ItemProto.iconSprite
+~~~
+
+An anomaly could appear as an icon row in the same visual language as the resources beneath it,
+reusing DSP's prefab and pool rather than inventing a component. That sits on the right side of the
+line the mod has held: borrowing existing UI, not building bespoke UI.
+
+The risk is layout bookkeeping. `UIPlanetDetail` counts entries and computes the resources tab
+height (`SetResCount`, `resourcesTabHeight`), so injecting a row needs care or it will misplace
+things. Fiddlier than the text appends done so far, and it should be judged on screen rather than
+in the abstract.
+
+Cheaper in the meantime: the existing `Marker` mode, or a Unicode symbol prefix, with the caveat
+that the label font may not carry the glyph.
+
 
 ### Phase B — A second static effect
 
