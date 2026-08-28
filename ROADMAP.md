@@ -127,6 +127,25 @@ would cross an architectural boundary rather than a design one; veins are real s
 them would end the property that the mod can be removed leaving an ordinary save. That property is
 why players could try v0.1.0 on established saves at all.
 
+Star map disclosure was built during Phase A and settled three questions by play rather than
+argument, each reversing a prior guess:
+
+- **Planet labels beat the description tab.** "Much quicker than using the descr text." Reading a
+  system at a glance is the behaviour worth supporting.
+- **A count is not enough.** Stars first showed "3 ANOMALIES", on the theory that at galaxy scale
+  the question is "is there anything here". Wrong: "I keep forgetting what is in that system." The
+  question is what, not whether.
+- **Truncation is worse than length.** Names were then capped at three with a "+2" tail, which
+  reintroduced the same failure in miniature. Uncapped: "yes it's long and they overlap, but it's
+  nice to see at a glance."
+
+Label overlap in dense regions is therefore a known and accepted cosmetic cost, not an open bug.
+If it is ever addressed, the fix is wrapping, a smaller font, or hiding labels below a zoom
+threshold -- not truncation, which has now failed twice.
+
+The pattern across all three: guesses about legibility were wrong in the same direction every time,
+consistently underestimating how much information the player wants on screen.
+
 ## Roadmap now
 
 ### Phase A — Learn from v0.1.x
