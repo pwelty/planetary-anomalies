@@ -96,6 +96,16 @@ namespace PlanetaryAnomalies
                     }
                 }
 
+                // Star map labels do not have rich text enabled, so colour tags render as literal
+                // "<color=#FFC454>" rather than colouring anything. UIPlanetDetail does support it,
+                // which is what misled the first attempt -- they are different components with
+                // different settings. Turn it on for this label rather than dropping the colour,
+                // because colour is what separates the mod's text from the game's at a glance.
+                if (!label.supportRichText)
+                {
+                    label.supportRichText = true;
+                }
+
                 string suffix = "  <color=#FFC454>" + body + "</color>";
 
                 // Guards the rename path, and any future call that re-applies without the game
