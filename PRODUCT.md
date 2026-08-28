@@ -63,7 +63,18 @@ Current surfaces, all consistent:
 - BepInEx log: `ANOMALY` blocks, `No anomaly:`, `Anomaly attached to ...`.
 
 New surfaces must use the same word. Do not introduce synonyms -- no "irregularity", "quirk",
-"bonus", or "effect" in player-facing text -- and do not abbreviate it.
+"bonus", or "effect" in player-facing text.
+
+**One deliberate exception: the star map uses `Å`.** Star labels sit beside every other star label,
+and the word costs more room than it earns there, especially now that a star lists the items in its
+system rather than a count. The word still appears everywhere with room for it -- the planet panel,
+the machine window, the log -- so a player meets it before meeting the shorthand.
+
+`Å` is U+00C5, Latin-1, so the UI font almost certainly carries it. More decorative glyphs risk
+rendering as an empty box, which is worse than a word.
+
+Inline item icons were investigated instead and are not possible in these labels; see `ROADMAP.md`.
+
 
 ### How precisely the anomaly is described
 

@@ -3,8 +3,8 @@
 ## Unreleased (0.2)
 
 - Anomalies are shown in the star map. A star lists the affected items in its system, and each
-  planet names its item and multiplier, so a system can be read without opening every planet's
-  description tab. `StarmapLabel` chooses between that (Detail), bare counts and markers (Marker),
+  planet names its item and multiplier, marked with a compact "Å", so a system can be read
+  without opening every planet's description tab. `StarmapLabel` chooses between that (Detail), bare counts and markers (Marker),
   or nothing (Off).
 - Fixed: gas giants could receive an anomaly. They cannot host assemblers, so the anomaly could
   never be used and the star map advertised something unusable. Gas giants are now skipped.

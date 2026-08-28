@@ -86,13 +86,13 @@ namespace PlanetaryAnomalies
                     return;
                 }
 
-                string body = "ANOMALY";
+                string body = "Å";
                 if (mode == StarmapLabelMode.Detail)
                 {
                     string what = AnomalyManager.ShortDescribeForPlanet(planet.id);
                     if (!string.IsNullOrEmpty(what))
                     {
-                        body = what;
+                        body = "Å " + what;
                     }
                 }
 
