@@ -76,6 +76,30 @@ If discovery ever fails or picks the wrong thing, override it, in this order of 
 2. `DSP_DIR` and `DSP_BEPINEX_DIR` environment variables
 3. `scripts\local.paths.ps1` — copy [`scripts\local.paths.example.ps1`](scripts/local.paths.example.ps1); it is gitignored
 
+## Two profiles: one to play, one to develop
+
+Now that the mod is on Thunderstore, the two uses pull in different directions.
+
+| Profile | What it holds | How the mod gets there |
+| --- | --- | --- |
+| `gs run` | the other mods, for actually playing | install **through Gale** from Thunderstore, so it is a tracked package: listed, toggleable, updatable |
+| `dev` | BepInEx only, nothing else | `install.ps1 -ProfileName 'dev'` |
+
+The dev profile is deliberately clean. With none of the other eleven mods present, anything odd in
+the log is ours, and there is no question of another mod adding recipes and shifting which planets
+are anomalous.
+
+**Do not put both copies in one profile.** A Gale-installed package and a hand-installed build
+declare the same `BepInPlugin` GUID, so BepInEx loads one and refuses the other -- and which one it
+refuses is not worth guessing while testing. `install.ps1` checks for this and refuses rather than
+producing a profile whose behaviour depends on load order.
+
+Launch the dev profile without going through Gale:
+
+```bash
+powershell -ExecutionPolicy Bypass -File .\scripts\launch.ps1 -ProfileName dev
+```
+
 ## Build
 
 ```bash
