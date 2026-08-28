@@ -156,6 +156,49 @@ if ($null -eq $asmWindow) {
     }
 }
 
+# The star map marker. Its correctness rests on planet being written ONLY in _OnInit/_OnFree --
+# if a label could be rebound to another planet without _OnInit running, a marker could survive
+# onto the wrong world. Assert that, because it is an assumption about behaviour, not just names.
+$starmapPlanet = $gameAsm.MainModule.GetType('UIStarmapPlanet')
+if ($null -eq $starmapPlanet) {
+    $failures.Add("Harmony target type 'UIStarmapPlanet' does not exist in the installed game.")
+} else {
+    foreach ($needed in @('_OnInit', 'OnPlanetDisplayNameChange')) {
+        if (-not ($starmapPlanet.Methods | Where-Object { $_.Name -eq $needed })) {
+            $failures.Add("Harmony target 'UIStarmapPlanet.$needed' does not exist in the installed game.")
+        } else {
+            Write-Host "OK  Harmony target: UIStarmapPlanet.$needed"
+        }
+    }
+
+    foreach ($needed in @('nameText', 'planet')) {
+        $fld = $starmapPlanet.Fields | Where-Object { $_.Name -eq $needed }
+        if (-not $fld -or -not $fld.IsPublic) {
+            $failures.Add("UIStarmapPlanet.$needed is missing or no longer public.")
+        } else {
+            Write-Host "OK  UIStarmapPlanet.$needed is public"
+        }
+    }
+
+    $writers = @()
+    foreach ($m in $starmapPlanet.Methods) {
+        if (-not $m.HasBody) { continue }
+        foreach ($ins in $m.Body.Instructions) {
+            $op = $ins.Operand
+            if ($ins.OpCode.Name -eq 'stfld' -and $op -is [Mono.Cecil.FieldReference] -and
+                $op.Name -eq 'planet' -and $op.DeclaringType.Name -eq 'UIStarmapPlanet') {
+                if ($writers -notcontains $m.Name) { $writers += $m.Name }
+            }
+        }
+    }
+    $unexpected = $writers | Where-Object { $_ -notin @('_OnInit', '_OnFree') }
+    if ($unexpected) {
+        $failures.Add("UIStarmapPlanet.planet is now also written in: $($unexpected -join ', '). A label may be rebound to a different planet without _OnInit running, so the star map marker could survive onto the wrong world. Re-check StarmapPlanetPatch.")
+    } else {
+        Write-Host "OK  UIStarmapPlanet.planet still written only in _OnInit/_OnFree"
+    }
+}
+
 # The discovery gate. PlanetData.scanned is DSP's own record of whether the player has learned
 # about a planet; if it disappears, the disclosure rule needs rethinking, not patching.
 $planetData = $gameAsm.MainModule.GetType('PlanetData')
