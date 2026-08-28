@@ -305,6 +305,25 @@ if ($null -eq $starmapStar) {
     }
 }
 
+# Gas giants are excluded because they cannot host assemblers. If this enum member is renamed the
+# comparison would stop matching and gas giants would quietly become anomalous again -- visible
+# only as a marker on a planet nobody can build on.
+$planetType = $gameAsm.MainModule.GetType('EPlanetType')
+if ($null -eq $planetType) {
+    $failures.Add("EPlanetType does not exist; the gas giant exclusion cannot compile.")
+} elseif (-not ($planetType.Fields | Where-Object { $_.Name -eq 'Gas' })) {
+    $failures.Add("EPlanetType.Gas is gone; gas giants would silently become eligible for anomalies again.")
+} else {
+    Write-Host "OK  EPlanetType.Gas exists (gas giant exclusion)"
+}
+
+$typeField = $gameAsm.MainModule.GetType('PlanetData').Fields | Where-Object { $_.Name -eq 'type' }
+if (-not $typeField -or -not $typeField.IsPublic) {
+    $failures.Add("PlanetData.type is missing or no longer public; gas giants cannot be identified.")
+} else {
+    Write-Host "OK  PlanetData.type is public"
+}
+
 # The discovery gate. PlanetData.scanned is DSP's own record of whether the player has learned
 # about a planet; if it disappears, the disclosure rule needs rethinking, not patching.
 $planetData = $gameAsm.MainModule.GetType('PlanetData')

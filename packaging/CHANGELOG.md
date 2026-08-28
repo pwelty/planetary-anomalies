@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased (0.2)
+
+- Anomalies are shown in the star map: on a planet's label, and as a count on its star, so a
+  system can be read without opening each planet's description tab. Configurable via
+  `StarmapLabel` (Detail / Marker / Off).
+- Fixed: gas giants could receive an anomaly. They cannot host assemblers, so the anomaly could
+  never be used and the star map advertised something unusable. Gas giants are now skipped.
+  This removes anomalies from gas giants in existing galaxies; every other planet is unchanged.
+
+
 ## 0.1.0
 
 First release.

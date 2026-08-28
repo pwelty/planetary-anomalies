@@ -200,6 +200,24 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>
+        /// Whether a planet cannot host the machines an anomaly would apply to.
+        ///
+        /// Only gas giants today. If the planet cannot be looked up we assume it is buildable:
+        /// wrongly skipping a real planet is worse than the marker we are trying to avoid.
+        /// </summary>
+        private static bool IsUnbuildable(int planetId)
+        {
+            GameData data = GameMain.data;
+            if (data == null || data.galaxy == null)
+            {
+                return false;
+            }
+
+            PlanetData planet = data.galaxy.PlanetById(planetId);
+            return planet != null && planet.type == EPlanetType.Gas;
+        }
+
+        /// <summary>
         /// The anomaly density for this galaxy: the config value when it is set to something
         /// other than -1, otherwise a value drawn from the seed within the range above.
         /// </summary>
@@ -228,6 +246,20 @@ namespace PlanetaryAnomalies
             // exists to explain it, and anomalies should be a reason to look at other worlds
             // rather than a property of the world you start on. See PRODUCT.md.
             if (planetId == _birthPlanetId)
+            {
+                return null;
+            }
+
+            // Gas giants cannot host assemblers -- they take orbital collectors and nothing else --
+            // so an anomaly there could never be realised. It would burn a slot and, worse, the
+            // star map would advertise something the player cannot use.
+            //
+            // This filter is applied here rather than inside AnomalyMath, and that distinction
+            // matters: presence is an independent per-planet draw, so excluding gas giants removes
+            // their anomalies without moving any other planet. Every non-gas-giant keeps exactly
+            // what it had. The generator's arithmetic is untouched, which is why the golden test
+            // correctly does not fire.
+            if (IsUnbuildable(planetId))
             {
                 return null;
             }
@@ -526,7 +558,9 @@ namespace PlanetaryAnomalies
 
         private static void LogNoAnomaly(int planetId)
         {
-            string suffix = planetId == _birthPlanetId ? " (home planet -- never anomalous)" : "";
+            string suffix = "";
+            if (planetId == _birthPlanetId) { suffix = " (home planet -- never anomalous)"; }
+            else if (IsUnbuildable(planetId)) { suffix = " (gas giant -- cannot host machines)"; }
             Plugin.Log.LogInfo(
                 "No anomaly: " + PlanetName(planetId) + " (planet id " + planetId + ")" + suffix + ".");
         }
