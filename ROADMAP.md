@@ -193,25 +193,32 @@ the difference between a mechanic people admire and one they use. Worth watching
 anomalies get used by players *without* established blueprint libraries, and whether the ones who
 do use them are reacting to unusually valuable anomalies rather than ordinary ones.
 
-**"Can you add a rule that e.g. lava planets don't add water pump effect?"** Two distinct problems
-are wearing one hat here.
+**"Can you add a rule that e.g. lava planets don't add water pump effect?"** Declined, and the
+reason is worth keeping because the request will recur.
 
-*Thematic implausibility.* A lava world being unusually good at water pumps is absurd, and absurd
-in a way that reads as a bug rather than as strangeness. This is the *make places tell industrial
-stories* principle, and it is conditionable: `PlanetData` exposes `waterItemId`, `type`, `theme`
-and `singularity`. Note DSP's own `ItemProto.productionMask` does **not** help -- it records how an
-item can be produced (recipe type, mining, gas collection), not where.
+It rests on a misreading. The anomaly makes the *item* cheaper to manufacture; where that item gets
+used is a separate question. A lava world producing water pumps ten at a time is no stranger than
+producing them anywhere else -- you export the pumps to wherever water needs pumping. Manufacturing
+location and use location are already decoupled in DSP, and that decoupling is the game.
 
-*Dud anomalies.* `Water Pump ×10` is close to worthless on any planet, because nobody mass-produces
-water pumps. So are `Wind Turbine ×10` and `Assembling Machine Mk.I ×10`, both of which appeared in
-testing. The lava pairing made a dud visible rather than creating one.
+A plausibility rule would therefore constrain nothing real while making generation planet-dependent
+and harder to reason about. Note also that DSP's own `ItemProto.productionMask` would not have
+helped: it records how an item can be produced -- recipe type, mining, gas collection -- not where.
 
-The second is the more serious finding. *Uneven value is the point* defends anomalies that are
-marginal or situational; it does not defend anomalies that no player would ever use. A pool full of
-one-off building recipes spends slots on nothing.
+**But the complaint surfaced a real defect underneath it.** `Water Pump ×10` is close to worthless
+on *any* planet, because nobody mass-produces water pumps. So are `Wind Turbine ×10` and
+`Assembling Machine Mk.I ×10`, both of which appeared in testing. The lava pairing made an existing
+dud visible rather than creating one.
 
-Both are generation changes, but cheap ones: rendezvous selection means excluding a recipe from a
-planet only moves planets that currently hold it.
+That is the finding worth acting on. *Uneven value is the point* defends anomalies that are
+marginal or situational; it does not defend anomalies no player would ever use. A pool containing
+one-off building recipes spends slots on nothing, and every dud is a planet that could have been
+interesting.
+
+Fixing it is cheap in blast radius: rendezvous selection means removing a recipe from the pool only
+moves the planets that currently hold it. What is not cheap is deciding *which* recipes are duds
+without hand-curating a list that rots as DSP changes -- a rule grounded in something the game
+already knows would be better, if one can be found.
 
 ## Roadmap now
 
