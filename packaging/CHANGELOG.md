@@ -3,7 +3,7 @@
 ## 0.2.0
 
 - Anomalies are shown in the star map. A star lists the affected items in its system, and each
-  planet names its item and multiplier, marked with a compact "Å", so a system can be read
+  planet names its item and multiplier, marked with a compact "Ã…", so a system can be read
   without opening every planet's description tab. `StarmapLabel` chooses between that (Detail), bare counts and markers (Marker),
   or nothing (Off).
 - Refine and Particle recipes are now eligible for anomalies, alongside Smelt, Assemble and

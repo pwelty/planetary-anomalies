@@ -94,6 +94,37 @@ if ($problems.Count -gt 0) {
     throw "$($problems.Count) problem(s) found."
 }
 
+# --- text that ships must be valid UTF-8 -------------------------------------------------------
+#
+# Three separate encoding bugs occurred while writing these files: a mangled multiplication sign, a
+# lone Latin-1 byte where a UTF-8 sequence belonged, and a stray BOM mid-file. Each survived review
+# because a single wrong byte looks like nothing in a diff and like a replacement character on
+# someone else's screen. The listing is the mod's shop window; garbage there is expensive.
+$strictUtf8 = New-Object System.Text.UTF8Encoding($false, $true)
+foreach ($textFile in @('manifest.json', 'README.md', 'CHANGELOG.md')) {
+    $path = Join-Path $packagingDir $textFile
+    if (-not (Test-Path $path)) { continue }
+
+    try {
+        [void]$strictUtf8.GetString([System.IO.File]::ReadAllBytes($path))
+    }
+    catch {
+        $problems.Add("packaging/$textFile is not valid UTF-8 -- it would render as replacement characters on the listing. $($_.Exception.Message)")
+        continue
+    }
+
+    if ((Get-Content $path -Raw) -match "\uFFFD") {
+        $problems.Add("packaging/$textFile already contains a replacement character (U+FFFD); something was mangled before it reached here.")
+    }
+}
+
+if ($problems.Count -gt 0) {
+    Write-Host ""
+    Write-Host "Package would ship broken text:" -ForegroundColor Red
+    foreach ($p in $problems) { Write-Host "  - $p" -ForegroundColor Red }
+    throw "$($problems.Count) problem(s) found."
+}
+
 # --- build fresh, so the packaged DLL is never a stale one ---
 
 Write-Host ""
