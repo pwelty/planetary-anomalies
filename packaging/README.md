@@ -6,6 +6,41 @@ A world where sorters come out ten at a time. A world that turns coal into energ
 
 The point is to make exploration industrially interesting. A planet stops being "does it have titanium?" and starts being "what is this place unreasonably good at, and is that worth building around?"
 
+## What's new in 0.2
+
+**You can see anomalies from the star map now.** Previously you had to select a planet and open its
+description tab, one planet at a time — which meant the screen you actually explore from told you
+nothing. Now a scanned anomalous planet is labelled with what it makes, and its star lists what the
+system contains. You can read a region at a glance instead of clicking through it.
+
+*Why:* several people said the same thing after the first release — that exploration goes quiet
+once you've found the resources you need, partly because the star map shows so little. Putting the
+anomalies there is the smallest thing that helps, and it turns out to be the difference between a
+mechanic you remember and one you forget you installed.
+
+**Gas giants no longer get anomalies.** They can't host assemblers, so an anomaly there could never
+be used — it just advertised something impossible. If a gas giant in your galaxy had one, it
+doesn't now; nothing else changes.
+
+**Oil refinery and particle collider recipes can be anomalous.** Previously only smelters,
+assemblers and chemical plants were eligible, which quietly ruled out Strange Matter, Deuterium and
+refined oil entirely — no galaxy could ever have them. That was an oversight, not a decision.
+
+*Effect on an existing save:* this adds three recipes to the pool, so a small number of planets
+change what they produce — around four out of a hundred and fifty in testing. Everything else stays
+exactly as it was. Anomalies are still derived from your galaxy seed, so nothing is random and
+nothing is lost.
+
+**Also:** the machine window now marks a machine running its planet's anomalous recipe, so the
+panel no longer shows the normal recipe while the machine visibly does something else.
+
+### A note on updates
+
+Anomalies are generated from your galaxy seed, which means a mod update could in principle
+rewrite your galaxy. It shouldn't, and from this release the build refuses to ship if the
+generator changes without a deliberate version bump — so your worlds stay your worlds across
+updates. The exceptions are called out above, and both are corrections rather than reshuffles.
+
 ## Why this exists
 
 I wanted more to do.
@@ -18,7 +53,7 @@ It is meant to add a decision, not a difficulty.
 
 ## How you find them
 
-Scan or visit a planet, then open its **description tab** in the star map. If it has an anomaly, it says so:
+Scan or visit a planet and the star map tells you. An anomalous planet is labelled with what it makes, and its star lists what the system contains, so you can read a region without clicking into it. Selecting a planet and opening its **description tab** gives the full detail:
 
 ```
 ANOMALY
@@ -43,6 +78,8 @@ Settings live in `BepInEx/config/com.planetaryanomalies.dsp.cfg` after the first
 | --- | --- | --- |
 | `AnomalyChancePercent` | `-1` | How many non-home planets are anomalous. `-1` derives it from the galaxy seed, between 25% and 75%, so galaxies differ from one another. Any value from 0 to 100 forces that density instead. |
 | `OutputMultiplier` | `10` | How much more an anomalous recipe produces. |
+| `StarmapLabel` | `Detail` | What star map labels show. `Detail` names the affected items, `Marker` shows counts and a symbol, `Off` hides them. Unscanned planets show nothing either way. |
+| `LogEveryAnomaly` | `false` | Writes every anomaly in the galaxy to the log, including planets you have never scanned. Spoils discovery on purpose; for troubleshooting. |
 
 Changes take effect when a save is next loaded.
 
@@ -57,7 +94,7 @@ Changes take effect when a save is next loaded.
 ## Known limitations
 
 - Only one kind of anomaly exists so far: increased output.
-- Only recipes with a single output item are eligible, so nothing that produces two different things at once.
+- Only recipes with a single output item are eligible, so nothing that produces two different things at once — which still rules out plasma refining and antimatter, since both produce hydrogen alongside their main output.
 - Proliferator interaction is untested beyond not crashing.
 - English only.
 
@@ -71,9 +108,7 @@ Rough intentions, not promises, roughly in the order they are being thought abou
 
 **Softer descriptions.** Right now the panel tells you exactly what an anomaly does. There is an argument for saying only *what* is affected — "improved sorter output" — and letting you find out how much by building it. Existence stays free; magnitude becomes something you discover.
 
-**Better ways to notice.** The planet description tab works, but it is somewhere you have to already be looking. Some signal at the system or galaxy level would make an unexplored region feel like it might be hiding something.
-
-**Version pinning.** Anomalies are derived from the galaxy seed and the version of the generator. Right now, if the generator changes, existing galaxies change with it. Recording the version a galaxy was created under would let it keep its anomalies across mod updates — the one thing that genuinely needs saving.
+**Version pinning.** The build now refuses to ship if the generator changes by accident, so updates do not quietly rewrite your galaxy. What is still missing is recording which generator version a galaxy was created under, which would let existing galaxies keep their anomalies even through a *deliberate* change. That single number is the one thing that genuinely needs saving.
 
 **Multi-output recipes**, and a considered answer to proliferator, rather than the current "does not crash".
 
