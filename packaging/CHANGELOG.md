@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (0.2)
+## 0.2.0
 
 - Anomalies are shown in the star map. A star lists the affected items in its system, and each
   planet names its item and multiplier, marked with a compact "Å", so a system can be read

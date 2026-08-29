@@ -15,7 +15,7 @@ namespace PlanetaryAnomalies
     {
         public const string PluginGuid = "com.planetaryanomalies.dsp";
         public const string PluginName = "Planetary Anomalies";
-        public const string PluginVersion = "0.1.0";
+        public const string PluginVersion = "0.2.0";
 
         internal static ManualLogSource Log;
 
@@ -87,10 +87,12 @@ namespace PlanetaryAnomalies
                 "Display",
                 "StarmapLabel",
                 StarmapLabelMode.Detail,
-                "How anomalous planets are labelled in the star map, for planets you have scanned.\n" +
-                "Detail: name the affected item and multiplier, e.g. \"Titanium Crystal x10\".\n" +
-                "Marker: just the word ANOMALY, for a less crowded galaxy view.\n" +
-                "Off: no star map label at all; anomalies remain visible in the planet panel.\n" +
+                "What star map labels show, for planets you have scanned.\n" +
+                "Detail: a star lists the affected items in its system, and a planet names its item\n" +
+                "  and multiplier, e.g. \"Titanium Crystal x10\".\n" +
+                "Marker: a star shows how many anomalous planets it has, and a planet shows just a\n" +
+                "  symbol -- a less crowded galaxy view.\n" +
+                "Off: no star map labels at all; anomalies remain visible in the planet panel.\n" +
                 "Unscanned planets never show anything, whichever setting is used.");
 
             LogEveryAnomaly = Config.Bind(

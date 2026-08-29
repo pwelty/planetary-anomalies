@@ -150,9 +150,9 @@ Launch DSP **from Gale**, using the profile you installed into.
 On startup you should see:
 
 ```
-[Info   :Planetary Anomalies] Planetary Anomalies v0.1.0 loaded
+[Info   :Planetary Anomalies] Planetary Anomalies v0.2.0 loaded
 [Info   :Planetary Anomalies] Anomalies derived from the galaxy seed; output x10. Density drawn per galaxy, 25-75%.
-[Info   :Planetary Anomalies] Patched PlanetFactory.BeforeGameTick() for production, and UIPlanetDetail.OnPlanetDataSet() and UIAssemblerWindow._OnUpdate() to disclose anomalies in the planet panel and on the machine. Idle until a planet has a factory (i.e. until something is built).
+[Info   :Planetary Anomalies] Patched PlanetFactory.BeforeGameTick() for production, and UIPlanetDetail, UIAssemblerWindow and the star map to disclose anomalies in the planet panel, on the machine, and on star map planet and star labels. Idle until a planet has a factory (i.e. until something is built).
 ```
 
 Once a save is loaded, the galaxy is characterised and each planet is decided as its factory
