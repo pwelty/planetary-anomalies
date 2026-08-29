@@ -175,6 +175,44 @@ Distribution notes from the same survey, useful for the duplicates question:
 - Any specific recipe has roughly a 37% chance of being absent from a galaxy this size. Absence is
   ordinary, not a bug -- worth remembering when someone reports "my galaxy has no X".
 
+### Player feedback after 0.1.x
+
+A player who actually installed it reported three things worth separating.
+
+**They run ×3, not ×10.** The configurable multiplier earned its place. It also suggests ×10 may be
+the wrong default rather than merely a bold one; two people have now called it too high.
+
+**They mostly do not use anomalies, "as I would have to wrap my head around the blueprints I used
+to play with."** This is the most important sentence anyone has said about the mod, and it is the
+thesis meeting reality. Planetary Anomalies asks players to abandon memorised layouts; blueprints
+are precisely the tool that makes memorised layouts free. A player with a blueprint library has
+already paid for a factory doctrine, and an anomaly asks them to write it off.
+
+That is not obviously a problem to fix -- it is the friction the mod exists to create -- but it is
+the difference between a mechanic people admire and one they use. Worth watching for whether
+anomalies get used by players *without* established blueprint libraries, and whether the ones who
+do use them are reacting to unusually valuable anomalies rather than ordinary ones.
+
+**"Can you add a rule that e.g. lava planets don't add water pump effect?"** Two distinct problems
+are wearing one hat here.
+
+*Thematic implausibility.* A lava world being unusually good at water pumps is absurd, and absurd
+in a way that reads as a bug rather than as strangeness. This is the *make places tell industrial
+stories* principle, and it is conditionable: `PlanetData` exposes `waterItemId`, `type`, `theme`
+and `singularity`. Note DSP's own `ItemProto.productionMask` does **not** help -- it records how an
+item can be produced (recipe type, mining, gas collection), not where.
+
+*Dud anomalies.* `Water Pump ×10` is close to worthless on any planet, because nobody mass-produces
+water pumps. So are `Wind Turbine ×10` and `Assembling Machine Mk.I ×10`, both of which appeared in
+testing. The lava pairing made a dud visible rather than creating one.
+
+The second is the more serious finding. *Uneven value is the point* defends anomalies that are
+marginal or situational; it does not defend anomalies that no player would ever use. A pool full of
+one-off building recipes spends slots on nothing.
+
+Both are generation changes, but cheap ones: rendezvous selection means excluding a recipe from a
+planet only moves planets that currently hold it.
+
 ## Roadmap now
 
 ### Phase A — Learn from v0.1.x
