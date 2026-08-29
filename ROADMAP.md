@@ -205,20 +205,29 @@ A plausibility rule would therefore constrain nothing real while making generati
 and harder to reason about. Note also that DSP's own `ItemProto.productionMask` would not have
 helped: it records how an item can be produced -- recipe type, mining, gas collection -- not where.
 
-**But the complaint surfaced a real defect underneath it.** `Water Pump ×10` is close to worthless
-on *any* planet, because nobody mass-produces water pumps. So are `Wind Turbine ×10` and
-`Assembling Machine Mk.I ×10`, both of which appeared in testing. The lava pairing made an existing
-dud visible rather than creating one.
+**The complaint did surface something underneath it, but it is narrower than it first looked.**
 
-That is the finding worth acting on. *Uneven value is the point* defends anomalies that are
-marginal or situational; it does not defend anomalies no player would ever use. A pool containing
-one-off building recipes spends slots on nothing, and every dud is a planet that could have been
-interesting.
+The initial reading was that building recipes are duds because nobody mass-produces buildings.
+Paul corrected that from actual play: the buildings placed in bulk are belts, sorters, wind
+turbines, solar panels and gas transport stations, and a ×10 on any of those genuinely changes a
+build. Wind Turbine was wrongly called a dud by someone reasoning from "it is a building" without
+knowing which buildings get placed by the thousand.
 
-Fixing it is cheap in blast radius: rendezvous selection means removing a recipe from the pool only
-moves the planets that currently hold it. What is not cheap is deciding *which* recipes are duds
-without hand-curating a list that rots as DSP changes -- a rule grounded in something the game
-already knows would be better, if one can be found.
+What survives is a much shorter list -- `Water Pump ×10` really is close to worthless, because a
+whole game needs very few -- and even that is shakier than it looks, because Paul's own phrasing
+was "for me anyway". Which buildings a player mass-produces depends on their style and stage: a
+Dyson swarm build places different things than a solar-tiling build, and an early game places
+different things than a late one.
+
+So filtering duds requires ranking recipes by value, and *the test for every proposed feature*
+asks whether a thing's value can change with context rather than being universally ranked. A dud
+filter is a universal ranking by construction. It would also need hand-curating, and the list would
+rot as DSP changes.
+
+Current position: **do not filter.** The dud problem is real but small, and the cure asks the design
+to do something it explicitly refuses. Revisit only if players report duds often enough that the
+noise outweighs the principle -- and if so, prefer a rule grounded in something the game already
+knows over a hand-written list.
 
 ## Roadmap now
 
