@@ -22,10 +22,22 @@ wrong answer: which recipes matter depends entirely on how you play. Wind turbin
 and solar panels get placed by the thousand; someone else's dead weight is your bottleneck. So the
 mod holds no opinion, and you state yours.
 
-Empty by default, so nothing changes unless you want it to. Excluding a recipe only moves the
-planets that currently carry it -- the rest of your galaxy is untouched -- though it does mean your
-galaxy will differ from another player's with the same seed. Entries that match nothing are
-reported in the log rather than silently ignored.
+Empty by default, so nothing changes unless you want it to. Entries that match nothing are reported
+in the log rather than silently ignored.
+
+*What it does and does not affect:* nothing is written to your saves, and nothing about your factory
+is altered. What changes is which anomaly a planet has — and only for planets carrying the recipe
+you excluded. Every other planet keeps exactly what it had. Those planets stay anomalous and get
+their next-best recipe instead.
+
+The one thing to be aware of: if you had built production on a planet to exploit recipe X and then
+exclude X, that planet's anomaly becomes something else and those machines return to normal output.
+In practice this is unlikely, since you would be excluding a recipe precisely because you do not
+build with it. Machines never get stuck part-way either — a machine's output data is reset from the
+game's own recipe on load and whenever its recipe changes, so it cannot keep producing an anomaly
+that no longer exists.
+
+It does mean your galaxy differs from another player's with the same seed.
 
 ## Previously, in 0.2
 
