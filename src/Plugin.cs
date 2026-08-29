@@ -27,6 +27,7 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<int> OutputMultiplier;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
         internal static ConfigEntry<bool> LogEveryAnomaly;
+        internal static ConfigEntry<string> ExcludedRecipes;
 
         private Harmony _harmony;
 
@@ -94,6 +95,21 @@ namespace PlanetaryAnomalies
                 "  symbol -- a less crowded galaxy view.\n" +
                 "Off: no star map labels at all; anomalies remain visible in the planet panel.\n" +
                 "Unscanned planets never show anything, whichever setting is used.");
+
+            ExcludedRecipes = Config.Bind(
+                "Generation",
+                "ExcludedRecipes",
+                "",
+                "Recipes that should never receive an anomaly, comma separated. Empty by default.\n" +
+                "Use the item name as it appears in game, or a recipe's numeric id:\n" +
+                "  ExcludedRecipes = Water Pump, Wind Turbine, 106\n" +
+                "The mod deliberately holds no opinion about which anomalies are worth having --\n" +
+                "which recipes matter depends on how you play, and a list that is useless to one\n" +
+                "player is exactly what another builds by the thousand. So this is yours to set.\n" +
+                "Entries that match no recipe are reported in the log rather than ignored quietly.\n" +
+                "Excluding a recipe only changes the planets that currently carry it; the rest of\n" +
+                "your galaxy is untouched. It does mean your galaxy differs from another player's\n" +
+                "with the same seed.");
 
             LogEveryAnomaly = Config.Bind(
                 "Diagnostics",

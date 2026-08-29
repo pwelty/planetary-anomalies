@@ -59,6 +59,11 @@ namespace PlanetaryAnomalies
         // Recipes an anomaly may land on, in ascending id order so the choice is stable.
         private static RecipeProto[] _eligible;
 
+        // Recipe names or ids the player has ruled out in config, lower-cased, and which of them
+        // actually matched something -- so a typo can be reported rather than silently doing nothing.
+        private static HashSet<string> _exclusions;
+        private static HashSet<string> _exclusionsMatched;
+
         private static bool _versionLogged;
         private static string _waitReason;
 
@@ -70,6 +75,8 @@ namespace PlanetaryAnomalies
             _galaxyKnown = false;
             _byPlanet.Clear();
             _eligible = null;
+            _exclusions = null;
+            _exclusionsMatched = null;
             _versionLogged = false;
             _waitReason = null;
         }
@@ -178,7 +185,9 @@ namespace PlanetaryAnomalies
                 return false;
             }
 
+            LoadExclusions();
             _eligible = BuildEligibleRecipes(recipes);
+            ReportExclusions();
 
             if (_eligible.Length == 0)
             {
@@ -572,11 +581,117 @@ namespace PlanetaryAnomalies
                 return false;
             }
 
+            if (IsExcludedByPlayer(recipe))
+            {
+                return false;
+            }
+
             return recipe.Items != null && recipe.Items.Length >= 1
                 && recipe.ItemCounts != null && recipe.ItemCounts.Length == recipe.Items.Length
                 && recipe.Results != null && recipe.Results.Length == 1
                 && recipe.ResultCounts != null && recipe.ResultCounts.Length == 1
                 && recipe.ResultCounts[0] > 0;
+        }
+
+        /// <summary>
+        /// Whether the player has ruled this recipe out in config.
+        ///
+        /// The alternative was for the mod to decide which anomalies are worthless -- and it
+        /// cannot. Which recipes matter depends on how someone plays: belts, sorters, wind
+        /// turbines and solar panels are placed by the thousand, while a whole game needs a
+        /// handful of water pumps, but that ranking shifts with play style and stage. Deciding
+        /// centrally would mean exactly the universal ranking that ROADMAP.md's feature test
+        /// rejects.
+        ///
+        /// So the mod holds no opinion and the player states theirs. Empty by default.
+        /// </summary>
+        private static bool IsExcludedByPlayer(RecipeProto recipe)
+        {
+            if (_exclusions == null || _exclusions.Count == 0)
+            {
+                return false;
+            }
+
+            if (_exclusions.Contains(recipe.ID.ToString()))
+            {
+                _exclusionsMatched.Add(recipe.ID.ToString());
+                return true;
+            }
+
+            // Match on anything a player might reasonably type: the recipe's name, its raw proto
+            // name, or the item it produces -- which is what the star map labels actually show, so
+            // it is the name most likely to be copied from the screen.
+            string[] candidates = new string[]
+            {
+                recipe.name,
+                recipe.Name,
+                (recipe.Results != null && recipe.Results.Length > 0) ? PlayerFacingItemName(recipe.Results[0]) : null
+            };
+
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                if (string.IsNullOrEmpty(candidates[i]))
+                {
+                    continue;
+                }
+
+                string key = candidates[i].Trim().ToLowerInvariant();
+                if (_exclusions.Contains(key))
+                {
+                    _exclusionsMatched.Add(key);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Parses the config exclusion list once per galaxy, and reports entries that matched
+        /// nothing. A silent typo would look identical to a working exclusion, which is the kind
+        /// of thing that costs someone an evening.
+        /// </summary>
+        private static void LoadExclusions()
+        {
+            _exclusions = new HashSet<string>();
+            _exclusionsMatched = new HashSet<string>();
+
+            string raw = Plugin.ExcludedRecipes != null ? Plugin.ExcludedRecipes.Value : null;
+            if (string.IsNullOrEmpty(raw))
+            {
+                return;
+            }
+
+            string[] parts = raw.Split(',');
+            for (int i = 0; i < parts.Length; i++)
+            {
+                string entry = parts[i].Trim();
+                if (entry.Length > 0)
+                {
+                    _exclusions.Add(entry.ToLowerInvariant());
+                }
+            }
+        }
+
+        private static void ReportExclusions()
+        {
+            if (_exclusions == null || _exclusions.Count == 0)
+            {
+                return;
+            }
+
+            Plugin.Log.LogInfo(
+                "Excluded by config: " + _exclusionsMatched.Count + " of " + _exclusions.Count + " entries matched a recipe.");
+
+            foreach (string entry in _exclusions)
+            {
+                if (!_exclusionsMatched.Contains(entry))
+                {
+                    Plugin.Log.LogWarning(
+                        "ExcludedRecipes entry \"" + entry + "\" matched no recipe. Check the spelling: " +
+                        "use the item name as it appears in game, or the recipe's numeric id.");
+                }
+            }
         }
 
         /// <summary>

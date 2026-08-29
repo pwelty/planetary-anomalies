@@ -2,6 +2,9 @@
 
 ## 0.2.0
 
+- New `ExcludedRecipes` setting: name recipes that should never receive an anomaly, comma
+  separated. Useful if your galaxy keeps handing you anomalies on things you never mass-produce.
+  Empty by default, because which recipes are worth having depends entirely on how you play.
 - Anomalies are shown in the star map. A star lists the affected items in its system, and each
   planet names its item and multiplier, marked with a compact "Å", so a system can be read
   without opening every planet's description tab. `StarmapLabel` chooses between that (Detail), bare counts and markers (Marker),
