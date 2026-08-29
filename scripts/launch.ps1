@@ -70,7 +70,7 @@ Remove-Item Env:\DOORSTOP_DISABLE -ErrorAction SilentlyContinue
 Start-Process -FilePath $exe -WorkingDirectory $GameDir
 
 Write-Host "Launched. Watch for these lines in the log:" -ForegroundColor Green
-Write-Host "  Planetary Anomalies v0.2.0 loaded"
+Write-Host "  Planetary Anomalies v0.3.0 loaded"
 Write-Host "  ANOMALY   (once a save is loaded)"
 Write-Host "  Anomaly attached to assembler #N   (once a matching smelter exists)"
 

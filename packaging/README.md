@@ -6,7 +6,28 @@ A world where sorters come out ten at a time. A world that turns coal into energ
 
 The point is to make exploration industrially interesting. A planet stops being "does it have titanium?" and starts being "what is this place unreasonably good at, and is that worth building around?"
 
-## What's new in 0.2
+## What's new in 0.3
+
+**You can now exclude recipes you do not want anomalies on.** A new `ExcludedRecipes` setting takes
+a comma-separated list, by item name as it appears in game or by numeric id:
+
+```
+ExcludedRecipes = Water Pump, Assembling Machine Mk.I
+```
+
+*Why:* a player pointed out that some anomalies are simply not worth having -- their example was a
+water pump anomaly, which is close to useless because a whole game needs very few water pumps. The
+obvious fix would be for the mod to filter such recipes out itself, and that turns out to be the
+wrong answer: which recipes matter depends entirely on how you play. Wind turbines, belts, sorters
+and solar panels get placed by the thousand; someone else's dead weight is your bottleneck. So the
+mod holds no opinion, and you state yours.
+
+Empty by default, so nothing changes unless you want it to. Excluding a recipe only moves the
+planets that currently carry it -- the rest of your galaxy is untouched -- though it does mean your
+galaxy will differ from another player's with the same seed. Entries that match nothing are
+reported in the log rather than silently ignored.
+
+## Previously, in 0.2
 
 **You can see anomalies from the star map now.** Previously you had to select a planet and open its
 description tab, one planet at a time — which meant the screen you actually explore from told you
