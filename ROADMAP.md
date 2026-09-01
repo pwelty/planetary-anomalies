@@ -377,6 +377,43 @@ Cheaper in the meantime: the existing `Marker` mode, or a Unicode symbol prefix,
 that the label font may not carry the glyph.
 
 
+### 0.4 candidate: hide labels for recipes not yet researched
+
+Paul's idea, from starting a fresh run. A star map label reading `Particle Broadband ×10` twenty
+hours before you can make particle broadband is noise, and noise that teaches players to stop
+reading labels. Showing it only once the recipe is researched turns the star map into progressive
+disclosure: information appears when it becomes actionable.
+
+Directly implementable. `GameHistoryData.RecipeUnlocked(int recipeId)` is public and is what the
+game itself uses for the same question; `GameHistoryData.recipeUnlocked` is the underlying set.
+
+**The obvious risk, and the feature hiding inside it.** If a label stays hidden until research
+lands, a player who sweeps a region early sees little and may never look again -- so a world that
+became relevant goes unnoticed. That would be worse than the noise it replaced.
+
+But `GameHistoryData` exposes an `onTechUnlocked` event, and `UIPlanetDetail` already refreshes on
+it. So the fix is better than the problem: when a recipe is researched, the galaxy can say it
+already knows where that recipe is unreasonably cheap. "You have researched Sorter Mk.III. You
+scanned a world three jumps away that makes them ten at a time." That is the mod telling a player
+something genuinely useful at the exact moment they can use it, which is a better moment than
+discovery.
+
+Open questions:
+
+- Does the **planet detail panel** hide too, or only star map labels? The panel is deliberate
+  inspection rather than ambient reading, so it probably should not. But then the rule "knowing the
+  planet means knowing its anomaly" needs restating as something like "the star map shows what you
+  can act on; the panel shows everything you know".
+- Does this make the early game feel *emptier* than it already does? The home planet is never
+  anomalous and scanning range is short, so the first hours are already vanilla. This removes more.
+  It may be right anyway -- an empty early star map that fills as you research is a better shape
+  than a full one you learn to ignore -- but it is a real cost and should be judged in play, which
+  is why a fresh run matters.
+- Should already-known-but-newly-relevant anomalies be announced once, or quietly appear? Announcing
+  risks nagging; appearing quietly risks going unseen.
+
+Not a generation change: this is display only, so it cannot move anyone's galaxy.
+
 ### Phase B — A second static effect
 
 Choose the second effect to test the design grammar, not to fill a catalog. It should differ in kind
