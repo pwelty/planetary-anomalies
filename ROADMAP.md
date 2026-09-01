@@ -398,12 +398,20 @@ scanned a world three jumps away that makes them ten at a time." That is the mod
 something genuinely useful at the exact moment they can use it, which is a better moment than
 discovery.
 
-Open questions:
+**Decided: hide it everywhere, not only on star map labels.** Paul's reasoning is that there is
+nothing to "disable" -- an unresearched recipe is already unavailable to the player, so an anomaly
+on it is not information being withheld, it is information that does not yet mean anything.
 
-- Does the **planet detail panel** hide too, or only star map labels? The panel is deliberate
-  inspection rather than ambient reading, so it probably should not. But then the rule "knowing the
-  planet means knowing its anomaly" needs restating as something like "the star map shows what you
-  can act on; the panel shows everything you know".
+That gives one rule across every surface instead of a split between ambient and deliberate ones,
+and it restates the discovery rule cleanly:
+
+> Knowing a planet means knowing the anomalies you can act on.
+
+It is self-consistent without special cases. The machine window needs none, since running a recipe
+implies having researched it. Star counts naturally count only what the player can use. And the
+planet panel showing nothing for an unresearched anomaly matches the star map showing nothing.
+
+Remaining open questions:
 - Does this make the early game feel *emptier* than it already does? The home planet is never
   anomalous and scanning range is short, so the first hours are already vanilla. This removes more.
   It may be right anyway -- an empty early star map that fills as you research is a better shape
