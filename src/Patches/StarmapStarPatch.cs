@@ -63,6 +63,21 @@ namespace PlanetaryAnomalies
             Apply(__instance);
         }
 
+        /// <summary>
+        /// The star map is built once and its labels are never rewritten by the game, so without
+        /// this a system's list is frozen at whatever was true when you opened the save. See
+        /// <see cref="StarmapLabel"/> for why this is a poll rather than an event.
+        /// </summary>
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(UIStarmapStar), "_OnLateUpdate")]
+        internal static void AfterLateUpdate(UIStarmapStar __instance)
+        {
+            if (StarmapLabel.DueForRefresh())
+            {
+                Apply(__instance);
+            }
+        }
+
         private static void Apply(UIStarmapStar instance)
         {
             try
@@ -82,11 +97,6 @@ namespace PlanetaryAnomalies
                 StarmapLabelMode mode = Plugin.StarmapLabel != null
                     ? Plugin.StarmapLabel.Value
                     : StarmapLabelMode.Detail;
-
-                if (mode == StarmapLabelMode.Off)
-                {
-                    return;
-                }
 
                 int anomalous = 0;
                 string names = "";
@@ -117,10 +127,7 @@ namespace PlanetaryAnomalies
                     }
                 }
 
-                if (anomalous == 0)
-                {
-                    return;
-                }
+
 
                 // A bare count says something is here but not whether it is worth the trip, which
                 // in play turned out to be the more common question -- you remember that a system
@@ -129,29 +136,23 @@ namespace PlanetaryAnomalies
                 //
                 // The word "anomaly" always appears, per PRODUCT.md, so anything the mod says is
                 // recognisable as the mod's doing rather than the game's.
-                string body;
-                if (mode == StarmapLabelMode.Detail && named > 0)
+                // Null clears any suffix already on the label, which is what makes this correct
+                // when a system stops having anything to report -- a planet's recipe excluded, or
+                // the label mode turned off mid-session.
+                string body = null;
+                if (anomalous > 0 && mode != StarmapLabelMode.Off)
                 {
-                    body = Symbol + " " + names;
-                }
-                else
-                {
-                    body = anomalous == 1 ? Symbol : Symbol + " " + anomalous;
-                }
-
-                if (!label.supportRichText)
-                {
-                    label.supportRichText = true;
-                }
-
-                string suffix = "  <color=#FFC454>" + body + "</color>";
-
-                if (label.text != null && label.text.EndsWith(suffix, StringComparison.Ordinal))
-                {
-                    return;
+                    if (mode == StarmapLabelMode.Detail && named > 0)
+                    {
+                        body = Symbol + " " + names;
+                    }
+                    else
+                    {
+                        body = anomalous == 1 ? Symbol : Symbol + " " + anomalous;
+                    }
                 }
 
-                label.text = label.text + suffix;
+                StarmapLabel.Set(label, body);
             }
             catch (Exception e)
             {

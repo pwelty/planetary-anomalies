@@ -18,6 +18,12 @@
   Display only: no planet changes what it produces, and no galaxy is regenerated. If a planet
   seemed to have a broken anomaly, it was correct all along and now says so.
 
+- Fixed: star map labels never updated. They were written once, when the star map was built, and
+  nothing rewrote them afterwards -- so scanning a planet or finishing a technology did not make
+  its anomaly appear until you reloaded the save. Reopening the map did not help. This was mostly
+  invisible before now, but combined with hiding unresearched anomalies it meant the mod could
+  hide something and then never un-hide it, which is the worst failure that feature could have.
+  Labels now re-examine themselves about twice a second and rewrite only when the answer changed.
 - Fixed: a stray dash in one label. DSP's own English name for the Thruster recipe is literally
   "- Thruster", so naming anomalies by recipe in this release exposed it and one planet advertised
   "- Thruster x10". Leading punctuation is now stripped from recipe names; hyphens inside a name

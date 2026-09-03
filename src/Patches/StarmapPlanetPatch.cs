@@ -50,6 +50,21 @@ namespace PlanetaryAnomalies
             Apply(__instance);
         }
 
+        /// <summary>
+        /// Scanning a planet and researching a recipe both change what this label should say, and
+        /// neither rewrites the label. Without this the text is frozen at whatever was true when
+        /// the star map was built. See <see cref="StarmapLabel"/>.
+        /// </summary>
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(UIStarmapPlanet), "_OnLateUpdate")]
+        internal static void AfterLateUpdate(UIStarmapPlanet __instance)
+        {
+            if (StarmapLabel.DueForRefresh())
+            {
+                Apply(__instance);
+            }
+        }
+
         private static void Apply(UIStarmapPlanet instance)
         {
             try
@@ -66,58 +81,33 @@ namespace PlanetaryAnomalies
                     return;
                 }
 
-                // The discovery gate. Nothing at all for a planet the player has not learned about.
-                if (!planet.scanned)
-                {
-                    return;
-                }
-
                 StarmapLabelMode mode = Plugin.StarmapLabel != null
                     ? Plugin.StarmapLabel.Value
                     : StarmapLabelMode.Detail;
 
-                if (mode == StarmapLabelMode.Off)
-                {
-                    return;
-                }
+                // Every reason to say nothing runs through the same path as saying something, so
+                // that a label which used to carry a marker loses it when the answer changes. An
+                // early return here would leave stale text on screen -- which is exactly the bug
+                // this shape exists to prevent.
+                string body = null;
 
-                // Has an anomaly, and it is one the player could actually use. An unresearched
-                // recipe names something they cannot build, so the label says nothing at all.
-                if (!AnomalyManager.IsDisclosed(planet.id))
+                // The two gates: has the player found this planet, and is its anomaly on something
+                // they could actually build. An unresearched recipe names something they cannot
+                // make and may not recognise.
+                if (planet.scanned && mode != StarmapLabelMode.Off && AnomalyManager.IsDisclosed(planet.id))
                 {
-                    return;
-                }
-
-                string body = "Å";
-                if (mode == StarmapLabelMode.Detail)
-                {
-                    string what = AnomalyManager.ShortDescribeForPlanet(planet.id);
-                    if (!string.IsNullOrEmpty(what))
+                    body = "Å";
+                    if (mode == StarmapLabelMode.Detail)
                     {
-                        body = "Å " + what;
+                        string what = AnomalyManager.ShortDescribeForPlanet(planet.id);
+                        if (!string.IsNullOrEmpty(what))
+                        {
+                            body = "Å " + what;
+                        }
                     }
                 }
 
-                // Star map labels do not have rich text enabled, so colour tags render as literal
-                // "<color=#FFC454>" rather than colouring anything. UIPlanetDetail does support it,
-                // which is what misled the first attempt -- they are different components with
-                // different settings. Turn it on for this label rather than dropping the colour,
-                // because colour is what separates the mod's text from the game's at a glance.
-                if (!label.supportRichText)
-                {
-                    label.supportRichText = true;
-                }
-
-                string suffix = "  <color=#FFC454>" + body + "</color>";
-
-                // Guards the rename path, and any future call that re-applies without the game
-                // having rewritten the label first.
-                if (label.text != null && label.text.EndsWith(suffix, StringComparison.Ordinal))
-                {
-                    return;
-                }
-
-                label.text = label.text + suffix;
+                StarmapLabel.Set(label, body);
             }
             catch (Exception e)
             {

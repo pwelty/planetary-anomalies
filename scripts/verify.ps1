@@ -221,7 +221,7 @@ $starmapPlanet = $gameAsm.MainModule.GetType('UIStarmapPlanet')
 if ($null -eq $starmapPlanet) {
     $failures.Add("Harmony target type 'UIStarmapPlanet' does not exist in the installed game.")
 } else {
-    foreach ($needed in @('_OnInit', 'OnPlanetDisplayNameChange')) {
+    foreach ($needed in @('_OnInit', 'OnPlanetDisplayNameChange', '_OnLateUpdate')) {
         if (-not ($starmapPlanet.Methods | Where-Object { $_.Name -eq $needed })) {
             $failures.Add("Harmony target 'UIStarmapPlanet.$needed' does not exist in the installed game.")
         } else {
@@ -262,7 +262,7 @@ $starmapStar = $gameAsm.MainModule.GetType('UIStarmapStar')
 if ($null -eq $starmapStar) {
     $failures.Add("Harmony target type 'UIStarmapStar' does not exist in the installed game.")
 } else {
-    foreach ($needed in @('_OnInit', 'OnStarDisplayNameChange')) {
+    foreach ($needed in @('_OnInit', 'OnStarDisplayNameChange', '_OnLateUpdate')) {
         if (-not ($starmapStar.Methods | Where-Object { $_.Name -eq $needed })) {
             $failures.Add("Harmony target 'UIStarmapStar.$needed' does not exist in the installed game.")
         } else {
