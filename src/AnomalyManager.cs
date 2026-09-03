@@ -167,12 +167,46 @@ namespace PlanetaryAnomalies
             if (!_withheldLogged.Contains(planetId))
             {
                 _withheldLogged.Add(planetId);
+                string tech = UnlockingTechName(anomaly.RecipeId);
                 Plugin.Log.LogInfo("Withheld on " + PlanetName(planetId) + " (planet id " + planetId +
-                                   "): recipe " + anomaly.RecipeId + " is not researched. " +
+                                   "): recipe " + anomaly.RecipeId + " is not researched" +
+                                   (tech != null ? ", unlocked by " + tech : "") + ". " +
                                    "Set HideUnresearchedAnomalies = false to show it anyway.");
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// The technology that unlocks a recipe, by name, or null if the game does not name one.
+        ///
+        /// <c>RecipeProto.preTech</c> is the game's own link, so this needs no table of its own and
+        /// cannot drift as DSP changes. Worth having because "recipe 79 is not researched" sends a
+        /// player hunting through the tech tree, while naming the technology ends the question.
+        /// </summary>
+        private static string UnlockingTechName(int recipeId)
+        {
+            RecipeProtoSet recipes = LDB.recipes;
+            if (recipes == null || !recipes.Exist(recipeId))
+            {
+                return null;
+            }
+
+            RecipeProto recipe = recipes.Select(recipeId);
+            if (recipe == null || recipe.preTech == null)
+            {
+                return null;
+            }
+
+            string name = recipe.preTech.name;
+            return string.IsNullOrEmpty(name) ? null : name;
+        }
+
+        /// <summary>The tech name in brackets, or nothing at all. Keeps the survey line readable.</summary>
+        private static string TechSuffix(int recipeId)
+        {
+            string tech = UnlockingTechName(recipeId);
+            return tech != null ? " (" + tech + ")" : "";
         }
 
         /// <summary>Planets already reported as withheld, so the log gets one line each.</summary>
@@ -352,7 +386,9 @@ namespace PlanetaryAnomalies
                             "  SURVEY  " + star.displayName + " / " + planet.displayName +
                             " (planet id " + planet.id + "): " + ShortDescribeForPlanet(planet.id) +
                             "  [" + (scanned ? "scanned" : "NOT scanned") +
-                            ", " + (researched ? "researched" : "NOT researched") +
+                            ", " + (researched
+                                ? "researched"
+                                : "NOT researched" + TechSuffix(anomaly.RecipeId)) +
                             " -> " + (scanned && researched ? "SHOWN" : "HIDDEN") + "]");
                         continue;
                     }

@@ -353,6 +353,15 @@ if (-not $history) {
     }
 }
 
+# RecipeProto.preTech is how the log names the technology a hidden anomaly is waiting on.
+$recipeProto = $gameAsm.MainModule.GetType('RecipeProto')
+$preTech = $recipeProto.Fields | Where-Object { $_.Name -eq 'preTech' -and $_.IsPublic }
+if (-not $preTech) {
+    $failures.Add("RecipeProto.preTech is missing or no longer public; hidden anomalies cannot name their technology.")
+} else {
+    Write-Host "OK  RecipeProto.preTech is public (names the blocking technology)"
+}
+
 $gameMain = $gameAsm.MainModule.GetType('GameMain')
 $historyProp = $gameMain.Properties | Where-Object {
     $_.Name -eq 'history' -and $_.GetMethod -and $_.GetMethod.IsStatic -and $_.GetMethod.IsPublic
