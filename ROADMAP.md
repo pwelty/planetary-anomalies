@@ -544,6 +544,9 @@ should not ship alongside anything else that moves planets.
 
 Untested: proliferator interaction, which labs handle with their own incremental fields
 (`matrixIncServed`), and which is already listed as unexamined for assemblers.
+
+**Deferred to 1.0**, Paul's call, and it wants real testing rather than a confident patch. See
+*The one re-roll* below for why that is now the natural home for it.
 ### Phase B — A second static effect
 
 Choose the second effect to test the design grammar, not to fill a catalog. It should differ in kind
@@ -714,6 +717,24 @@ galaxies develop recognizable economic geography:
 
 The aim is not more content for its own sake. It is a galaxy where players tell stories about places
 because those places changed what they built.
+
+## The one re-roll
+
+Three things now want a generation change: galaxy-wide unique recipes, variable multipliers, and
+research cubes. Each one on its own has to justify moving planets in an existing save, and each one
+would ask players to accept a scramble for a single feature.
+
+Bundled into 1.0 they ask once. That is worth more than it sounds -- the objection to any of them
+was never the feature, it was the reshuffle, and the reshuffle does not get worse for being shared.
+
+The three also need each other. Cubes without variable multipliers means Electromagnetic Matrix and
+Universe Matrix both get a flat ×10, which is the one case where uniform value stops being a stated
+principle and starts being a missing feature. Unique recipes without the wider pool that cubes add
+runs out of recipes sooner. They are better together than in sequence, and they are the reason 1.0
+is a real boundary rather than a version number.
+
+Everything before 1.0 should therefore hold the generator still, which is what the golden test
+already enforces.
 
 ## Candidate release sequence
 
