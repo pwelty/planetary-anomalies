@@ -125,6 +125,26 @@ An anomaly does nothing until you build the affected recipe on that planet. Most
 
 Anomalies are **not balanced**, on purpose. A ×10 on iron ingots is a convenience. A ×10 on something late-game and expensive is a windfall. Finding one of those should feel like a discovery, not like a reward that has been carefully measured out for you.
 
+### The galaxy does the balancing
+
+Anomalies are not balanced against each other. Using one is balanced anyway, and not by anything
+this mod invented.
+
+An anomaly is somewhere you did not choose. Reaching it costs logistics. Building on it costs a
+factory you have to think about rather than paste. And on most worlds worth having it costs a
+fight: you clear the dark fog, and then you *hold* it, because ground bases get re-seeded from
+orbit. There is no trip that ends the problem. So a remote anomaly is never just a ×10 -- it is a
+×10 plus a garrison, plus the power to run it, plus everything you shipped out to build it.
+
+That price scales with exactly what the mod is asking of you. The further out you are willing to
+go, the more the galaxy charges, and it charges in a currency -- ground you have to keep -- that no
+output multiplier can pay off. Nothing in this mod knows the dark fog exists. DSP has been pricing
+distance the whole time; the mod only had to give you a reason to go.
+
+Which means a good anomaly never asks whether ×10 is worth having. It asks whether this one is worth
+holding ground for, twenty light years from home. That is a better question, and the mod is a good
+deal worse at asking it than the game is.
+
 ## Configuration
 
 Settings live in `BepInEx/config/com.planetaryanomalies.dsp.cfg` after the first run.
