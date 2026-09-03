@@ -898,9 +898,10 @@ namespace PlanetaryAnomalies
                 return null;
             }
 
-            if (!string.IsNullOrEmpty(recipe.name))
+            string named = CleanRecipeName(recipe.name);
+            if (named != null)
             {
-                return recipe.name;
+                return named;
             }
 
             if (recipe.Results != null && recipe.Results.Length > 0)
@@ -914,6 +915,38 @@ namespace PlanetaryAnomalies
         /// <summary>Localized item name with no ids, for display to the player.</summary>
 
 
+
+        /// <summary>
+        /// Strips the decoration DSP's own recipe strings occasionally carry. The English name of
+        /// recipe 20 is literally "- Thruster", dash included; printed verbatim on a star map label
+        /// that reads as a bug in this mod rather than a quirk of the game's data. It is the only
+        /// such case in the 94 recipes observed in play, which is exactly why it is worth handling
+        /// here rather than special-casing one id.
+        ///
+        /// Only *leading* punctuation goes, so hyphenated names -- "EM-Rail Ejector",
+        /// "High-purity Silicon", "Super-magnetic Ring" -- are left exactly as the game writes them.
+        /// Returns null rather than an empty string when nothing survives, so the caller falls back
+        /// to the output item's name.
+        /// </summary>
+        private static string CleanRecipeName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+
+            int start = 0;
+            while (start < name.Length &&
+                   (char.IsWhiteSpace(name[start]) ||
+                    name[start] == '-' || name[start] == '\u2013' ||
+                    name[start] == '\u2014' || name[start] == '\u00B7'))
+            {
+                start++;
+            }
+
+            string trimmed = name.Substring(start).TrimEnd();
+            return trimmed.Length > 0 ? trimmed : null;
+        }
 
         private static string PlayerFacingItemName(int itemId)
         {
