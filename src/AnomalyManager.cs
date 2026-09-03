@@ -625,7 +625,7 @@ namespace PlanetaryAnomalies
             {
                 recipe.name,
                 recipe.Name,
-                (recipe.Results != null && recipe.Results.Length > 0) ? PlayerFacingItemName(recipe.Results[0]) : null
+                PlayerFacingRecipeName(recipe)
             };
 
             for (int i = 0; i < candidates.Length; i++)
@@ -758,7 +758,7 @@ namespace PlanetaryAnomalies
                 // The arrow, multiplication sign and middot used in this project are literal UTF-8.
                 // csc reads them correctly and they render correctly in game -- both verified. Keep
                 // to characters already proven here rather than introducing untested ones.
-                body += PlayerFacingItemName(recipe.Results[i]) + ": " +
+                body += PlayerFacingRecipeName(recipe) + ": " +
                         normal + " → " + (normal * anomaly.OutputMultiplier);
             }
 
@@ -798,7 +798,7 @@ namespace PlanetaryAnomalies
 
             // Only the first product is named. Eligible recipes have exactly one, and if that ever
             // changes a star map label is not the place to explain it.
-            return PlayerFacingItemName(recipe.Results[0]) + " ×" + anomaly.OutputMultiplier;
+            return PlayerFacingRecipeName(recipe) + " ×" + anomaly.OutputMultiplier;
         }
 
         /// <summary>
@@ -825,10 +825,45 @@ namespace PlanetaryAnomalies
                 return null;
             }
 
-            return PlayerFacingItemName(recipe.Results[0]);
+            return PlayerFacingRecipeName(recipe);
+        }
+
+        /// <summary>
+        /// The recipe's own player-facing name, falling back to its output item.
+        ///
+        /// Naming the *recipe* rather than its output matters more than it looks. DSP has several
+        /// cases where two recipes produce the same item -- "Space Warper" from Graviton Lens and
+        /// "Space Warper (advanced)" from Gravity Matrix, for instance. Labelling an anomaly by its
+        /// output item told a player their planet boosted "Space Warper", so they built the recipe
+        /// they knew, got no boost, and reasonably reported a bug. The mod was right and its label
+        /// was wrong.
+        ///
+        /// The recipe name disambiguates because that is exactly its job in the game's own UI. For
+        /// the large majority of recipes it reads identically to the item name, so this changes
+        /// nothing visible except in the cases where it matters.
+        /// </summary>
+        private static string PlayerFacingRecipeName(RecipeProto recipe)
+        {
+            if (recipe == null)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrEmpty(recipe.name))
+            {
+                return recipe.name;
+            }
+
+            if (recipe.Results != null && recipe.Results.Length > 0)
+            {
+                return PlayerFacingItemName(recipe.Results[0]);
+            }
+
+            return null;
         }
 
         /// <summary>Localized item name with no ids, for display to the player.</summary>
+
 
 
         private static string PlayerFacingItemName(int itemId)

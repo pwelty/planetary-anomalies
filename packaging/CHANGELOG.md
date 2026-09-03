@@ -2,6 +2,11 @@
 
 ## 0.3.0
 
+- Fixed: anomalies were labelled by the item they produce rather than by the recipe. Where DSP has
+  two recipes for the same item -- "Space Warper" from Graviton Lens and "Space Warper (advanced)"
+  from Gravity Matrix, and nine other pairs -- the label named the item, so building the recipe you
+  already knew produced no boost and looked like a broken mod. Labels now name the recipe, which
+  is how the game itself distinguishes them. Affects roughly one anomaly in fifteen.
 - New `ExcludedRecipes` setting: name recipes that should never receive an anomaly, comma
   separated, by item name as shown in game or by numeric id. Useful if your galaxy keeps handing
   you anomalies on things you never mass-produce. Empty by default, because which recipes are
