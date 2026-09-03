@@ -512,6 +512,38 @@ Open questions:
 
 Low priority, high delight-per-line. A good thing to build on a day when the generator should not
 be touched.
+### Candidate: research cubes (matrices)
+
+Paul asked whether cubes can be anomalous. Today they cannot: matrix recipes are
+`ERecipeType.Research`, and the eligible set is Smelt, Assemble, Chemical, Refine and Particle.
+
+**The mechanism transfers almost unchanged**, which was the surprise. `LabComponent` is a struct
+carrying `recipeExecuteData` exactly like `AssemblerComponent`, and `FactorySystem.labPool` and
+`labCursor` are public. So the production patch is the existing one plus a second sweep and one
+condition: only labs with `researchMode == false`, since a lab consuming cubes for research is not
+running a recipe. `GameTickLabProduceMode` is the path that would read the swapped data.
+
+**It is the best fit for the thesis of anything left on this list.** Cubes are the one thing a
+player would genuinely restructure a galaxy around, and they are consumed forever rather than built
+once, so a cube world is a permanent logistics commitment rather than a one-off trip. It also lands
+squarely on the defence cost: a ×10 cube world twenty light years out is worth holding, which
+makes the decision to hold it a real one.
+
+**And it is the strongest anomaly the mod could offer, which is the thing to be careful about.**
+Research is the game's progression axis. A ×10 on Electromagnetic Matrix is a pleasant early
+boost; a ×10 on Universe Matrix is a different order of object, and "anomalies are not balanced,
+on purpose" was written about iron plates. That does not settle it -- uneven value is the stated
+point, and a windfall should feel like one -- but it argues for meeting variable multipliers first,
+so the tiers can differ rather than every matrix getting the same ×10. Players who disagree can
+already exclude them by name.
+
+**Cost to existing galaxies:** this is a generation change. Six recipes joining a pool of 150 moves
+a few planets, on the order of the Refine/Particle widening in 0.2. Acceptable under the rule
+already agreed -- adding recipes is allowed to shift things -- but it has to be called out, and it
+should not ship alongside anything else that moves planets.
+
+Untested: proliferator interaction, which labs handle with their own incremental fields
+(`matrixIncServed`), and which is already listed as unexamined for assemblers.
 ### Phase B — A second static effect
 
 Choose the second effect to test the design grammar, not to fill a catalog. It should differ in kind
