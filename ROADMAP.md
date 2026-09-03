@@ -229,6 +229,37 @@ to do something it explicitly refuses. Revisit only if players report duds often
 noise outweighs the principle -- and if so, prefer a rule grounded in something the game already
 knows over a hand-written list.
 
+### The defence cost, found in play (0.4)
+
+Paul, mid-run: using anomalies forces you to clear and hold far more planets than an ordinary game
+does, and that is a serious problem for a world 22 light years out.
+
+Nothing in this mod knows the dark fog exists. This cost was never designed, never balanced and
+never paid for -- DSP supplied it the moment the mod started asking players to build somewhere
+they had not chosen.
+
+**It is the strongest confirmation of the thesis so far.** The stated aim was to create another
+logistics problem rather than free items. The real price turns out to be larger and better than
+logistics: moving production to an anomalous world means clearing it and then *holding* it, which
+at interstellar range means shipping turrets and ammunition, or standing up local ammunition
+production, on a planet you picked for exactly one recipe. An anomaly stops being an optimisation
+and becomes a campaign decision.
+
+**And it prices itself.** Distance raises the reward -- the further out, the more the mod is asking
+of you -- and raises the defensive burden in the same motion. That is a difficulty curve the mod
+got for free by not building one, which is the best possible reason to keep not building one.
+Anything that tried to price anomalies by hand would be competing with this and losing.
+
+**The risk on the other side.** If holding ground costs enough, anomalies stop being used -- which
+is the 0.1.x blueprint finding wearing different clothes. Two independent reasons not to use an
+anomaly, sunk factory doctrine and military cost, pointing at the same outcome. They may compound:
+a player who would have rebuilt their layout for a ×10 may still decline to fight for it. Worth
+watching specifically, because the mod would look identical either way from the outside.
+
+Nothing to build. The temptation this creates -- weight anomalies toward dangerous space, or away
+from it -- should be refused until there is evidence, because the game is already pricing the
+thing that rule would price. Nor should the star map gain a threat indicator: DSP shows dark fog
+already.
 ## Roadmap now
 
 ### Phase A — Learn from v0.1.x
@@ -339,7 +370,21 @@ Options:
 - **Defer to 1.0**, where a re-roll is already accepted, and bundle it with variable multipliers so
   players pay one re-roll rather than two.
 
-The third is the current leaning, for that last reason alone.
+The third is the current leaning -- and a finding from play has since made galaxy-wide uniqueness
+look actively worse, not merely expensive.
+
+**Duplication is a release valve.** This section treats duplicates as diluted identity. But once
+holding a planet costs something (see *The defence cost, found in play*), three Crystal Silicon
+worlds are not three copies of one fact -- they are a choice about which one you can actually
+reach and defend, and that choice is strategic content the mod did not have to write. Galaxy-wide
+uniqueness deletes it, and hands every recipe a single address that may be 22 light years away
+through hostile space, with no alternative at any price.
+
+Per-system uniqueness survives this intact: it removes duplication from the screen you look at
+while leaving alternatives across the galaxy. Galaxy-wide uniqueness now needs to argue not only
+that it is worth a re-roll, but that removing the player's choice of *which* sorter world to fight
+for makes the game better. That is a much harder case, and it is the first argument against it
+that comes from play rather than from implementation cost.
 
 ### Icons instead of names (investigated; viable in the panel, not the star map)
 
