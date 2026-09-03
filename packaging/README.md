@@ -6,7 +6,29 @@ A world where sorters come out ten at a time. A world that turns coal into energ
 
 The point is to make exploration industrially interesting. A planet stops being "does it have titanium?" and starts being "what is this place unreasonably good at, and is that worth building around?"
 
-## What's new in 0.3
+## What's new in 0.4
+
+**Anomalies stay hidden until you have researched the recipe.** Every surface follows the same
+rule now — the planet panel, planet and star labels, and the system counts.
+
+*Why:* a star map label reading `Particle Broadband ×10` twenty hours before you can make particle
+broadband is not a secret being kept from you; the recipe is already unavailable, so the label
+names something you cannot build and may not recognise. It is noise, and noise teaches you to stop
+reading the labels. The rule is one line: **knowing a planet means knowing the anomalies you can
+act on.** In practice the star map now fills in as your research opens up, which is the shape the
+information actually has.
+
+Set `HideUnresearchedAnomalies = false` if you preferred seeing everything. Nothing about
+generation changes either way — the same planets are anomalous, you just get told later.
+
+**Fixed: anomalies are named by their recipe, not by the item they make.** DSP has ten pairs of
+recipes that produce the same item — Space Warper from Graviton Lens and *Space Warper
+(advanced)* from Gravity Matrix, and nine more. The label named the item, so a player on a
+"Space Warper" planet built the recipe they knew, got no boost, and reasonably reported a bug. The
+mod was right and its label was wrong. Labels now name the recipe, which is exactly how the game
+itself tells them apart. About one anomaly in fifteen reads differently; none of them moved.
+
+## Previously, in 0.3
 
 **You can now exclude recipes you do not want anomalies on.** A new `ExcludedRecipes` setting takes
 a comma-separated list, by item name as it appears in game or by numeric id:
@@ -39,7 +61,7 @@ that no longer exists.
 
 It does mean your galaxy differs from another player's with the same seed.
 
-## Previously, in 0.2
+## And in 0.2
 
 **You can see anomalies from the star map now.** Previously you had to select a planet and open its
 description tab, one planet at a time — which meant the screen you actually explore from told you
@@ -93,7 +115,7 @@ ANOMALY
 Sorter Mk.III: 2 → 20
 ```
 
-That is the whole discovery mechanic — no hunting, no guessing. Knowing the planet means knowing its anomaly. A machine actually running an anomalous recipe also marks itself in its own window, so you are never left wondering why a number looks wrong.
+That is the whole discovery mechanic — no hunting, no guessing. Knowing a planet means knowing the anomalies you can act on: an anomaly on a recipe you have not researched yet stays quiet until the research lands, so the map fills in as the game opens up rather than naming things you cannot build. A machine actually running an anomalous recipe also marks itself in its own window, so you are never left wondering why a number looks wrong.
 
 Your **home planet never has an anomaly**. The starting world stays ordinary, deliberately: anomalies are a reason to look outward.
 
@@ -113,6 +135,7 @@ Settings live in `BepInEx/config/com.planetaryanomalies.dsp.cfg` after the first
 | `OutputMultiplier` | `10` | How much more an anomalous recipe produces. |
 | `StarmapLabel` | `Detail` | What star map labels show. `Detail` names the affected items, `Marker` shows counts and a symbol, `Off` hides them. Unscanned planets show nothing either way. |
 | `ExcludedRecipes` | empty | Recipes that should never receive an anomaly, comma separated — by item name as it appears in game, or numeric id. The mod holds no opinion about which anomalies are worth having, because that depends entirely on how you play; this is where you state yours. Entries matching nothing are reported in the log rather than ignored. |
+| `HideUnresearchedAnomalies` | `true` | Hides an anomaly until you have researched the recipe it affects, everywhere it would otherwise appear. `false` shows every anomaly on any planet you have scanned, as in 0.3. Display only: generation is unchanged. |
 | `LogEveryAnomaly` | `false` | Writes every anomaly in the galaxy to the log, including planets you have never scanned. Spoils discovery on purpose; for troubleshooting. |
 
 Changes take effect when a save is next loaded.

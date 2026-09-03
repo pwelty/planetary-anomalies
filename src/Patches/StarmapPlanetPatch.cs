@@ -81,7 +81,9 @@ namespace PlanetaryAnomalies
                     return;
                 }
 
-                if (AnomalyManager.AnomalyFor(planet.id) == null)
+                // Has an anomaly, and it is one the player could actually use. An unresearched
+                // recipe names something they cannot build, so the label says nothing at all.
+                if (!AnomalyManager.IsDisclosed(planet.id))
                 {
                     return;
                 }

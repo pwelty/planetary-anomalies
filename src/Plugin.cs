@@ -15,7 +15,7 @@ namespace PlanetaryAnomalies
     {
         public const string PluginGuid = "com.planetaryanomalies.dsp";
         public const string PluginName = "Planetary Anomalies";
-        public const string PluginVersion = "0.3.0";
+        public const string PluginVersion = "0.4.0";
 
         internal static ManualLogSource Log;
 
@@ -26,6 +26,7 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<int> AnomalyChancePercent;
         internal static ConfigEntry<int> OutputMultiplier;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
+        internal static ConfigEntry<bool> HideUnresearched;
         internal static ConfigEntry<bool> LogEveryAnomaly;
         internal static ConfigEntry<string> ExcludedRecipes;
 
@@ -110,6 +111,19 @@ namespace PlanetaryAnomalies
                 "Excluding a recipe only changes the planets that currently carry it; the rest of\n" +
                 "your galaxy is untouched. It does mean your galaxy differs from another player's\n" +
                 "with the same seed.");
+
+            HideUnresearched = Config.Bind(
+                "Display",
+                "HideUnresearchedAnomalies",
+                true,
+                "Hides an anomaly until you have researched the recipe it affects, on every\n" +
+                "surface: the planet panel, planet and star labels, and the system counts.\n" +
+                "An unresearched recipe is already unavailable to you, so an anomaly on it names\n" +
+                "something you cannot build and may not recognise -- which is noise, and noise\n" +
+                "teaches you to stop reading the labels. With this on, the star map fills in as\n" +
+                "your research opens up, and anything it shows you is something you can act on.\n" +
+                "Set to false to see every anomaly on any planet you have scanned, as in 0.3.\n" +
+                "This is display only: it changes nothing about which planets are anomalous.");
 
             LogEveryAnomaly = Config.Bind(
                 "Diagnostics",

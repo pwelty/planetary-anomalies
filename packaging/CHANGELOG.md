@@ -1,12 +1,25 @@
 # Changelog
 
-## 0.3.0
+## 0.4.0
 
+- Anomalies stay hidden until you have researched the recipe they affect -- on the planet panel,
+  on planet and star labels, and in the system counts. An unresearched recipe is already
+  unavailable to you, so an anomaly on it named something you could not build and might not
+  recognise. "Particle Broadband x10" twenty hours before particle broadband exists is noise, and
+  noise teaches you to stop reading the labels. Now the star map fills in as your research opens
+  up, and anything on it is something you can act on. Set `HideUnresearchedAnomalies = false` for
+  the old behaviour. Display only: no planet changes what it produces.
 - Fixed: anomalies were labelled by the item they produce rather than by the recipe. Where DSP has
   two recipes for the same item -- "Space Warper" from Graviton Lens and "Space Warper (advanced)"
   from Gravity Matrix, and nine other pairs -- the label named the item, so building the recipe you
   already knew produced no boost and looked like a broken mod. Labels now name the recipe, which
   is how the game itself distinguishes them. Affects roughly one anomaly in fifteen.
+
+  Display only: no planet changes what it produces, and no galaxy is regenerated. If a planet
+  seemed to have a broken anomaly, it was correct all along and now says so.
+
+## 0.3.0
+
 - New `ExcludedRecipes` setting: name recipes that should never receive an anomaly, comma
   separated, by item name as shown in game or by numeric id. Useful if your galaxy keeps handing
   you anomalies on things you never mass-produce. Empty by default, because which recipes are

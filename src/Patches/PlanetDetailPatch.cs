@@ -44,6 +44,11 @@ namespace PlanetaryAnomalies
                     return;
                 }
 
+                if (!AnomalyManager.IsDisclosed(planet.id))
+                {
+                    return;
+                }
+
                 string description = AnomalyManager.DescribeForPlanet(planet.id);
                 if (string.IsNullOrEmpty(description))
                 {

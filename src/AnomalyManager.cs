@@ -133,6 +133,55 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>
+        /// Whether a planet's anomaly should be shown to the player at all. Every display surface
+        /// asks this; production never does.
+        ///
+        /// An anomaly on a recipe the player has not researched is not information being withheld
+        /// -- the recipe is already unavailable, so the label names something they cannot build and
+        /// may not recognise. Twenty hours before particle broadband exists, "Particle Broadband
+        /// x10" is noise, and noise teaches players to stop reading labels. Hiding it until the
+        /// research lands makes the star map fill in as the game opens up, which is the shape the
+        /// information actually has.
+        ///
+        /// The rule is deliberately the same on every surface rather than split between ambient
+        /// ones and deliberate ones, so it can be stated in a line: knowing a planet means knowing
+        /// the anomalies you can act on. The machine window needs no special case, since running a
+        /// recipe implies having researched it.
+        /// </summary>
+        internal static bool IsDisclosed(int planetId)
+        {
+            PlanetAnomaly anomaly = AnomalyFor(planetId);
+            if (anomaly == null)
+            {
+                return false;
+            }
+
+            return IsRecipeKnown(anomaly.RecipeId);
+        }
+
+        /// <summary>
+        /// Whether the player has researched a recipe, using the game's own record of it --
+        /// GameHistoryData.RecipeUnlocked is what DSP itself asks before offering a recipe.
+        ///
+        /// Fails open. If the config is off, or history is not available yet, the answer is "show
+        /// it": a null reference during loading should not silently blank the whole feature.
+        /// </summary>
+        private static bool IsRecipeKnown(int recipeId)
+        {
+            if (Plugin.HideUnresearched != null && !Plugin.HideUnresearched.Value)
+            {
+                return true;
+            }
+
+            GameHistoryData history = GameMain.history;
+            if (history == null)
+            {
+                return true;
+            }
+
+            return history.RecipeUnlocked(recipeId);
+        }
+        /// <summary>
         /// Establishes which galaxy is loaded and builds the eligible recipe list. Returns false
         /// while the game is still loading.
         /// </summary>

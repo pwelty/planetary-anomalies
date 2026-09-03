@@ -100,7 +100,9 @@ namespace PlanetaryAnomalies
                         continue;
                     }
 
-                    if (AnomalyManager.AnomalyFor(planet.id) == null)
+                    // Counts follow the same rule as names: a system's tally is of anomalies the
+                    // player can act on, so it cannot advertise one whose label is hidden.
+                    if (!AnomalyManager.IsDisclosed(planet.id))
                     {
                         continue;
                     }

@@ -334,6 +334,35 @@ if (-not $scanned -or -not $scanned.IsPublic) {
     Write-Host "OK  PlanetData.scanned is public (discovery gate)"
 }
 
+# The second half of the disclosure rule: an anomaly is hidden until its recipe is researched.
+# RecipeUnlocked is what the game itself asks, so if it moves, the mod should stop rather than
+# quietly fall back to showing everything.
+$history = $gameAsm.MainModule.GetType('GameHistoryData')
+if (-not $history) {
+    $failures.Add("GameHistoryData is gone; the research gate cannot be evaluated.")
+} else {
+    $recipeUnlocked = $history.Methods | Where-Object {
+        $_.Name -eq 'RecipeUnlocked' -and $_.IsPublic -and $_.Parameters.Count -eq 1 -and
+        $_.Parameters[0].ParameterType.FullName -eq 'System.Int32' -and
+        $_.ReturnType.FullName -eq 'System.Boolean'
+    }
+    if (-not $recipeUnlocked) {
+        $failures.Add("GameHistoryData.RecipeUnlocked(int) -> bool is missing; the research gate is gone.")
+    } else {
+        Write-Host "OK  GameHistoryData.RecipeUnlocked(int) is public (research gate)"
+    }
+}
+
+$gameMain = $gameAsm.MainModule.GetType('GameMain')
+$historyProp = $gameMain.Properties | Where-Object {
+    $_.Name -eq 'history' -and $_.GetMethod -and $_.GetMethod.IsStatic -and $_.GetMethod.IsPublic
+}
+if (-not $historyProp) {
+    $failures.Add("GameMain.history is missing or no longer a public static property; the research gate is unreachable.")
+} else {
+    Write-Host "OK  GameMain.history is a public static property"
+}
+
 # The hook must run in BOTH the sequential and multithreaded dispatch paths. GameLogic pairs most
 # factory phases with a _Parallel twin and picks between them on thread count, so a phase that has
 # a twin is only half the story. FactoryBeforeGameTick having no twin is what makes it safe --

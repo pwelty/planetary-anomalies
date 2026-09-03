@@ -377,7 +377,7 @@ Cheaper in the meantime: the existing `Marker` mode, or a Unicode symbol prefix,
 that the label font may not carry the glyph.
 
 
-### 0.4 candidate: hide labels for recipes not yet researched
+### Shipped in 0.4: hide labels for recipes not yet researched
 
 Paul's idea, from starting a fresh run. A star map label reading `Particle Broadband ×10` twenty
 hours before you can make particle broadband is noise, and noise that teaches players to stop
@@ -422,6 +422,20 @@ Remaining open questions:
 
 Not a generation change: this is display only, so it cannot move anyone's galaxy.
 
+**Shipped in 0.4**, gated on `GameHistoryData.RecipeUnlocked` as anticipated, applied at the three
+display surfaces rather than inside the describe methods so that `LogEveryAnomaly` keeps dumping the
+whole galaxy -- a diagnostic that deliberately ignores every disclosure rule should keep ignoring
+this one. `HideUnresearchedAnomalies` defaults to true; false restores 0.3 behaviour, because this
+changes what an existing player sees and that is their call to reverse.
+
+The two open questions above are now play questions, not design questions:
+- whether the early game feels emptier. Judge on a fresh run, not a mature save, where almost
+  everything is researched and the change is nearly invisible.
+- the `onTechUnlocked` announcement is **not** built. Hiding had to come first: there is nothing to
+  announce until something was being withheld. It is the obvious next move, and it is what turns
+  this from a subtraction into an addition -- "you have researched Sorter Mk.III, and you scanned a
+  world three jumps away that makes them ten at a time."
+
 ### Candidate: export the galaxy index as a single web page
 
 Paul's idea, after I generated one by hand for his seed so he could plan around it: the artifact
@@ -436,7 +450,7 @@ that same data written to a file with a `<style>` block around it. No new game h
 **What makes it interesting is what it refuses to include.** The obvious version dumps the whole
 galaxy, which is the answer key -- it is `LogEveryAnomaly` with better typography, and it deletes
 the exploration the mod exists to create. The version worth building exports only what the player
-has actually discovered: scanned planets, and (if the 0.4 rule lands) only the recipes they have
+has actually discovered: scanned planets, and -- following the 0.4 rule -- only the recipes they have
 researched. Then it is a field notebook rather than a solution file, it grows as the galaxy opens
 up, and re-exporting after a long survey run is itself a small reward.
 
@@ -633,8 +647,8 @@ This is a sequencing hypothesis, not a commitment:
 - **v0.2 — Second effect vertical slice:** one effect of a different kind, selected from play evidence.
 - **v0.3 — Industrial personalities:** planet-type weighting and perhaps one coherent buff/constraint
   pairing, if it remains legible.
-- **v0.4 — Discovery experiment:** beacon/probe or progressive disclosure, only if current scanning
-  proves too passive.
+- **v0.4 — Discovery experiment:** progressive disclosure. Shipped, in the form of hiding anomalies
+  until their recipe is researched; the beacon/probe half remains unbuilt and unneeded so far.
 - **v0.5+ — Stateful experiment:** one awakening or commitment mechanic with explicit save semantics.
 
 Version numbers may change. The dependency order matters more than the labels.
