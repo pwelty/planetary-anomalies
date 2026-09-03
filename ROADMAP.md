@@ -422,6 +422,37 @@ Remaining open questions:
 
 Not a generation change: this is display only, so it cannot move anyone's galaxy.
 
+### Candidate: export the galaxy index as a single web page
+
+Paul's idea, after I generated one by hand for his seed so he could plan around it: the artifact
+turned out to be more fun than a planning aid. A self-contained HTML file listing every anomaly you
+know about, grouped by system, that you can open in a browser, keep on a second monitor, or paste
+to a friend playing the same seed.
+
+It costs almost nothing to build. The mod already derives every anomaly, already knows which
+planets are scanned, and already renders these strings for the panel and star map. An export is
+that same data written to a file with a `<style>` block around it. No new game hooks.
+
+**What makes it interesting is what it refuses to include.** The obvious version dumps the whole
+galaxy, which is the answer key -- it is `LogEveryAnomaly` with better typography, and it deletes
+the exploration the mod exists to create. The version worth building exports only what the player
+has actually discovered: scanned planets, and (if the 0.4 rule lands) only the recipes they have
+researched. Then it is a field notebook rather than a solution file, it grows as the galaxy opens
+up, and re-exporting after a long survey run is itself a small reward.
+
+That also makes it honest about its own limits. A page that says "seventeen anomalies known, of a
+galaxy you have not finished looking at" is a truer artifact than one claiming completeness.
+
+Open questions:
+- How is it triggered? A config flag that writes on save is invisible and cheap; a keybind is
+  discoverable but needs UI. Probably a config flag first, since the audience for this is small and
+  already reads the config file.
+- Where does it go? Next to the save, or `BepInEx/` -- the former is more findable, the latter less
+  intrusive.
+- Does it become stale immediately? Yes, and that is fine: it is a snapshot, dated in the header.
+
+Low priority, high delight-per-line. A good thing to build on a day when the generator should not
+be touched.
 ### Phase B — A second static effect
 
 Choose the second effect to test the design grammar, not to fill a catalog. It should differ in kind
