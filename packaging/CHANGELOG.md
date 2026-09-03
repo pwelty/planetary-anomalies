@@ -18,6 +18,15 @@
   Display only: no planet changes what it produces, and no galaxy is regenerated. If a planet
   seemed to have a broken anomaly, it was correct all along and now says so.
 
+- Fixed: a stray dash in one label. DSP's own English name for the Thruster recipe is literally
+  "- Thruster", so naming anomalies by recipe in this release exposed it and one planet advertised
+  "- Thruster x10". Leading punctuation is now stripped from recipe names; hyphens inside a name
+  are left alone, so EM-Rail Ejector and High-purity Silicon still read correctly.
+- The log now says when an anomaly is being withheld and why, and the galaxy survey reports both
+  gates per planet -- whether you have scanned it, whether you have researched the recipe, and
+  which way that came out. A feature that hides things has to be able to say what it hid, or every
+  question about a missing label turns into guesswork.
+
 ## 0.3.0
 
 - New `ExcludedRecipes` setting: name recipes that should never receive an anomaly, comma

@@ -74,6 +74,7 @@ namespace PlanetaryAnomalies
             _birthPlanetId = -1;
             _galaxyKnown = false;
             _byPlanet.Clear();
+            _withheldLogged.Clear();
             _eligible = null;
             _exclusions = null;
             _exclusionsMatched = null;
@@ -156,8 +157,26 @@ namespace PlanetaryAnomalies
                 return false;
             }
 
-            return IsRecipeKnown(anomaly.RecipeId);
+            if (IsRecipeKnown(anomaly.RecipeId))
+            {
+                return true;
+            }
+
+            // A feature that hides things must be able to say what it hid and why, or every
+            // question about a missing label becomes a guess. Once per planet, not per frame.
+            if (!_withheldLogged.Contains(planetId))
+            {
+                _withheldLogged.Add(planetId);
+                Plugin.Log.LogInfo("Withheld on " + PlanetName(planetId) + " (planet id " + planetId +
+                                   "): recipe " + anomaly.RecipeId + " is not researched. " +
+                                   "Set HideUnresearchedAnomalies = false to show it anyway.");
+            }
+
+            return false;
         }
+
+        /// <summary>Planets already reported as withheld, so the log gets one line each.</summary>
+        private static readonly HashSet<int> _withheldLogged = new HashSet<int>();
 
         /// <summary>
         /// Whether the player has researched a recipe, using the game's own record of it --
@@ -173,6 +192,17 @@ namespace PlanetaryAnomalies
                 return true;
             }
 
+            return IsRecipeResearched(recipeId);
+        }
+
+        /// <summary>
+        /// Whether the game says the player has researched a recipe, ignoring this mod's config.
+        /// Kept separate from IsRecipeKnown so the survey can report what the *game* thinks rather
+        /// than what the mod decided to do about it -- two questions that look identical in a log
+        /// until the moment they disagree.
+        /// </summary>
+        private static bool IsRecipeResearched(int recipeId)
+        {
             GameHistoryData history = GameMain.history;
             if (history == null)
             {
@@ -217,6 +247,7 @@ namespace PlanetaryAnomalies
 
             // New game, or a different save. Nothing carries over.
             _byPlanet.Clear();
+            _withheldLogged.Clear();
             _eligible = null;
             _galaxySeed = seed;
             _birthPlanetId = birthPlanetId;
@@ -315,9 +346,14 @@ namespace PlanetaryAnomalies
                     if (anomaly != null)
                     {
                         anomalous++;
+                        bool scanned = planet.scanned;
+                        bool researched = IsRecipeResearched(anomaly.RecipeId);
                         Plugin.Log.LogInfo(
                             "  SURVEY  " + star.displayName + " / " + planet.displayName +
-                            " (planet id " + planet.id + "): " + ShortDescribeForPlanet(planet.id));
+                            " (planet id " + planet.id + "): " + ShortDescribeForPlanet(planet.id) +
+                            "  [" + (scanned ? "scanned" : "NOT scanned") +
+                            ", " + (researched ? "researched" : "NOT researched") +
+                            " -> " + (scanned && researched ? "SHOWN" : "HIDDEN") + "]");
                         continue;
                     }
 
