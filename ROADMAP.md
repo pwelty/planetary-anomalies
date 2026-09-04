@@ -1,4 +1,4 @@
-# Roadmap
+﻿# Roadmap
 
 This is the canonical design roadmap for Planetary Anomalies. It records directions, questions,
 and sequencing; it is not a promise that every idea below will ship.
@@ -70,7 +70,7 @@ preserve curiosity.
 
 ### Protect curiosity from chores
 
-Once a planet is known, the player must not be forced to test the planet × recipe cross-product.
+Once a planet is known, the player must not be forced to test the planet Ã— recipe cross-product.
 Discovery mechanics may require travel, scanning, probes, investment, or progressive disclosure,
 but they should reveal actionable information rather than demand brute force.
 
@@ -105,7 +105,7 @@ world-native design thinking, not as an immediate feature commitment.
 
 The replies beneath it are stronger evidence than the suggestion itself. Three separate players
 described the same complaint without prompting: the star map gives no indication of what has been
-scanned, the 6 ly boundary is invisible in a 3D view, and exploration ends abruptly — "bam, done
+scanned, the 6 ly boundary is invisible in a 3D view, and exploration ends abruptly â€” "bam, done
 exploring." The mod currently discloses anomalies only after selecting a planet and opening its
 description tab, which means the screen people actually explore from shows nothing. This converges
 with the premise rather than merely sitting near it.
@@ -120,8 +120,8 @@ defect with the same standing as a code defect; it produced objections to a mod 
 what the objections describe.
 
 Two community suggestions were declined and the reasons are worth keeping. Adding drawbacks to
-compensate powerful anomalies — more aggressive dark fog on anomalous worlds, resource costs to
-discover — contradicts *Uneven value is the point*: an anomaly with a price becomes a trade to
+compensate powerful anomalies â€” more aggressive dark fog on anomalous worlds, resource costs to
+discover â€” contradicts *Uneven value is the point*: an anomaly with a price becomes a trade to
 evaluate rather than something to find. Making anomalous planets carry only the resource they favour
 would cross an architectural boundary rather than a design one; veins are real save data, so writing
 them would end the property that the mod can be removed leaving an ordinary save. That property is
@@ -152,7 +152,7 @@ A galaxy-wide survey of two saves (a diagnostic that ignores discovery, off by d
 the clearest evidence yet.
 
 Seed 40078654: 146 anomalous of 252 planets. Paul went looking for a Quantum Chip anomaly and there
-was none -- in either surveyed galaxy. What that galaxy had instead was `Plane Filter ×10` on two
+was none -- in either surveyed galaxy. What that galaxy had instead was `Plane Filter Ã—10` on two
 worlds, one step upstream: `1 Casimir Crystal + 2 Titanium Glass -> 10 Plane Filter`, where Plane
 Filter is the expensive half of a Quantum Chip.
 
@@ -179,7 +179,7 @@ Distribution notes from the same survey, useful for the duplicates question:
 
 A player who actually installed it reported three things worth separating.
 
-**They run ×3, not ×10.** The configurable multiplier earned its place. It also suggests ×10 may be
+**They run Ã—3, not Ã—10.** The configurable multiplier earned its place. It also suggests Ã—10 may be
 the wrong default rather than merely a bold one; two people have now called it too high.
 
 **They mostly do not use anomalies, "as I would have to wrap my head around the blueprints I used
@@ -209,11 +209,11 @@ helped: it records how an item can be produced -- recipe type, mining, gas colle
 
 The initial reading was that building recipes are duds because nobody mass-produces buildings.
 Paul corrected that from actual play: the buildings placed in bulk are belts, sorters, wind
-turbines, solar panels and gas transport stations, and a ×10 on any of those genuinely changes a
+turbines, solar panels and gas transport stations, and a Ã—10 on any of those genuinely changes a
 build. Wind Turbine was wrongly called a dud by someone reasoning from "it is a building" without
 knowing which buildings get placed by the thousand.
 
-What survives is a much shorter list -- `Water Pump ×10` really is close to worthless, because a
+What survives is a much shorter list -- `Water Pump Ã—10` really is close to worthless, because a
 whole game needs very few -- and even that is shakier than it looks, because Paul's own phrasing
 was "for me anyway". Which buildings a player mass-produces depends on their style and stage: a
 Dyson swarm build places different things than a solar-tiling build, and an early game places
@@ -253,7 +253,7 @@ Anything that tried to price anomalies by hand would be competing with this and 
 **The risk on the other side.** If holding ground costs enough, anomalies stop being used -- which
 is the 0.1.x blueprint finding wearing different clothes. Two independent reasons not to use an
 anomaly, sunk factory doctrine and military cost, pointing at the same outcome. They may compound:
-a player who would have rebuilt their layout for a ×10 may still decline to fight for it. Worth
+a player who would have rebuilt their layout for a Ã—10 may still decline to fight for it. Worth
 watching specifically, because the mod would look identical either way from the outside.
 
 Nothing to build. The temptation this creates -- weight anomalies toward dangerous space, or away
@@ -262,7 +262,7 @@ thing that rule would price. Nor should the star map gain a threat indicator: DS
 already.
 ## Roadmap now
 
-### Phase A — Learn from v0.1.x
+### Phase A â€” Learn from v0.1.x
 
 Do not outrun the first playable idea.
 
@@ -272,9 +272,9 @@ Collect stories and failures:
 - Which are useful early, mid, or late, and which become useful only after circumstances change?
 - How far will players travel for a sufficiently valuable anomaly?
 - Do players revisit known planets when their bottlenecks change?
-- Does 25–75% per-galaxy density sustain curiosity or make anomalies feel routine?
+- Does 25â€“75% per-galaxy density sustain curiosity or make anomalies feel routine?
 - Does exact disclosure create good decisions, or would partial disclosure produce better play?
-- Does the current machine buffer cap make ×10 feel powerful or merely stalled?
+- Does the current machine buffer cap make Ã—10 feel powerful or merely stalled?
 - What happens with proliferator and production statistics?
 - Which other mods alter recipes or factory behavior in ways that matter?
 
@@ -302,7 +302,7 @@ star map without being selected?
 
 `docs/inspection.md` records the surface: `UIStarmapPlanet` exposes a public `nameText` label and a
 public `planet`, and that text is assigned in `_OnInit` and `OnPlanetDisplayNameChange` rather than
-`_OnUpdate` — so an appended marker persists with no per-frame cost, unlike the assembler window,
+`_OnUpdate` â€” so an appended marker persists with no per-frame cost, unlike the assembler window,
 which must re-append every frame. Cheaper than either surface already built.
 
 The open questions are about restraint, not feasibility:
@@ -325,7 +325,7 @@ code change at all.
 
 The wrinkle is that development then collides with it. A Gale-installed `pwelty-PlanetaryAnomalies`
 and a hand-installed `PlanetaryAnomalies` both declare the same `BepInPlugin` GUID, so BepInEx will
-load one and refuse the other — and which one it refuses is not something to leave to chance while
+load one and refuse the other â€” and which one it refuses is not something to leave to chance while
 testing.
 
 **Two profiles was tried on 2026-08-28 and abandoned.** A clean dev profile holding only BepInEx
@@ -424,7 +424,7 @@ that the label font may not carry the glyph.
 
 ### Shipped in 0.4: hide labels for recipes not yet researched
 
-Paul's idea, from starting a fresh run. A star map label reading `Particle Broadband ×10` twenty
+Paul's idea, from starting a fresh run. A star map label reading `Particle Broadband Ã—10` twenty
 hours before you can make particle broadband is noise, and noise that teaches players to stop
 reading labels. Showing it only once the recipe is researched turns the star map into progressive
 disclosure: information appears when it becomes actionable.
@@ -472,6 +472,21 @@ display surfaces rather than inside the describe methods so that `LogEveryAnomal
 whole galaxy -- a diagnostic that deliberately ignores every disclosure rule should keep ignoring
 this one. `HideUnresearchedAnomalies` defaults to true; false restores 0.3 behaviour, because this
 changes what an existing player sees and that is their call to reverse.
+
+**What the first galaxy of hidden anomalies actually contained.** Thirty-one were hidden by the
+research gate, and the list was overwhelmingly military: Destroyer four times, Corvette twice,
+Supersonic Missile Set twice, Vertical Launching Silo twice, plus Gravity Missile Set,
+High-Explosive Shell Set, Superalloy Ammo Box, SR Plasma Turret, Explosive Unit, and the antimatter
+chain.
+
+That is not a coincidence, it is the shape of DSP's tech tree -- combat and endgame sit behind the
+research a player has not done yet, so they are exactly what a research gate hides. And it collides
+head-on with the defence cost: a player who has just discovered that anomalies cost them a war is
+the player the mod is hiding `Superalloy Ammo Box Ã—10` and `SR Plasma Turret Ã—10` from. Paul hit
+both facts within an hour of each other.
+
+So the cost of hiding is not evenly spread. It falls hardest on the anomalies a player would most
+want as a *reason to research*, which is the argument below, sharpened by evidence.
 
 The two open questions above are now play questions, not design questions:
 - whether the early game feels emptier. Judge on a fresh run, not a mature save, where almost
@@ -526,15 +541,15 @@ running a recipe. `GameTickLabProduceMode` is the path that would read the swapp
 **It is the best fit for the thesis of anything left on this list.** Cubes are the one thing a
 player would genuinely restructure a galaxy around, and they are consumed forever rather than built
 once, so a cube world is a permanent logistics commitment rather than a one-off trip. It also lands
-squarely on the defence cost: a ×10 cube world twenty light years out is worth holding, which
+squarely on the defence cost: a Ã—10 cube world twenty light years out is worth holding, which
 makes the decision to hold it a real one.
 
 **And it is the strongest anomaly the mod could offer, which is the thing to be careful about.**
-Research is the game's progression axis. A ×10 on Electromagnetic Matrix is a pleasant early
-boost; a ×10 on Universe Matrix is a different order of object, and "anomalies are not balanced,
+Research is the game's progression axis. A Ã—10 on Electromagnetic Matrix is a pleasant early
+boost; a Ã—10 on Universe Matrix is a different order of object, and "anomalies are not balanced,
 on purpose" was written about iron plates. That does not settle it -- uneven value is the stated
 point, and a windfall should feel like one -- but it argues for meeting variable multipliers first,
-so the tiers can differ rather than every matrix getting the same ×10. Players who disagree can
+so the tiers can differ rather than every matrix getting the same Ã—10. Players who disagree can
 already exclude them by name.
 
 **Cost to existing galaxies:** this is a generation change. Six recipes joining a pool of 150 moves
@@ -547,7 +562,7 @@ Untested: proliferator interaction, which labs handle with their own incremental
 
 **Deferred to 1.0**, Paul's call, and it wants real testing rather than a confident patch. See
 *The one re-roll* below for why that is now the natural home for it.
-### Phase B — A second static effect
+### Phase B â€” A second static effect
 
 Choose the second effect to test the design grammar, not to fill a catalog. It should differ in kind
 from output multiplication and answer a specific question about play.
@@ -561,9 +576,9 @@ Candidate families:
 - **Byproduct:** add a useful or troublesome secondary output.
 - **Constraint/nerf:** require more input, more power, or more time in a specific and legible way.
 
-A negative anomaly is worthwhile only when it creates planning, tradeoffs, or character. “Everything
-is 15% slower” is punishment confetti. “Electronics consume twice the copper here, but turbines
-produce at ×10” describes an industrial place.
+A negative anomaly is worthwhile only when it creates planning, tradeoffs, or character. â€œEverything
+is 15% slowerâ€ is punishment confetti. â€œElectronics consume twice the copper here, but turbines
+produce at Ã—10â€ describes an industrial place.
 
 Do not build a generalized effect framework before the second effect demonstrates what abstractions
 are actually shared. After two or three real effects, extract the smallest common contract.
@@ -607,7 +622,7 @@ establishes the concept: graphene from fire ice, diamonds from kimberlite.
 
 There are two versions, and they are very different in cost.
 
-**Substitution — reachable with the seam already built.** Same recipe, different inputs on that
+**Substitution â€” reachable with the seam already built.** Same recipe, different inputs on that
 planet. Inspection confirms `AssemblerComponent.UpdateNeeds` computes `needs` from
 `recipeExecuteData.requires` and `requireCounts`, and `InternalUpdate` consumes from the same
 arrays (IL_0394, IL_03a1). We already hand affected machines a private `RecipeExecuteData`, so
@@ -615,7 +630,7 @@ changing `requires` there would make the machine consume something else -- and b
 derives from it, inserters and logistics would fetch the substituted ingredient on their own. No
 new machinery.
 
-**Additional recipes in the picker — much harder.** Recipes are global protos and the picker lists
+**Additional recipes in the picker â€” much harder.** Recipes are global protos and the picker lists
 what is unlocked; making a recipe available on one planet only is not something this seam touches.
 Do not assume the cheap version generalises to this.
 
@@ -627,7 +642,7 @@ stated plainly on the machine before it ships, not merely in the planet panel.
 
 Worth prototyping as the Phase B effect if it survives that constraint.
 
-### Phase C — Planet-conditioned industrial personalities
+### Phase C â€” Planet-conditioned industrial personalities
 
 Explore weighted relationships between planet type and anomaly family:
 
@@ -638,7 +653,7 @@ Explore weighted relationships between planet type and anomaly family:
 - high-wind worlds leaning toward power or lightweight-component effects.
 
 These are thematic weights, not deterministic rules and not claims of scientific simulation. The
-goal is for a player to say, “Of course that furnace world makes titanium alloy absurdly well,”
+goal is for a player to say, â€œOf course that furnace world makes titanium alloy absurdly well,â€
 while still occasionally finding a surprising exception.
 
 Questions:
@@ -648,16 +663,16 @@ Questions:
 - Can local resources and anomaly effects combine into emergent industrial regions?
 - Should neighboring systems ever form complementary anomaly corridors?
 
-### Phase D — Discovery as infrastructure
+### Phase D â€” Discovery as infrastructure
 
 The current rule is intentionally cheap: scan or visit a planet and its anomaly is disclosed. Any
-new discovery system must preserve actionability and avoid recipe × planet brute force.
+new discovery system must preserve actionability and avoid recipe Ã— planet brute force.
 
 Candidate mechanisms:
 
 - system- or galaxy-level signals that something unusual exists without revealing details;
 - launched beacons or probes that report on another system;
-- progressive disclosure: signal → affected recipe/family → exact effect;
+- progressive disclosure: signal â†’ affected recipe/family â†’ exact effect;
 - travel revealing more than remote scanning;
 - consultable records of every anomaly already learned.
 
@@ -673,7 +688,7 @@ Possible disclosure ladder:
 
 This remains a research track until v0.1 play shows that the current disclosure model is too cheap.
 
-### Phase E — Stateful anomalies and industrial history
+### Phase E â€” Stateful anomalies and industrial history
 
 Static anomalies give planets properties. Stateful anomalies give them histories.
 
@@ -688,7 +703,7 @@ Candidate forms:
 - **Mutation:** an anomaly changes after a documented condition.
 
 Every threshold must create an investment, commitment, risk, or revelation. Avoid a universal grind
-bar whose solved answer is always “produce 1,000 junk units before building the real factory.”
+bar whose solved answer is always â€œproduce 1,000 junk units before building the real factory.â€
 
 This phase changes the ontology and the implementation. Current anomalies are deterministic facts
 recomputed from seed and planet ID. Stateful anomalies are dispositions whose manifestations depend
@@ -703,7 +718,7 @@ on player activity. They require deliberate decisions about:
 
 Do not enter this phase casually; it is a separate architectural milestone.
 
-### Phase F — Mature procedural economic geography
+### Phase F â€” Mature procedural economic geography
 
 Only after multiple effect and discovery types survive playtesting, consider combinations that make
 galaxies develop recognizable economic geography:
@@ -728,7 +743,7 @@ Bundled into 1.0 they ask once. That is worth more than it sounds -- the objecti
 was never the feature, it was the reshuffle, and the reshuffle does not get worse for being shared.
 
 The three also need each other. Cubes without variable multipliers means Electromagnetic Matrix and
-Universe Matrix both get a flat ×10, which is the one case where uniform value stops being a stated
+Universe Matrix both get a flat Ã—10, which is the one case where uniform value stops being a stated
 principle and starts being a missing feature. Unique recipes without the wider pool that cubes add
 runs out of recipes sooner. They are better together than in sequence, and they are the reason 1.0
 is a real boundary rather than a version number.
@@ -740,21 +755,21 @@ already enforces.
 
 This is a sequencing hypothesis, not a commitment:
 
-- **v0.1.x — Observe and harden:** current ×10 static anomaly; statistics, proliferator, compatibility,
+- **v0.1.x â€” Observe and harden:** current Ã—10 static anomaly; statistics, proliferator, compatibility,
   documentation, and player stories.
-- **v0.2 — Second effect vertical slice:** one effect of a different kind, selected from play evidence.
-- **v0.3 — Industrial personalities:** planet-type weighting and perhaps one coherent buff/constraint
+- **v0.2 â€” Second effect vertical slice:** one effect of a different kind, selected from play evidence.
+- **v0.3 â€” Industrial personalities:** planet-type weighting and perhaps one coherent buff/constraint
   pairing, if it remains legible.
-- **v0.4 — Discovery experiment:** progressive disclosure. Shipped, in the form of hiding anomalies
+- **v0.4 â€” Discovery experiment:** progressive disclosure. Shipped, in the form of hiding anomalies
   until their recipe is researched; the beacon/probe half remains unbuilt and unneeded so far.
-- **v0.5+ — Stateful experiment:** one awakening or commitment mechanic with explicit save semantics.
+- **v0.5+ â€” Stateful experiment:** one awakening or commitment mechanic with explicit save semantics.
 
 Version numbers may change. The dependency order matters more than the labels.
 
 ## Explicitly not on the immediate roadmap
 
 - balancing every anomaly to equal economic value;
-- universal quality tiers that tell the player what is “best”;
+- universal quality tiers that tell the player what is â€œbestâ€;
 - per-cycle random output as the default model;
 - a giant modifier framework before several effects exist;
 - custom UI merely to make the mod look larger;

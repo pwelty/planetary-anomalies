@@ -28,8 +28,8 @@
   "- Thruster", so naming anomalies by recipe in this release exposed it and one planet advertised
   "- Thruster x10". Leading punctuation is now stripped from recipe names; hyphens inside a name
   are left alone, so EM-Rail Ejector and High-purity Silicon still read correctly.
-- The log now says when an anomaly is being withheld and why, and the galaxy survey reports both
-  gates per planet -- whether you have scanned it, whether you have researched the recipe, and
+- The log now says when an anomaly is being withheld, which technology would reveal it, and the
+  galaxy survey reports both gates per planet -- whether you have scanned it, whether you have researched the recipe, and
   which way that came out. A feature that hides things has to be able to say what it hid, or every
   question about a missing label turns into guesswork.
 
