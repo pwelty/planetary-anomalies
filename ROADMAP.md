@@ -1,4 +1,4 @@
-﻿# Roadmap
+# Roadmap
 
 This is the canonical design roadmap for Planetary Anomalies. It records directions, questions,
 and sequencing; it is not a promise that every idea below will ship.
@@ -606,6 +606,20 @@ benefit, but that is a mitigation rather than an answer.
 If built, multiply when the task is created rather than at delivery, so the replicator window shows
 the real count. Patching `TaskDeliver` alone would show 1 and hand over 10, which is the same
 "UI lies" defect already fixed twice on other surfaces.
+
+Re-verified against 0.10.34.28529. The concrete patch point is a postfix on
+`MechaForge.AddTaskIterate(int, int)`, which returns the `ForgeTask` -- a class, not a struct, with
+public `recipeId`, `productCounts` and `produced`, so its arrays can be rewritten in place without
+touching anything shared. `GameMain.localPlanet` is a public static property, so "where is Icarus
+standing" is one call. Nothing here has moved since the first look.
+
+**One argument has appeared since, and it cuts both ways.** Hauling inputs to an anomalous world and
+crafting there is not quite free -- it is logistics, of a sort. But it is logistics without the
+factory, and the factory is the part the mod exists to relocate. A player who flies to a
+`Quantum Chip ×10` world with a hold full of inputs, hand-crafts, and leaves has extracted the
+reward while skipping the commitment. That is a sharper way to state the objection than "it grants
+items": the problem is not that it is free, it is that it is *cheap in the one currency the mod
+charges in*.
 
 Scheduled for consideration, not for the next release.
 
