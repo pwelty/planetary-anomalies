@@ -747,6 +747,43 @@ galaxies develop recognizable economic geography:
 The aim is not more content for its own sake. It is a galaxy where players tell stories about places
 because those places changed what they built.
 
+## What belongs in config
+
+Paul: some of these choices could be settings rather than decisions. Some could. The rule for which
+is already established by `ExcludedRecipes`, and it is sharper than "let players choose":
+
+> The mod holds no opinion where the answer depends on how you play, and a firm one where there is
+> a better answer.
+
+Water Pump ×10 is worthless to one player and a bottleneck to another; no correct answer exists, so
+it is the player's to state. Whether a label names the wrong recipe has a correct answer, and a
+toggle for it would have been cowardice dressed as flexibility. Config is not a way to avoid
+deciding -- every setting is a combination that has to keep working, and a mod that resolves every
+contested question with a toggle has no design left, only surface.
+
+**Good candidates.** Display and behaviour, no effect on generation, genuine differences of taste:
+
+- **Disclosure as three-way rather than on/off.** `Everything` / `MarkerWhenUnresearched` /
+  `OnlyResearched`. The middle mode does not exist yet and is the interesting one: a planet shows
+  the symbol with no name, so you know something is there without being told what. It is the direct
+  answer to the military finding above -- those 31 worlds would have been visible as *somewhere to
+  look* without twenty hours of `Vertical Launching Silo ×10` a player cannot read yet. It also
+  splits the difference the current rule refuses to split: existence is cheap information, the name
+  is the part that is noise before research.
+- **`ReplicatorObeysAnomalies`, default off.** Lets a curious player have it without the mod
+  endorsing it, which is the honest shape for a feature whose objection is philosophical rather
+  than technical.
+
+**Bad candidates.** Anything that changes the eligible pool -- research cubes, recipe types,
+duplicate rules. Not because players should not choose, but because each one fragments *same seed,
+same galaxy*, which is the property the mod trades on hardest and the one that makes a catalogue or
+a shared seed worth anything. `AnomalyChancePercent` and `ExcludedRecipes` already cost that;
+more of them compound it. If the pool must become configurable, it should happen once, at 1.0,
+alongside the other generation changes -- see *The one re-roll*.
+
+**The count matters too.** Six settings today. Disclosure modes multiply against `StarmapLabel`,
+so the real number is combinations, not entries, and every one is a state someone will report a bug
+from.
 ## The one re-roll
 
 Three things now want a generation change: galaxy-wide unique recipes, variable multipliers, and
