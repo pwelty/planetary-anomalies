@@ -105,16 +105,45 @@ foreach ($textFile in @('manifest.json', 'README.md', 'CHANGELOG.md')) {
     $path = Join-Path $packagingDir $textFile
     if (-not (Test-Path $path)) { continue }
 
+    $decoded = $null
     try {
-        [void]$strictUtf8.GetString([System.IO.File]::ReadAllBytes($path))
+        $decoded = $strictUtf8.GetString([System.IO.File]::ReadAllBytes($path))
     }
     catch {
         $problems.Add("packaging/$textFile is not valid UTF-8 -- it would render as replacement characters on the listing. $($_.Exception.Message)")
         continue
     }
 
-    if ((Get-Content $path -Raw) -match "\uFFFD") {
+    # Deliberately checked against the strictly decoded string rather than Get-Content -Raw. In
+    # Windows PowerShell 5.1 that cmdlet reads a BOM-less UTF-8 file as the system codepage, which
+    # is the exact mistake this section exists to catch -- a check that made it would be worthless.
+    if ($decoded -match "\uFFFD") {
         $problems.Add("packaging/$textFile already contains a replacement character (U+FFFD); something was mangled before it reached here.")
+    }
+}
+
+# --- and the documentation, which is not shipped but is the project's memory --------------------
+#
+# ROADMAP.md was once silently double-encoded end to end: a Get-Content -Raw round trip read it as
+# cp1252 and wrote it back as UTF-8, turning every multiplication sign into "A-tilde em-dash" and
+# every em dash into three characters. Still valid UTF-8, so the check above would never have seen
+# it; only a reader would, and by then the file is the design record.
+#
+# The signature is a non-ASCII run beginning with U+00C3 or U+00E2, which is what a re-encoded
+# lead byte looks like and which essentially never occurs in real English prose.
+$docs = @(Get-ChildItem -Path $repoRoot -Filter *.md -Recurse |
+          Where-Object { $_.FullName -notmatch '\\(build|dist|\.git)\\' })
+foreach ($doc in $docs) {
+    $body = $null
+    try { $body = $strictUtf8.GetString([System.IO.File]::ReadAllBytes($doc.FullName)) }
+    catch {
+        $problems.Add("$($doc.Name) is not valid UTF-8. $($_.Exception.Message)")
+        continue
+    }
+
+    $mojibake = [regex]::Matches($body, "[\u00C3\u00E2][^\x00-\x7F]")
+    if ($mojibake.Count -gt 0) {
+        $problems.Add("$($doc.Name) looks double-encoded: $($mojibake.Count) run(s) such as '$($mojibake[0].Value)'. Something read it as cp1252 and wrote it back as UTF-8.")
     }
 }
 
