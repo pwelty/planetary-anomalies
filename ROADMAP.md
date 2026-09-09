@@ -784,6 +784,30 @@ alongside the other generation changes -- see *The one re-roll*.
 **The count matters too.** Six settings today. Disclosure modes multiply against `StarmapLabel`,
 so the real number is combinations, not entries, and every one is a state someone will report a bug
 from.
+### Running out of ideas is evidence
+
+Paul, after the marker mode landed: "I confess I don't have a lot more ideas even with hours of
+play." That is worth recording rather than filling.
+
+Five releases have all been about the same half of the problem. The planet panel, star map labels,
+the machine marker, hiding, and now markers are every one of them about *finding* an anomaly.
+Discovery is close to solved -- which is why the ideas have dried up. There is not much left to
+notice about a mechanic whose noticing is finished.
+
+The half nobody has touched is what happens next. The 0.1.x player said they do not use anomalies
+"as I would have to wrap my head around the blueprints I used to play with", and nothing built
+since has been aimed at that sentence. Paul did not hit it because he rebuilt Plane Filter
+production by hand and enjoyed doing it. A player with a blueprint library hits a wall at exactly
+the point the mod stops helping.
+
+This does not obviously want a feature. "Make it easier to rebuild a factory elsewhere" is close to
+asking the mod to undo its own friction, and *Create another logistics problem, not free items*
+would refuse most versions of it. But it is the one place where the thesis is known to fail in
+practice, and no release has looked at it.
+
+Meanwhile the productive move is probably not to add. Ship 0.5 as scoped -- marker mode, the
+announcement, version pinning -- and let a fresh run and other players produce the next finding, as
+they have every previous one worth having.
 ## What 0.5 should be
 
 Mostly decided by what 0.4 left behind rather than by what is next on the wishlist.
