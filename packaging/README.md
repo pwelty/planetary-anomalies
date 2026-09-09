@@ -6,7 +6,27 @@ A world where sorters come out ten at a time. A world that turns coal into energ
 
 The point is to make exploration industrially interesting. A planet stops being "does it have titanium?" and starts being "what is this place unreasonably good at, and is that worth building around?"
 
-## What's new in 0.4
+## What's new in 0.5
+
+**An anomaly you cannot use yet can now show a marker instead of vanishing.** `UnresearchedAnomalies
+= Marker` puts the symbol on the planet without naming the recipe: you know something is there and
+worth coming back for, but not yet what.
+
+*Why:* 0.4 hid anomalies until you researched their recipe, which removed a lot of noise and one
+useful thing along with it. In the first galaxy to run it, 31 anomalies went dark -- and they were
+overwhelmingly military, because that is where DSP's tech tree puts the research you have not done.
+A player fighting to hold a distant world could not see that the galaxy contained
+`Superalloy Ammo Box ×10` three jumps away. Hiding the name is right; hiding the *place* removed a
+reason to explore.
+
+Existence turns out to be cheap information. The name is the part that means nothing before you can
+build it.
+
+`Hide` remains the default and is the 0.4 behaviour. `Show` names everything, as in 0.3.
+If you set `HideUnresearchedAnomalies = false` in 0.4, it is migrated to `Show` and reported in
+the log rather than quietly ignored.
+
+## Previously, in 0.4
 
 **Anomalies stay hidden until you have researched the recipe.** Every surface follows the same
 rule now — the planet panel, planet and star labels, and the system counts.
@@ -155,7 +175,7 @@ Settings live in `BepInEx/config/com.planetaryanomalies.dsp.cfg` after the first
 | `OutputMultiplier` | `10` | How much more an anomalous recipe produces. |
 | `StarmapLabel` | `Detail` | What star map labels show. `Detail` names the affected items, `Marker` shows counts and a symbol, `Off` hides them. Unscanned planets show nothing either way. |
 | `ExcludedRecipes` | empty | Recipes that should never receive an anomaly, comma separated — by item name as it appears in game, or numeric id. The mod holds no opinion about which anomalies are worth having, because that depends entirely on how you play; this is where you state yours. Entries matching nothing are reported in the log rather than ignored. |
-| `HideUnresearchedAnomalies` | `true` | Hides an anomaly until you have researched the recipe it affects, everywhere it would otherwise appear. `false` shows every anomaly on any planet you have scanned, as in 0.3. Display only: generation is unchanged. |
+| `UnresearchedAnomalies` | `Hide` | What an anomaly says about itself before you have researched its recipe, everywhere it would appear. `Hide` says nothing. `Marker` shows the symbol without the name — somewhere to come back to. `Show` names everything, as in 0.3. Display only: generation is unchanged. |
 | `LogEveryAnomaly` | `false` | Writes every anomaly in the galaxy to the log, including planets you have never scanned. Spoils discovery on purpose; for troubleshooting. |
 
 Changes take effect when a save is next loaded.

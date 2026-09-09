@@ -149,17 +149,39 @@ namespace PlanetaryAnomalies
         /// the anomalies you can act on. The machine window needs no special case, since running a
         /// recipe implies having researched it.
         /// </summary>
-        internal static bool IsDisclosed(int planetId)
+        /// <summary>
+        /// How much a surface may say about this planet's anomaly: nothing, that it exists, or what
+        /// it is. Every display surface asks this; production never does.
+        ///
+        /// Callers must route every outcome through the same write, including None -- a label that
+        /// returns early when there is nothing to say cannot clear what it said last time. That was
+        /// the shape of the bug that let 0.4 hide an anomaly and never un-hide it.
+        /// </summary>
+        internal static AnomalyVisibility VisibilityFor(int planetId)
         {
             PlanetAnomaly anomaly = AnomalyFor(planetId);
             if (anomaly == null)
             {
-                return false;
+                return AnomalyVisibility.None;
             }
 
-            if (IsRecipeKnown(anomaly.RecipeId))
+            if (IsRecipeResearched(anomaly.RecipeId))
             {
-                return true;
+                return AnomalyVisibility.Full;
+            }
+
+            UnresearchedDisplay mode = Plugin.UnresearchedAnomalies != null
+                ? Plugin.UnresearchedAnomalies.Value
+                : UnresearchedDisplay.Hide;
+
+            if (mode == UnresearchedDisplay.Show)
+            {
+                return AnomalyVisibility.Full;
+            }
+
+            if (mode == UnresearchedDisplay.Marker)
+            {
+                return AnomalyVisibility.Marker;
             }
 
             // A feature that hides things must be able to say what it hid and why, or every
@@ -171,10 +193,10 @@ namespace PlanetaryAnomalies
                 Plugin.Log.LogInfo("Withheld on " + PlanetName(planetId) + " (planet id " + planetId +
                                    "): recipe " + anomaly.RecipeId + " is not researched" +
                                    (tech != null ? ", unlocked by " + tech : "") + ". " +
-                                   "Set HideUnresearchedAnomalies = false to show it anyway.");
+                                   "Set UnresearchedAnomalies = Marker or Show to reveal it.");
             }
 
-            return false;
+            return AnomalyVisibility.None;
         }
 
         /// <summary>
@@ -213,27 +235,15 @@ namespace PlanetaryAnomalies
         private static readonly HashSet<int> _withheldLogged = new HashSet<int>();
 
         /// <summary>
-        /// Whether the player has researched a recipe, using the game's own record of it --
-        /// GameHistoryData.RecipeUnlocked is what DSP itself asks before offering a recipe.
+        /// Whether the game says the player has researched a recipe. GameHistoryData.RecipeUnlocked
+        /// is what DSP itself asks before offering a recipe, so this needs no rule of its own.
         ///
-        /// Fails open. If the config is off, or history is not available yet, the answer is "show
-        /// it": a null reference during loading should not silently blank the whole feature.
-        /// </summary>
-        private static bool IsRecipeKnown(int recipeId)
-        {
-            if (Plugin.HideUnresearched != null && !Plugin.HideUnresearched.Value)
-            {
-                return true;
-            }
-
-            return IsRecipeResearched(recipeId);
-        }
-
-        /// <summary>
-        /// Whether the game says the player has researched a recipe, ignoring this mod's config.
-        /// Kept separate from IsRecipeKnown so the survey can report what the *game* thinks rather
-        /// than what the mod decided to do about it -- two questions that look identical in a log
-        /// until the moment they disagree.
+        /// Deliberately knows nothing about this mod's config: it reports what the *game* thinks,
+        /// leaving what to do about it to VisibilityFor. The two look identical in a log right up
+        /// until they disagree, which is why the survey prints this one.
+        ///
+        /// Fails open. If history is not available yet, the answer is "researched" -- a null
+        /// reference during loading should not silently blank the whole feature.
         /// </summary>
         private static bool IsRecipeResearched(int recipeId)
         {

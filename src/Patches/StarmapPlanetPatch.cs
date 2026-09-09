@@ -94,15 +94,21 @@ namespace PlanetaryAnomalies
                 // The two gates: has the player found this planet, and is its anomaly on something
                 // they could actually build. An unresearched recipe names something they cannot
                 // make and may not recognise.
-                if (planet.scanned && mode != StarmapLabelMode.Off && AnomalyManager.IsDisclosed(planet.id))
+                if (planet.scanned && mode != StarmapLabelMode.Off)
                 {
-                    body = "Å";
-                    if (mode == StarmapLabelMode.Detail)
+                    AnomalyVisibility visibility = AnomalyManager.VisibilityFor(planet.id);
+                    if (visibility != AnomalyVisibility.None)
                     {
-                        string what = AnomalyManager.ShortDescribeForPlanet(planet.id);
-                        if (!string.IsNullOrEmpty(what))
+                        // Marker visibility stops here, at the bare symbol: the place is worth
+                        // remembering, the recipe is not worth naming until it means something.
+                        body = "Å";
+                        if (mode == StarmapLabelMode.Detail && visibility == AnomalyVisibility.Full)
                         {
-                            body = "Å " + what;
+                            string what = AnomalyManager.ShortDescribeForPlanet(planet.id);
+                            if (!string.IsNullOrEmpty(what))
+                            {
+                                body = "Å " + what;
+                            }
                         }
                     }
                 }

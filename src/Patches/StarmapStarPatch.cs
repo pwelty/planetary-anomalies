@@ -101,6 +101,7 @@ namespace PlanetaryAnomalies
                 int anomalous = 0;
                 string names = "";
                 int named = 0;
+                int unnamed = 0;
 
                 for (int i = 0; i < star.planets.Length; i++)
                 {
@@ -111,20 +112,27 @@ namespace PlanetaryAnomalies
                     }
 
                     // Counts follow the same rule as names: a system's tally is of anomalies the
-                    // player can act on, so it cannot advertise one whose label is hidden.
-                    if (!AnomalyManager.IsDisclosed(planet.id))
+                    // player is allowed to know about, so it cannot advertise one that is hidden.
+                    AnomalyVisibility visibility = AnomalyManager.VisibilityFor(planet.id);
+                    if (visibility == AnomalyVisibility.None)
                     {
                         continue;
                     }
 
                     anomalous++;
 
-                    string item = AnomalyManager.AnomalousItemName(planet.id);
-                    if (!string.IsNullOrEmpty(item))
+                    if (visibility == AnomalyVisibility.Full)
                     {
-                        names += (named > 0 ? ", " : "") + item;
-                        named++;
+                        string item = AnomalyManager.AnomalousItemName(planet.id);
+                        if (!string.IsNullOrEmpty(item))
+                        {
+                            names += (named > 0 ? ", " : "") + item;
+                            named++;
+                            continue;
+                        }
                     }
+
+                    unnamed++;
                 }
 
 
@@ -144,7 +152,12 @@ namespace PlanetaryAnomalies
                 {
                     if (mode == StarmapLabelMode.Detail && named > 0)
                     {
-                        body = Symbol + " " + names;
+                        // The "+N" tail was once rejected here, when it stood for names this label
+                        // had truncated -- saying there was more without saying what, which is the
+                        // problem Detail mode exists to solve. It means something different now:
+                        // N anomalies in this system that the player genuinely cannot read yet.
+                        // The label is not withholding them; their research is.
+                        body = Symbol + " " + names + (unnamed > 0 ? ", +" + unnamed : "");
                     }
                     else
                     {

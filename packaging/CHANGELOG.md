@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0 (in development)
+
+- Anomalies on recipes you have not researched can now show a marker without naming what they are.
+  `UnresearchedAnomalies = Marker` marks the planet so you know something is there and worth coming
+  back for, while withholding the name until the recipe means something to you. `Hide` is the 0.4
+  behaviour and remains the default; `Show` names everything, as in 0.3 and earlier.
+
 ## 0.4.0
 
 - Anomalies stay hidden until you have researched the recipe they affect -- on the planet panel,

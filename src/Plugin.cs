@@ -15,7 +15,7 @@ namespace PlanetaryAnomalies
     {
         public const string PluginGuid = "com.planetaryanomalies.dsp";
         public const string PluginName = "Planetary Anomalies";
-        public const string PluginVersion = "0.4.0";
+        public const string PluginVersion = "0.5.0";
 
         internal static ManualLogSource Log;
 
@@ -26,7 +26,13 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<int> AnomalyChancePercent;
         internal static ConfigEntry<int> OutputMultiplier;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
-        internal static ConfigEntry<bool> HideUnresearched;
+        internal static ConfigEntry<UnresearchedDisplay> UnresearchedAnomalies;
+
+        /// <summary>
+        /// Superseded by <see cref="UnresearchedAnomalies"/> in 0.5, and still bound so that a
+        /// player who set it in 0.4 does not have their choice silently ignored.
+        /// </summary>
+        internal static ConfigEntry<bool> LegacyHideUnresearched;
         internal static ConfigEntry<bool> LogEveryAnomaly;
         internal static ConfigEntry<string> ExcludedRecipes;
 
@@ -112,18 +118,39 @@ namespace PlanetaryAnomalies
                 "your galaxy is untouched. It does mean your galaxy differs from another player's\n" +
                 "with the same seed.");
 
-            HideUnresearched = Config.Bind(
+            UnresearchedAnomalies = Config.Bind(
+                "Display",
+                "UnresearchedAnomalies",
+                UnresearchedDisplay.Hide,
+                "What an anomaly says about itself before you have researched the recipe it\n" +
+                "affects. Applies everywhere: the planet panel, planet and star labels, and the\n" +
+                "system counts.\n" +
+                "Hide:   nothing at all. The planet reads as ordinary until the research lands.\n" +
+                "Marker: the symbol without the name -- you know something is there and worth\n" +
+                "  coming back for, but not yet what. Existence is cheap information; the name is\n" +
+                "  the part that means nothing before you can build it.\n" +
+                "Show:   everything, as in 0.3 and earlier.\n" +
+                "Display only: this changes nothing about which planets are anomalous.");
+
+            LegacyHideUnresearched = Config.Bind(
                 "Display",
                 "HideUnresearchedAnomalies",
                 true,
-                "Hides an anomaly until you have researched the recipe it affects, on every\n" +
-                "surface: the planet panel, planet and star labels, and the system counts.\n" +
-                "An unresearched recipe is already unavailable to you, so an anomaly on it names\n" +
-                "something you cannot build and may not recognise -- which is noise, and noise\n" +
-                "teaches you to stop reading the labels. With this on, the star map fills in as\n" +
-                "your research opens up, and anything it shows you is something you can act on.\n" +
-                "Set to false to see every anomaly on any planet you have scanned, as in 0.3.\n" +
-                "This is display only: it changes nothing about which planets are anomalous.");
+                "Superseded by UnresearchedAnomalies. Kept only so a 0.4 setting is not ignored:\n" +
+                "if this is false and UnresearchedAnomalies is still at its default, it is read as\n" +
+                "UnresearchedAnomalies = Show, once, and reported in the log.");
+
+            // A player who turned the 0.4 setting off asked to see everything. Renaming the setting
+            // must not quietly revoke that -- a config that stops being honoured without saying so
+            // is worse than one that never existed.
+            if (!LegacyHideUnresearched.Value && UnresearchedAnomalies.Value == UnresearchedDisplay.Hide)
+            {
+                UnresearchedAnomalies.Value = UnresearchedDisplay.Show;
+                Log.LogInfo("HideUnresearchedAnomalies = false is superseded by " +
+                            "UnresearchedAnomalies = Show, and has been migrated. You can delete " +
+                            "the old setting; Marker is the middle option if you want the symbol " +
+                            "without the name.");
+            }
 
             LogEveryAnomaly = Config.Bind(
                 "Diagnostics",
