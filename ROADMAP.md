@@ -808,6 +808,40 @@ practice, and no release has looked at it.
 Meanwhile the productive move is probably not to add. Ship 0.5 as scoped -- marker mode, the
 announcement, version pinning -- and let a fresh run and other players produce the next finding, as
 they have every previous one worth having.
+### The multiplier is not a number, it is a price
+
+Paul, asked whether ×10 was too high: *"it's generally a LOT of work to set stuff up. For me anyway.
+I like ×10. If no dark fog, then ok, could be much less."*
+
+That resolves an argument that had been stuck. Two players said ×10 was too high and run ×3; Paul
+says ×10 is right. Both are correct, because they are not answering the same question. The
+multiplier is not a reward to be tuned in isolation -- it is the *return on a cost*, and the
+dominant cost is the one found in play: clearing a world and then holding it, forever, because
+ground bases are re-seeded from orbit.
+
+Turn the dark fog off and that cost disappears. What is left is hauling, which is real but far
+cheaper. The same ×10 that is fair against a garrison is a giveaway without one.
+
+**The game already knows, and so can the mod.** `GameData.gameDesc` exposes `isPeaceMode` and
+`isCombatMode`; `GameDesc.combatSettings` exposes `aggressiveLevel`, `isEnemyPassive` and
+`difficulty`. Reading them is one call.
+
+**Proposal: `OutputMultiplier = -1` derives from the combat settings**, exactly as
+`AnomalyChancePercent = -1` already derives density from the seed. That design language is
+established in this mod, so it needs no explaining. Keep it simple enough to predict: peace mode or
+passive enemies resolve to a low multiplier, anything hostile resolves to the current ×10. Two
+values, one sentence, no curve nobody can anticipate.
+
+Safe by construction: `OutputMultiplier` affects neither which planets are anomalous nor which
+recipe each carries, so nothing moves and the golden test is untouched.
+
+The one caution is silence. A number that changes because of a setting elsewhere is confusing
+unless the mod says so, and it must be logged plainly at load -- "peace mode: output multiplier
+resolved to ×N" -- for the same reason every other hidden decision here ended up in the log.
+
+Whether `-1` should be the *default* is the real question. In a combat game it resolves to ×10 and
+nothing changes for anyone; only peaceful galaxies see a difference, and those are the galaxies
+where the current number is wrong. That argues for yes.
 ## What 0.5 should be
 
 Mostly decided by what 0.4 left behind rather than by what is next on the wishlist.
