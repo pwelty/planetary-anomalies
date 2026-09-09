@@ -124,29 +124,10 @@ foreach ($textFile in @('manifest.json', 'README.md', 'CHANGELOG.md')) {
 
 # --- and the documentation, which is not shipped but is the project's memory --------------------
 #
-# ROADMAP.md was once silently double-encoded end to end: a Get-Content -Raw round trip read it as
-# cp1252 and wrote it back as UTF-8, turning every multiplication sign into "A-tilde em-dash" and
-# every em dash into three characters. Still valid UTF-8, so the check above would never have seen
-# it; only a reader would, and by then the file is the design record.
-#
-# The signature is a non-ASCII run beginning with U+00C3 or U+00E2, which is what a re-encoded
-# lead byte looks like and which essentially never occurs in real English prose.
-$docs = @(Get-ChildItem -Path $repoRoot -Filter *.md -Recurse |
-          Where-Object { $_.FullName -notmatch '\\(build|dist|\.git)\\' })
-foreach ($doc in $docs) {
-    $body = $null
-    try { $body = $strictUtf8.GetString([System.IO.File]::ReadAllBytes($doc.FullName)) }
-    catch {
-        $problems.Add("$($doc.Name) is not valid UTF-8. $($_.Exception.Message)")
-        continue
-    }
-
-    $mojibake = [regex]::Matches($body, "[\u00C3\u00E2][^\x00-\x7F]")
-    if ($mojibake.Count -gt 0) {
-        $problems.Add("$($doc.Name) looks double-encoded: $($mojibake.Count) run(s) such as '$($mojibake[0].Value)'. Something read it as cp1252 and wrote it back as UTF-8.")
-    }
-}
-
+# Kept in its own script so it can be run without rebuilding anything. It used to live here, which
+# meant checking the docs rebuilt and rezipped the release -- changing its bytes, and invalidating
+# a hash recorded against a tag. A read-only check should not cost that.
+& (Join-Path $PSScriptRoot 'check-docs.ps1') -Problems $problems
 if ($problems.Count -gt 0) {
     Write-Host ""
     Write-Host "Package would ship broken text:" -ForegroundColor Red

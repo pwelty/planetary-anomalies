@@ -784,6 +784,54 @@ alongside the other generation changes -- see *The one re-roll*.
 **The count matters too.** Six settings today. Disclosure modes multiply against `StarmapLabel`,
 so the real number is combinations, not entries, and every one is a state someone will report a bug
 from.
+## What 0.5 should be
+
+Mostly decided by what 0.4 left behind rather than by what is next on the wishlist.
+
+**Finish disclosure. Both halves.** 0.4 hides anomalies whose recipe is not researched, and the
+first galaxy to run it hid 31 -- overwhelmingly military, at the exact moment the player had
+discovered that using anomalies costs a war. Two changes repay that, and they are the same
+subsystem:
+
+- **Announce on `onTechUnlocked`.** When a technology lands, say that the galaxy already knows
+  where that recipe is cheap. This is what turns hiding from a subtraction into an addition, and it
+  is the only thing that restores anomalies as a *reason to research* rather than a reward for
+  having researched.
+- **`MarkerWhenUnresearched`**, the middle disclosure mode: the symbol with no name. Existence is
+  cheap information and rarely noise; the name is the part that means nothing before research.
+  Those 31 worlds would have read as *somewhere to look*.
+
+Both are display-only. Neither can move a galaxy, which keeps the promise that the generator holds
+still until 1.0.
+
+**Version pinning, because 1.0 depends on it.** Recording which generator version a galaxy was
+created under is the one thing that genuinely needs saving. It is also the thing that makes *The
+one re-roll* a choice rather than an imposition: with it, an existing save can keep its anomalies
+through a deliberate generation change, and only new galaxies take the new rules. Without it, 1.0
+must scramble every galaxy that exists. It has to land first, and 0.5 is where it fits.
+
+**Small, and it pays for itself:** `install.ps1` should refuse when a Gale-managed copy of the same
+`BepInPlugin` GUID is present, rather than producing a silent conflict where BepInEx loads one and
+refuses the other without saying which. That becomes a live hazard the moment 0.4.0 is on
+Thunderstore and installable into the profile being developed against.
+
+**Not 0.5, and why:**
+
+- **Multi-output recipes** (the antimatter case -- antimatter and plasma refining are excluded only
+  because hydrogen falls out alongside). This widens the eligible pool, so it moves planets. By the
+  rule in *What belongs in config* and *The one re-roll*, it goes in the 1.0 bundle with research
+  cubes and unique recipes. Recorded here because the antimatter case is the clearest argument that
+  the single-output rule is standing in for "one clear product" and the two come apart.
+- **Icons in the planet panel.** Viable, investigated, and polish. It should not go ahead of a gap
+  the mod actually has.
+- **The replicator.** Still the application that least serves the thesis. If it ships at all it
+  ships as an off-by-default setting, and there is no urgency.
+
+**Open question, for the author.** Two players have now said ×10 is too high and run ×3. That is a
+default, not a generation change -- `OutputMultiplier` affects neither which planets are anomalous
+nor which recipe each carries -- so lowering it is cheap and reversible. But it changes the feel of
+every galaxy for everyone who has not touched the config, and "a windfall should feel like one" is
+a stated principle. Worth deciding deliberately rather than drifting.
 ## The one re-roll
 
 Three things now want a generation change: galaxy-wide unique recipes, variable multipliers, and
