@@ -185,15 +185,17 @@ An anomaly does nothing until you build the affected recipe on that planet. Most
 
 Anomalies are **not balanced**, on purpose. A ×10 on iron ingots is a convenience. A ×10 on something late-game and expensive is a windfall. Finding one of those should feel like a discovery, not like a reward that has been carefully measured out for you.
 
-**And yes, ×10 is a lot. It is meant to be.** Using an anomaly means building somewhere you did not
-choose, hauling the output home, and -- in a hostile galaxy -- clearing the Dark Fog off a world and
-then holding it, while it keeps trying to take your far-flung industry apart. That is a real price,
-paid in belts, vessels, turrets, ammunition and attention. ×10 is the number that makes paying it
-worth doing. A smaller reward would leave all of the hassle and remove the reason for it.
+**And yes, ten is a lot.** It is a default, not a verdict. Using an anomaly means building somewhere
+you did not choose, hauling the output home, and -- in a hostile galaxy -- clearing the Dark Fog off
+a world and then holding it while it keeps trying to take your far-flung industry apart. That is a
+real price, paid in belts, vessels, turrets, ammunition and attention, and the reward has to be
+worth it. How big it needs to be for that is a matter of taste.
 
-If your galaxy has no Dark Fog, the price is smaller and the number can be too: `OutputMultiplier`
-is yours to set, and there is an experimental setting below that lowers it for peaceful galaxies
-automatically.
+So the exact multiplier is yours. `OutputMultiplier` takes whatever makes the trade interesting to
+you: some players run three, the default is ten, and nothing else in the mod cares which. There is
+also an experimental setting, below, meant to scale the reward to how hostile your galaxy is -- today
+it simply uses a smaller number when the Dark Fog is off or passive, so a peaceful game does not get
+paid for a war it never has to fight.
 
 ### The galaxy does the balancing
 
