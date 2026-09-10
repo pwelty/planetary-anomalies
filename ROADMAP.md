@@ -577,6 +577,44 @@ Untested: proliferator interaction, which labs handle with their own incremental
 
 **Deferred to 1.0**, Paul's call, and it wants real testing rather than a confident patch. See
 *The one re-roll* below for why that is now the natural home for it.
+### Candidate: anomalies for any seed, outside the game
+
+Paul: interface with DSP Seed Finder (doubleuth.github.io/DSP-Seed-Finder) -- or have our own.
+
+**Why it is feasible at all.** `AnomalyMath` was written as pure integer arithmetic with no game
+types so that it could run outside the game; that is what the golden test already does. A port to
+JavaScript is a hundred lines of FNV-1a and rendezvous hashing, and the golden file validates it
+byte for byte: 198 locked results across seeds, planets and pools. What the port cannot supply on
+its own is the galaxy -- planet ids, which are gas giants, which is the birth planet -- and the
+eligible recipe pool for a given DSP version.
+
+**What Seed Finder is.** Apache-2.0. It reproduces DSP's galaxy generation client-side, in Rust
+compiled to WebAssembly with a TypeScript/React front end, and lets players search seeds by
+luminosity, gas giants, tidal locking and vein amounts. No plugin or overlay mechanism, and no
+documented galaxy export format. So "interface with it" means one of two things:
+
+- **Contribute upstream.** An anomaly column in their results, computed from their own galaxy data
+  plus the ported math. Their generator answers every question the port cannot. It also puts the
+  mod in front of every player who searches seeds, which is exactly the audience that would want
+  it. The cost is that it lives in someone else's project on someone else's schedule, and that the
+  eligible pool and rules version have to be pinned to something they can update.
+- **Our own page.** Reuse their WASM generator under Apache-2.0, add the ported math, and publish a
+  single page: type a seed, see its anomalies by system, filter by recipe. Fully under this
+  project's control; a natural home for the *field notebook* export already on the list, since the
+  two are the same page with the answer key switched on or off.
+
+**The honest cost, either way:** this is the answer key for every seed, permanently, on the open
+web. Anyone can look up a galaxy before playing it. That is already true of `LogEveryAnomaly` for
+a galaxy you have loaded; this extends it to galaxies nobody has loaded. It is the player's choice
+to look, as it is today -- but it should be presented as a spoiler tool, not as the mod's front
+door, and the in-game experience must never assume the player has seen it.
+
+Two things the page would have to declare, or it lies: the rules version (v1 until 1.0; pinned
+galaxies stay v1 after) and the DSP version's recipe pool. Config-dependent results --
+`ExcludedRecipes`, forced density -- cannot be shown and should be said not to be.
+
+Not for 0.5. A good first post-1.0 project, once the rules have moved and there are two versions
+to show.
 ### Phase B — A second static effect
 
 Choose the second effect to test the design grammar, not to fill a catalog. It should differ in kind
