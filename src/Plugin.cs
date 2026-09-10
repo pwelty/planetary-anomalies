@@ -23,7 +23,7 @@ namespace PlanetaryAnomalies
         // BepInEx/config/com.planetaryanomalies.dsp.cfg on first run; edit that file and relaunch
         // rather than rebuilding. They are read when a galaxy is first seen, so a change takes
         // effect on the next load rather than mid-session.
-        internal static ConfigEntry<int> AnomalyChancePercent;
+        internal static ConfigEntry<string> AnomalyChancePercent;
         internal static ConfigEntry<int> OutputMultiplier;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
         internal static ConfigEntry<UnresearchedDisplay> UnresearchedAnomalies;
@@ -51,9 +51,10 @@ namespace PlanetaryAnomalies
             BindConfig();
 
             Log.LogInfo(PluginName + " v" + PluginVersion + " loaded");
+            int forcedDensity;
             Log.LogInfo("Anomalies derived from the galaxy seed; output x" + OutputMultiplier.Value +
-                        (AnomalyChancePercent.Value >= 0
-                            ? ". Density forced to " + AnomalyChancePercent.Value + "% by config."
+                        (AnomalyManager.TryForcedDensity(out forcedDensity)
+                            ? ". Density forced to " + forcedDensity + "% by config."
                             : ". Density drawn per galaxy, 25-75%.") +
                         (MultiplierFromCombatSettings.Value
                             ? " EXPERIMENTAL: peaceful galaxies use x" + PeacefulOutputMultiplier.Value +
@@ -82,17 +83,14 @@ namespace PlanetaryAnomalies
             AnomalyChancePercent = Config.Bind(
                 "Generation",
                 "AnomalyChancePercent",
-                -1,
-                new ConfigDescription(
-                    "Playtesting override for how many non-home planets carry an anomaly. " +
-                    "-1, the default, derives the density from the galaxy seed, between 25% and " +
-                    "75%, so galaxies differ from one another: some are anomaly-rich, some sparse. " +
-                    "That is the intended behaviour. Any value from 0 to 100 forces that " +
-                    "percentage instead, which is useful for testing but makes every galaxy the " +
-                    "same density. Changing this re-rolls which planets are anomalous, though not " +
-                    "which recipe each anomalous planet gets.",
-                    new AcceptableValueRange<int>(-1, 100)));
-
+                "Seed",
+                "How many non-home planets carry an anomaly.\n" +
+                "Seed: derived from the galaxy seed, between 25% and 75%, so galaxies differ from one\n" +
+                "  another -- some anomaly-rich, some sparse. The default, and the intended behaviour.\n" +
+                "A number from 0 to 100 forces that percentage instead. Useful when a galaxy rolls\n" +
+                "  sparser than you want to play; it costs nothing on a galaxy nobody has built on.\n" +
+                "Changing this re-rolls which planets are anomalous, though not which recipe each\n" +
+                "anomalous planet gets. (-1 still means Seed, for configs written by earlier versions.)");
             OutputMultiplier = Config.Bind(
                 "Effect",
                 "OutputMultiplier",

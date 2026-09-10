@@ -21,6 +21,9 @@
   its `1`, and every galaxy on it stays exactly as it is through 1.0 and beyond. Set
   `AnomalyRules = Latest` (or the new number) when you want the new rules. Nothing is written to
   your saves, or anywhere else -- that one line in the config is the whole record.
+- `AnomalyChancePercent` now reads `Seed` by default rather than `-1`, and says what it means.
+  A number from 0 to 100 still forces a density; `-1` still works for configs written by earlier
+  versions. Nothing about generation changes.
 - Experimental, off by default: `MultiplierFromCombatSettings`. When on, a galaxy with the Dark Fog
   disabled or passive uses `PeacefulOutputMultiplier` (default 3) instead of `OutputMultiplier`;
   hostile galaxies are unchanged. The multiplier is a return on the cost of using an anomaly, and

@@ -711,17 +711,56 @@ namespace PlanetaryAnomalies
         /// </summary>
         private static int ResolveDensity(int seed)
         {
-            if (IsDensityOverridden())
+            int forced;
+            if (TryForcedDensity(out forced))
             {
-                return Plugin.AnomalyChancePercent.Value;
+                return forced;
             }
 
             return AnomalyMath.DensityFor(seed, AnomalySystemVersion);
         }
 
+        /// <summary>
+        /// Reads AnomalyChancePercent. "Seed", blank, or the -1 that earlier versions wrote all mean
+        /// "derive it from the seed"; a number from 0 to 100 forces that density. Anything else is
+        /// a warning, once, and the seed decides -- the safe answer, since a mistyped override on
+        /// an existing galaxy is the one that would move planets.
+        /// </summary>
+        internal static bool TryForcedDensity(out int percent)
+        {
+            percent = -1;
+
+            string raw = Plugin.AnomalyChancePercent != null ? Plugin.AnomalyChancePercent.Value : null;
+            string setting = raw != null ? raw.Trim() : "";
+
+            if (setting.Length == 0 ||
+                string.Equals(setting, "seed", StringComparison.OrdinalIgnoreCase) ||
+                setting == "-1")
+            {
+                return false;
+            }
+
+            int value;
+            if (!int.TryParse(setting.TrimEnd('%'), out value) || value < 0 || value > 100)
+            {
+                if (!_densityWarned)
+                {
+                    _densityWarned = true;
+                    Plugin.Log.LogWarning("AnomalyChancePercent = '" + raw + "' was not understood. Use Seed, or a number from 0 to 100. Deriving density from the seed.");
+                }
+                return false;
+            }
+
+            percent = value;
+            return true;
+        }
+
+        private static bool _densityWarned;
+
         private static bool IsDensityOverridden()
         {
-            return Plugin.AnomalyChancePercent != null && Plugin.AnomalyChancePercent.Value >= 0;
+            int forced;
+            return TryForcedDensity(out forced);
         }
 
         /// <summary>

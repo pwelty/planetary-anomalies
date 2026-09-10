@@ -253,7 +253,7 @@ Settings live in `BepInEx/config/com.planetaryanomalies.dsp.cfg` after the first
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `AnomalyChancePercent` | `-1` | How many non-home planets are anomalous. `-1` derives it from the galaxy seed, between 25% and 75%, so galaxies differ from one another. Any value from 0 to 100 forces that density instead. |
+| `AnomalyChancePercent` | `Seed` | How many non-home planets are anomalous. `Seed` derives it from the galaxy seed, between 25% and 75%, so galaxies differ from one another. A number from 0 to 100 forces that density instead -- useful when a galaxy rolls sparser than you want to play, and free on a galaxy nobody has built on. Changing it re-rolls which planets are anomalous, not which recipe each one carries. |
 | `OutputMultiplier` | `10` | How much more an anomalous recipe produces. |
 | `StarmapLabel` | `Detail` | What star map labels show. `Detail` names the affected items, `Marker` shows counts and a symbol, `Off` hides them. Unscanned planets show nothing either way. |
 | `AnomalyRules` | `1` | The version of the anomaly rules this install uses: a number, or `Latest`. Written once and never changed by the mod, so an upgraded install keeps rolling its galaxies as before when 1.0 introduces version 2. Set `Latest` or the new number to take the new rules, for every galaxy on this install. See *Before 1.0* above. |
