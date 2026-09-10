@@ -897,6 +897,7 @@ forced 60% to see whether the complaint is about the number or about the start.
 The escape hatch already exists and was used: `AnomalyChancePercent` forces a density, and on a
 galaxy nobody has built on yet it costs nothing.
 
+### Running out of ideas is evidence
 
 Paul, after the marker mode landed: "I confess I don't have a lot more ideas even with hours of
 play." That is worth recording rather than filling.
@@ -920,6 +921,43 @@ practice, and no release has looked at it.
 Meanwhile the productive move is probably not to add. Ship 0.5 as scoped -- marker mode, the
 announcement, version pinning -- and let a fresh run and other players produce the next finding, as
 they have every previous one worth having.
+### The early game is where the mod is thinnest
+
+Two findings the same afternoon, from the first fresh run anyone has done with 0.5, and they are
+the same finding from opposite ends.
+
+**A sparse galaxy feels empty at hour one.** Paul, on a galaxy that rolled 31%: `there's so much
+grind to reach other planets, I can't deal with 31%`. Forced to 60 and the complaint went away.
+
+**And nothing at all is reachable at the start.** Paul again: `it would be kind of fun, as a start
+a new run, that I can get SOME bonus even without travelling to another planet`.
+
+Both say the same thing. The mod's whole payload is somewhere else, and *somewhere else* is
+expensive for the first several hours -- so for those hours the mod is a promise rather than a
+mechanic. Every feature built so far makes anomalies easier to *find*; none makes the first one
+easier to *reach*.
+
+**Shipped in 0.5, and deliberately only half an answer:** `HomePlanetNeverAnomalous`, on by default,
+off if you want it. Off, the home planet takes exactly the same draw as everywhere else -- a
+one-in-three to two-in-three chance depending on density, of a uniformly random recipe. Which might
+be Assembling Machine Mk.I, worth having at hour one, or Antimatter Capsule, worth nothing for
+forty hours. It is a fair coin, not a starting gift, and the documentation says so.
+
+**For 1.0: a weighted home draw.** Home always anomalous, drawn from recipes the player can actually
+build in the first hours -- smelting, belts, sorters, assemblers, the things placed by the hundred
+early. A real generation change, since it needs its own selection rather than the ordinary one, so
+it belongs in the one re-roll.
+
+The tension to hold while designing it: *Create another logistics problem, not free items*, and
+**anomalies are a reason to look outward**. A home anomaly is the closest this mod comes to a plain
+buff, and a generous one would undercut the thesis in the first hour of every game. What argues for
+it anyway is that those hours currently have no mechanic at all -- and a ×10 on iron ingots at home
+is not a windfall, it is an invitation to notice that planets differ, delivered at the one moment
+the player has nothing else to notice.
+
+Open questions: guaranteed or merely likelier; whether it should carry a smaller multiplier than
+the rest; and whether `HomePlanetNeverAnomalous = false` should switch to the weighted draw at 1.0
+rather than keeping the uniform one.
 ### The multiplier is not a number, it is a price
 
 Paul, asked whether ×10 was too high: *"it's generally a LOT of work to set stuff up. For me anyway.

@@ -309,6 +309,11 @@ a galaxy around, and they are consumed forever rather than built once -- so a cu
 permanent commitment, which is exactly the trade this mod is about. It waits for varied multipliers,
 because a flat ×10 on Universe Matrix is a different order of thing from ×10 on iron.
 
+**A starting world that does something.** The first hours are a long walk before any anomaly is
+reachable, which is the one stretch where this mod has nothing to say. A home planet always
+anomalous, drawn from what you can actually build early, would change that. `HomePlanetNeverAnomalous
+= false` is the blunt version of it today.
+
 **Recipes with a by-product.** Antimatter and plasma refining are excluded only because hydrogen
 falls out alongside. The single-output rule is standing in for "one clear product", and those two
 are where it comes apart.
