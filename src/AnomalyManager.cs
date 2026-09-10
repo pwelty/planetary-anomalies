@@ -651,7 +651,7 @@ namespace PlanetaryAnomalies
         /// </summary>
         private static string WouldBeRecipeName(int planetId)
         {
-            if (planetId == _birthPlanetId || IsUnbuildable(planetId) || _eligible == null)
+            if ((planetId == _birthPlanetId && HomeIsProtected) || IsUnbuildable(planetId) || _eligible == null)
             {
                 return null;
             }
@@ -693,6 +693,14 @@ namespace PlanetaryAnomalies
         /// Only gas giants today. If the planet cannot be looked up we assume it is buildable:
         /// wrongly skipping a real planet is worse than the marker we are trying to avoid.
         /// </summary>
+        /// <summary>
+        /// Whether the starting world is kept ordinary. True unless the player has said otherwise.
+        /// </summary>
+        private static bool HomeIsProtected
+        {
+            get { return Plugin.HomePlanetNeverAnomalous == null || Plugin.HomePlanetNeverAnomalous.Value; }
+        }
+
         private static bool IsUnbuildable(int planetId)
         {
             GameData data = GameMain.data;
@@ -769,10 +777,15 @@ namespace PlanetaryAnomalies
 
         private static PlanetAnomaly Derive(int planetId)
         {
-            // Home planets never have anomalies. The player would meet one before the star map
-            // exists to explain it, and anomalies should be a reason to look at other worlds
-            // rather than a property of the world you start on. See PRODUCT.md.
-            if (planetId == _birthPlanetId)
+            // Home planets never have anomalies, unless the player asks for it. Meeting one before
+            // the star map exists to explain it is a bad first impression, and anomalies are meant
+            // to be a reason to look at other worlds rather than a property of the ground you start
+            // on. See PRODUCT.md.
+            //
+            // Like the gas giant filter below, this is applied here rather than inside AnomalyMath:
+            // presence is an independent per-planet draw, so turning it off gives the home planet
+            // its own draw without moving a single other planet.
+            if (planetId == _birthPlanetId && HomeIsProtected)
             {
                 return null;
             }
@@ -1437,7 +1450,7 @@ namespace PlanetaryAnomalies
         private static void LogNoAnomaly(int planetId)
         {
             string suffix = "";
-            if (planetId == _birthPlanetId) { suffix = " (home planet -- never anomalous)"; }
+            if (planetId == _birthPlanetId && HomeIsProtected) { suffix = " (home planet -- never anomalous)"; }
             else if (IsUnbuildable(planetId)) { suffix = " (gas giant -- cannot host machines)"; }
             Plugin.Log.LogInfo(
                 "No anomaly: " + PlanetName(planetId) + " (planet id " + planetId + ")" + suffix + ".");

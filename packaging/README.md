@@ -202,7 +202,7 @@ have already scanned makes one of its recipes ×10, you get a brief tip naming i
 you have not found have it, you are told that much and no more. If the mod says nothing, your
 galaxy has no anomaly on that recipe anywhere. `AnnounceOnResearch = false` turns this off.
 
-Your **home planet never has an anomaly**. The starting world stays ordinary, deliberately: anomalies are a reason to look outward.
+Your **home planet never has an anomaly**. The starting world stays ordinary, deliberately: anomalies are a reason to look outward, and one at home would arrive before the star map exists to explain it. If you would rather start with something -- the early game is a long walk before the first anomaly is reachable -- set `HomePlanetNeverAnomalous = false` and home takes the same chance as anywhere else. Most of the time that still means nothing; occasionally it means a reason to stay a while.
 
 ## What this means in practice
 
@@ -253,6 +253,7 @@ Settings live in `BepInEx/config/com.planetaryanomalies.dsp.cfg` after the first
 
 | Setting | Default | What it does |
 | --- | --- | --- |
+| `HomePlanetNeverAnomalous` | `true` | Keeps the world you start on ordinary. On by default: an anomaly at home arrives before the star map exists to explain it, and anomalies are meant to send you outward. Turn it off and home is drawn like anywhere else -- usually nothing, occasionally a reason to stay a while. Affects only the home planet. |
 | `AnomalyChancePercent` | `Seed` | How many non-home planets are anomalous. `Seed` derives it from the galaxy seed, between 25% and 75%, so galaxies differ from one another. A number from 0 to 100 forces that density instead -- useful when a galaxy rolls sparser than you want to play, and free on a galaxy nobody has built on. Changing it re-rolls which planets are anomalous, not which recipe each one carries. |
 | `OutputMultiplier` | `10` | How much more an anomalous recipe produces. |
 | `StarmapLabel` | `Detail` | What star map labels show. `Detail` names the affected items, `Marker` shows counts and a symbol, `Off` hides them. Unscanned planets show nothing either way. |

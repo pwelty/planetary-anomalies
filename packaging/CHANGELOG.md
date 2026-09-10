@@ -21,6 +21,10 @@
   its `1`, and every galaxy on it stays exactly as it is through 1.0 and beyond. Set
   `AnomalyRules = Latest` (or the new number) when you want the new rules. Nothing is written to
   your saves, or anywhere else -- that one line in the config is the whole record.
+- `HomePlanetNeverAnomalous`, on by default, is the rule that has always been there -- your starting
+  world stays ordinary -- now written down where you can turn it off. Off, the home planet takes the
+  same chance as everywhere else, which most of the time still means nothing. Only the home planet
+  is affected either way; every other world keeps exactly what it had.
 - `AnomalyChancePercent` now reads `Seed` by default rather than `-1`, and says what it means.
   A number from 0 to 100 still forces a density; `-1` still works for configs written by earlier
   versions. Nothing about generation changes.

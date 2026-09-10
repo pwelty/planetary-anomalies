@@ -24,6 +24,7 @@ namespace PlanetaryAnomalies
         // rather than rebuilding. They are read when a galaxy is first seen, so a change takes
         // effect on the next load rather than mid-session.
         internal static ConfigEntry<string> AnomalyChancePercent;
+        internal static ConfigEntry<bool> HomePlanetNeverAnomalous;
         internal static ConfigEntry<int> OutputMultiplier;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
         internal static ConfigEntry<UnresearchedDisplay> UnresearchedAnomalies;
@@ -80,6 +81,19 @@ namespace PlanetaryAnomalies
 
         private void BindConfig()
         {
+            HomePlanetNeverAnomalous = Config.Bind(
+                "Generation",
+                "HomePlanetNeverAnomalous",
+                true,
+                "Keeps the world you start on ordinary.\n" +
+                "On by default, deliberately: you would meet an anomaly before the star map exists to\n" +
+                "explain it, and anomalies are meant to be a reason to look outward rather than a\n" +
+                "property of the ground you are standing on.\n" +
+                "Set to false and your home planet is drawn like any other -- most of the time it will\n" +
+                "still have nothing, since it takes the same chance as everywhere else.\n" +
+                "This affects only the home planet. Every other world keeps exactly the anomaly it\n" +
+                "already had, because presence is an independent draw per planet.");
+
             AnomalyChancePercent = Config.Bind(
                 "Generation",
                 "AnomalyChancePercent",
