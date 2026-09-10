@@ -443,6 +443,18 @@ namespace PlanetaryAnomalies
         /// </summary>
         private static bool EnsureGalaxy()
         {
+            // The galaxy behind the main menu is a real galaxy to the game -- loaded from a
+            // resource save, factories ticking -- and nobody is playing it. Every patch reaches the
+            // mod through here, so refusing it here keeps the mod out of the menu entirely: no
+            // boosted output in the background, no labels, no pin, no log lines. Paul's call, and
+            // the right one: a menu that behaves differently with the mod installed is jarring, and
+            // the menu is the one screen where the mod has nothing to offer.
+            if (DSPGame.IsMenuDemo)
+            {
+                Waiting("the main menu demo galaxy is showing; the mod does nothing there.");
+                return false;
+            }
+
             GameData data = GameMain.data;
             if (data == null)
             {

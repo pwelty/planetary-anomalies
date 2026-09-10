@@ -981,8 +981,11 @@ returns `GameMain.instance.timei`, which is not the saved age of anything. A dir
 verify.ps1 now asserts the call order the signal depends on. And the galaxy it saw was not a new
 game at all: it was the one behind the **main menu**, which DSP loads from a resource save and ticks
 like a real game. The mod had never noticed it in five releases because everything was lazy; the
-eager hook added for pinning noticed it immediately and pinned it. `DSPGame.IsMenuDemo` now
-excludes it everywhere pinning is decided.
+eager hook added for pinning noticed it immediately and pinned it. Paul's call: do not touch the
+menu demo at all -- a menu that behaves differently with the mod installed is jarring. So
+`DSPGame.IsMenuDemo` is refused at `EnsureGalaxy`, the one choke point every patch goes through,
+and the mod is simply absent from the menu: no boosted output in the background, no labels, no
+pin, no log lines.
 
 Related, and older than it looks: `GameMain.Start` calls `GalaxyData.StartAutoScanning()`, so DSP
 scans planets in the background from the first minute. `PlanetData.scanned`, the discovery gate
