@@ -615,6 +615,29 @@ galaxies stay v1 after) and the DSP version's recipe pool. Config-dependent resu
 
 Not for 0.5. A good first post-1.0 project, once the rules have moved and there are two versions
 to show.
+
+**The notebook, decided in shape.** Paul: the notebook should be a generated web page -- not WASM
+-- that you open with your seed. Agreed, and it is simpler than the seed-finder version because the
+mod generates it *from inside the game*, where everything it needs is already in memory: the
+resolved rules version, the multiplier in force, exclusions, density, and every anomaly derived so
+far. So the page reads nothing. It **stamps** what it was generated under, in its header, which is
+the honesty requirement anyway: a reader has to be able to see why their galaxy differs from
+another player's on the same seed.
+
+Concretely: a static HTML file named by seed, `PlanetaryAnomalies-<seed>.html`, written beside the
+config on demand or on save. Header: seed, star count, rules version, output multiplier and where
+it came from, exclusions, density, mod version, generated-at. Body: anomalies grouped by system,
+filterable by recipe, with a switch -- on the page, not in the mod -- between *what you have found*
+(scanned and researched: the field notebook) and *everything* (the answer key, marked as such).
+The hand-built catalogue from seed 30853643 is the prototype; its data rows are exactly this.
+
+**Pin in the config file, or beside it?** Paul asked whether the pin could live inside the `.cfg`
+and be written on new game. It could: BepInEx binds entries at runtime, so a `[Pins]` section with
+one key per seed is straightforward, and *everything in one place* becomes literal. The cost is
+that people delete their config to reset settings, and that would delete their pins with it --
+silently re-rolling every galaxy at the next rules change, which is the one failure pinning exists
+to prevent. Recommendation: the pin is a record, not a setting; keep it beside the config, and have
+the notebook page carry a copy. Open, pending Paul's call.
 ### Phase B — A second static effect
 
 Choose the second effect to test the design grammar, not to fill a catalog. It should differ in kind
