@@ -14,15 +14,13 @@
   point at worlds you have not visited. If none of your scanned worlds has it but the galaxy does,
   it says only that -- that it exists somewhere you have not been, without saying where. Knowing
   something is out there is a reason to go looking; finding it is still the part worth earning.
-- Your galaxy now keeps its rules through updates. The mod records which generation rules each
-  galaxy was first seen under -- in a small `.pins` file beside the config, not in your save --
-  and keeps rolling that galaxy under those rules even after the mod's rules change. Every 0.x
-  release has used the same rules, so nothing changes today. It matters because 1.0 will change
-  them: with `AnomalyRules = Pinned` (the default) your current galaxy stays exactly as it is
-  through 1.0, and only new galaxies see the new rules. `AnomalyRules = Latest` opts every galaxy
-  into whatever is current instead. A save that skips straight from 0.4 to 1.0 is protected too:
-  a galaxy with no record that was loaded from a save, rather than started fresh, is kept on the
-  original rules.
+- Your galaxies keep their rules through updates. A new setting, `AnomalyRules`, names the version
+  of the anomaly rules this install uses; it is written once, as `1`, and the mod never changes
+  it. Every 0.x release has used rules version 1, so nothing changes today. It matters because 1.0
+  will introduce version 2, which draws anomalies differently: an install upgraded from 0.5 keeps
+  its `1`, and every galaxy on it stays exactly as it is through 1.0 and beyond. Set
+  `AnomalyRules = Latest` (or the new number) when you want the new rules. Nothing is written to
+  your saves, or anywhere else -- that one line in the config is the whole record.
 - Experimental, off by default: `MultiplierFromCombatSettings`. When on, a galaxy with the Dark Fog
   disabled or passive uses `PeacefulOutputMultiplier` (default 3) instead of `OutputMultiplier`;
   hostile galaxies are unchanged. The multiplier is a return on the cost of using an anomaly, and

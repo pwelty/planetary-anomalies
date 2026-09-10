@@ -652,13 +652,9 @@ filterable by recipe, with a switch -- on the page, not in the mod -- between *w
 (scanned and researched: the field notebook) and *everything* (the answer key, marked as such).
 The hand-built catalogue from seed 30853643 is the prototype; its data rows are exactly this.
 
-**Pin in the config file, or beside it?** Paul asked whether the pin could live inside the `.cfg`
-and be written on new game. It could: BepInEx binds entries at runtime, so a `[Pins]` section with
-one key per seed is straightforward, and *everything in one place* becomes literal. The cost is
-that people delete their config to reset settings, and that would delete their pins with it --
-silently re-rolling every galaxy at the next rules change, which is the one failure pinning exists
-to prevent. Recommendation: the pin is a record, not a setting; keep it beside the config, and have
-the notebook page carry a copy. Open, pending Paul's call.
+**Pin in the config file, or beside it?** Resolved by making it a setting rather than a record --
+see *Version pinning* above. The notebook page stamps the rules version it was generated under,
+which is all it ever needed.
 ### Phase B — A second static effect
 
 Choose the second effect to test the design grammar, not to fill a catalog. It should differ in kind
@@ -881,7 +877,26 @@ alongside the other generation changes -- see *The one re-roll*.
 **The count matters too.** Six settings today. Disclosure modes multiply against `StarmapLabel`,
 so the real number is combinations, not entries, and every one is a state someone will report a bug
 from.
-### Running out of ideas is evidence
+### The low end of the density range is too low for a fresh run
+
+Paul, minutes into a new galaxy that rolled 31%: "there's so much grind to reach other planets, I
+can't deal with 31%." His previous galaxy was 64% and never drew the complaint.
+
+That is the first fresh-run finding, and it lands on a number chosen without one. Density is drawn
+per galaxy from 25-75% so that galaxies differ; the range was set to make some galaxies sparse
+and some rich, on the theory that sparse ones would feel more precious. What a sparse galaxy
+actually feels like at hour one is *empty*, because the cost of reaching any other planet is the
+whole early game, and a third of them having anything to offer is not enough to make that cost
+feel paid.
+
+Two readings, not yet separable: the floor is too low (raise it to 40 or 50), or sparse is fine
+later and only the early game suffers -- which would argue for density that is generous near home
+and thins outward, a generation change and therefore 1.0 material. Worth a second fresh run at a
+forced 60% to see whether the complaint is about the number or about the start.
+
+The escape hatch already exists and was used: `AnomalyChancePercent` forces a density, and on a
+galaxy nobody has built on yet it costs nothing.
+
 
 Paul, after the marker mode landed: "I confess I don't have a lot more ideas even with hours of
 play." That is worth recording rather than filling.
@@ -967,13 +982,19 @@ subsystem:
 Both are display-only. Neither can move a galaxy, which keeps the promise that the generator holds
 still until 1.0.
 
-**Version pinning -- built in 0.5.** Paul's framing shaped it: one config setting so every choice
-lives in one place, `AnomalyRules = Pinned | Latest`, and the pin file is the mod's memory in
-service of it rather than a second place to configure. A galaxy is identified by seed, star count
-and algorithm. A galaxy with no record is judged by how it arrived: `GameData.NewGame` fired and
-`GameData.Import` did not means created this session; otherwise it was loaded from a save and
-predates pinning. So a player who skips 0.5 entirely is still protected. The golden file is now a
-permanent contract for version 1.
+**Version pinning -- built in 0.5, then rebuilt smaller.** The first version was per galaxy: a
+pin file beside the config, one line per galaxy, with the mod deciding whether an unrecorded
+galaxy was new or an old save. Paul's second thought was better: *the rules version is a setting*.
+`AnomalyRules = 1` or `Latest`, one line in the config, written once and never touched by the mod.
+BepInEx writes a default only when the key is absent, so an install upgraded from 0.5 keeps its
+`1` through 1.0 and a fresh 1.0 install gets `2` -- existing players protected, new players on the
+new rules, with no record-keeping at all. The pin file, the created-versus-loaded detection and
+two Harmony patches were deleted the same afternoon they were written, and "nothing is written to
+your saves" is true again without a footnote.
+
+The cost is per-install rather than per-galaxy: on an upgraded install a brand-new game also rolls
+the old rules until the number is changed. Accepted, and the log states the version in force on
+every load so it is never a surprise. The golden file is a permanent contract for version 1.
 
 **Two things the first run taught, both worth keeping.** The first version judged age from
 `GameMain.gameTick`, and the very first "new" galaxy it saw read 515,221 ticks -- that property

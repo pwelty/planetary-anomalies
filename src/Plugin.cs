@@ -40,7 +40,7 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<bool> LegacyHideUnresearched;
         internal static ConfigEntry<bool> LogEveryAnomaly;
         internal static ConfigEntry<string> ExcludedRecipes;
-        internal static ConfigEntry<AnomalyRulesMode> AnomalyRules;
+        internal static ConfigEntry<string> AnomalyRules;
 
         private Harmony _harmony;
 
@@ -67,8 +67,7 @@ namespace PlanetaryAnomalies
             _harmony.PatchAll(typeof(UIStarmapPlanetPatch));
             _harmony.PatchAll(typeof(UIStarmapStarPatch));
             _harmony.PatchAll(typeof(TechUnlockPatch));
-            _harmony.PatchAll(typeof(GameBeginPatch));
-            _harmony.PatchAll(typeof(GameDataPatch));
+
 
             // The production hook only fires once a planet has a factory to tick, which does not
             // happen until something is built there -- not merely when a save is loaded.
@@ -119,17 +118,15 @@ namespace PlanetaryAnomalies
             AnomalyRules = Config.Bind(
                 "Generation",
                 "AnomalyRules",
-                AnomalyRulesMode.Pinned,
-                "What a galaxy does when this mod's generation rules change in an update.\n" +
-                "Pinned: each galaxy keeps the rules it was first seen under, so an update never\n" +
-                "  rewrites a galaxy you are playing. New galaxies get the current rules. The record\n" +
-                "  of which galaxy uses which rules is the .pins file beside this one; it is safe to\n" +
-                "  edit, and raising one galaxy's version there re-rolls just that galaxy.\n" +
-                "Latest: the current rules for every galaxy, no matter what. Your existing galaxies\n" +
-                "  re-roll whenever the rules change. Nothing you built moves; the anomalies do.\n" +
-                "Why this exists: 1.0 will change how anomalies are drawn. Every 0.x release has\n" +
-                "used the same rules, so with Pinned your current galaxy stays exactly as it is\n" +
-                "through 1.0 and beyond, and only new galaxies see the new rules.");
+                AnomalyManager.CurrentAnomalySystemVersion.ToString(),
+                "Which version of the anomaly rules this install uses: a version number, or Latest.\n" +
+                "Every 0.x release has used rules version 1. 1.0 will introduce version 2, which draws\n" +
+                "anomalies differently -- a galaxy rolled under 2 is a different galaxy.\n" +
+                "This line is written once, when the mod first runs, and the mod never changes it. So\n" +
+                "an install upgraded from 0.5 keeps 1, and its galaxies stay exactly as they are\n" +
+                "through 1.0 and beyond; a fresh install gets that release's default. Set Latest, or\n" +
+                "the new number, when you want the new rules -- for every galaxy on this install,\n" +
+                "old and new alike. Nothing is written to saves or anywhere else; this is the record.");
 
             ExcludedRecipes = Config.Bind(
                 "Generation",

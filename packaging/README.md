@@ -13,19 +13,22 @@ combination of unique recipes, varied multipliers, and research cubes. Every 0.x
 the same rules, which is why your anomalies have never moved. Under new rules they would.
 
 So this release adds the one thing that lets an update change the rules without changing your
-galaxy. The mod now remembers which rules each galaxy was first seen under and keeps rolling it
-that way, forever, even after the current rules move on. Your Kaus III stays your Kaus III.
+galaxy: a setting that names the rules version, `AnomalyRules = 1`. It is written into your config
+once, and the mod never changes it. When 1.0 arrives with rules version 2, your config still says
+`1`, and every galaxy on this install keeps rolling exactly as it does today. Your Kaus III stays
+your Kaus III. A fresh install of 1.0 gets `2` as its default and the new rules from the start.
 
-You do not have to do anything. `AnomalyRules = Pinned` is the default. When 1.0 arrives, your
-existing galaxies stay exactly as they are and only new galaxies get the new rules. If you would
-rather have the new rules everywhere, set `AnomalyRules = Latest`; if you want them on one galaxy
-only, the `.pins` file beside the config has one line per galaxy and is safe to edit.
+You do not have to do anything. When you *want* the new rules, set `AnomalyRules = Latest` -- or
+the new number -- and they apply to every galaxy on this install, old and new alike. That is the
+one thing to know: the setting is per install, not per galaxy. If you keep it at `1` and start a
+brand-new game after 1.0, that game rolls the old rules too, until you change it. The log says
+which rules are in force on every load.
 
-Two honest notes. The record lives beside the config on your machine, not in the save, so it does
-not travel: someone you hand a save to will see that galaxy for the first time under whatever rules
-are current for them. And pinning covers the *rules*, not the recipe list -- if 1.0 adds recipes
-to the pool, a few planets shift the way a handful did when refining and particle recipes joined
-in 0.2. Everything else stays put.
+Two honest notes. The setting lives in your config on your machine, not in the save, so it does
+not travel: someone you hand a save to will see that galaxy under whatever their own config says.
+And it covers the *rules*, not the recipe list -- if 1.0 adds recipes to the pool, a few planets
+shift the way a handful did when refining and particle recipes joined in 0.2. Everything else
+stays put.
 ## What's new in 0.5
 
 **Finish a technology and the galaxy tells you where it is already cheap.** Research Antimatter
@@ -253,7 +256,7 @@ Settings live in `BepInEx/config/com.planetaryanomalies.dsp.cfg` after the first
 | `AnomalyChancePercent` | `-1` | How many non-home planets are anomalous. `-1` derives it from the galaxy seed, between 25% and 75%, so galaxies differ from one another. Any value from 0 to 100 forces that density instead. |
 | `OutputMultiplier` | `10` | How much more an anomalous recipe produces. |
 | `StarmapLabel` | `Detail` | What star map labels show. `Detail` names the affected items, `Marker` shows counts and a symbol, `Off` hides them. Unscanned planets show nothing either way. |
-| `AnomalyRules` | `Pinned` | What a galaxy does when the mod's generation rules change in an update. `Pinned` keeps each galaxy on the rules it was first seen under, so updates never rewrite a galaxy you are playing; new galaxies get the current rules. `Latest` re-rolls every galaxy to the current rules. See *Before 1.0* above. |
+| `AnomalyRules` | `1` | The version of the anomaly rules this install uses: a number, or `Latest`. Written once and never changed by the mod, so an upgraded install keeps rolling its galaxies as before when 1.0 introduces version 2. Set `Latest` or the new number to take the new rules, for every galaxy on this install. See *Before 1.0* above. |
 | `ExcludedRecipes` | empty | Recipes that should never receive an anomaly, comma separated — by item name as it appears in game, or numeric id. The mod holds no opinion about which anomalies are worth having, because that depends entirely on how you play; this is where you state yours. Entries matching nothing are reported in the log rather than ignored. |
 | `AnnounceOnResearch` | `true` | When a technology completes, names any world you have already scanned that makes one of its recipes ten times over. Shown as the game's own brief tip, and always written to the log. Never names a planet you have not visited. |
 | `UnresearchedAnomalies` | `Hide` | What an anomaly says about itself before you have researched its recipe, everywhere it would appear. `Hide` says nothing. `Marker` shows the symbol without the name — somewhere to come back to. `Show` names everything, as in 0.3. Display only: generation is unchanged. |
@@ -274,7 +277,7 @@ Off by default, and may change or go away.
 
 - Built and tested against **DSP 0.10.34**.
 - **No mod dependencies** beyond BepInEx.
-- **Nothing is written to your saves.** Anomalies are recomputed from the galaxy seed every time you load, so removing this mod leaves a completely ordinary save behind. Recipe prototypes are never modified, so other mods reading them see vanilla values. The one thing the mod does write is a small `.pins` file beside its config, recording which rules each galaxy was first seen under -- see *Before 1.0*.
+- **Nothing is written to your saves.** Anomalies are recomputed from the galaxy seed every time you load, so removing this mod leaves a completely ordinary save behind. Recipe prototypes are never modified, so other mods reading them see vanilla values.
 - Mods that **add recipes** may shift the anomalies on a small number of planets, since new recipes join the pool that anomalies are drawn from. The rest of your galaxy is unaffected.
 - Multiplayer is untested.
 

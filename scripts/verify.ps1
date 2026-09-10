@@ -429,65 +429,14 @@ if (-not $passive) {
     Write-Host "OK  CombatSettings.isEnemyPassive getter is public"
 }
 
-# --- version pinning -----------------------------------------------------------------------------
-$gameMainType = $gameAsm.MainModule.GetType('GameMain')
-$begin = $gameMainType.Methods | Where-Object { $_.Name -eq 'Begin' -and $_.IsStatic -and $_.Parameters.Count -eq 0 }
-if (-not $begin) {
-    $failures.Add("Harmony target 'GameMain.Begin()' is gone; the galaxy would no longer be established at load, and pinning could not tell a new game from an old save.")
-} else {
-    Write-Host "OK  Harmony target: GameMain.Begin()"
-}
-# New-vs-loaded comes from the game, not from a guess: NewGame fired and Import did not.
-$gameData = $gameAsm.MainModule.GetType('GameData')
-$newGame = $gameData.Methods | Where-Object { $_.Name -eq 'NewGame' -and $_.Parameters.Count -eq 1 -and $_.Parameters[0].ParameterType.Name -eq 'GameDesc' }
-if (-not $newGame) {
-    $failures.Add("Harmony target 'GameData.NewGame(GameDesc)' is gone; a new galaxy could not be told from a loaded one.")
-} else {
-    Write-Host "OK  Harmony target: GameData.NewGame(GameDesc)"
-}
-$import = $gameData.Methods | Where-Object { $_.Name -eq 'Import' -and $_.Parameters.Count -eq 1 -and $_.Parameters[0].ParameterType.Name -eq 'BinaryReader' }
-if (-not $import) {
-    $failures.Add("Harmony target 'GameData.Import(BinaryReader)' is gone; a loaded galaxy would look like a new one and be pinned to the current rules.")
-} else {
-    Write-Host "OK  Harmony target: GameData.Import(BinaryReader)"
-}
-
-# The two halves of the call order the flag depends on. Behaviour, not shape, so nothing else
-# would catch it: if Start stopped calling NewGame, or a load stopped going through Import, the
-# flag would be silently wrong in exactly the direction that scrambles galaxies.
-$startMethod = ($gameMainType.Methods | Where-Object { $_.Name -eq 'Start' -and -not $_.IsStatic })[0]
-$startCallsNewGame = $startMethod.Body.Instructions | Where-Object { $_.Operand -and $_.Operand.Name -eq 'NewGame' -and $_.Operand.DeclaringType -and $_.Operand.DeclaringType.Name -eq 'GameData' }
-if (-not $startCallsNewGame) {
-    $failures.Add("GameMain.Start no longer calls GameData.NewGame; the created-this-session flag would never be set.")
-} else {
-    Write-Host "OK  GameMain.Start still calls GameData.NewGame (new-galaxy signal)"
-}
-$gameSave = $gameAsm.MainModule.GetType('GameSave')
-$loadMethod = ($gameSave.Methods | Where-Object { $_.Name -eq 'LoadCurrentGame' })[0]
-$loadCallsImport = $loadMethod.Body.Instructions | Where-Object { $_.Operand -and $_.Operand.Name -eq 'Import' -and $_.Operand.DeclaringType -and $_.Operand.DeclaringType.Name -eq 'GameData' }
-if (-not $loadCallsImport) {
-    $failures.Add("GameSave.LoadCurrentGame no longer calls GameData.Import; a loaded galaxy would be mistaken for a new one.")
-} else {
-    Write-Host "OK  GameSave.LoadCurrentGame still calls GameData.Import (loaded-galaxy signal)"
-}
-
-# The main-menu galaxy is real to the game and must never be pinned.
+# --- the menu demo galaxy must stay untouched --------------------------------------------------
 $dspGame = $gameAsm.MainModule.GetType('DSPGame')
 $menuDemo = $dspGame.Fields | Where-Object { $_.Name -eq 'IsMenuDemo' -and $_.IsPublic -and $_.IsStatic }
 if (-not $menuDemo) {
-    $failures.Add("DSPGame.IsMenuDemo is missing or no longer public static; the menu demo galaxy would be pinned as if someone were playing it.")
+    $failures.Add("DSPGame.IsMenuDemo is missing or no longer public static; the mod would run against the galaxy behind the main menu.")
 } else {
     Write-Host "OK  DSPGame.IsMenuDemo is public static (menu demo excluded)"
 }
-foreach ($needed in @('galaxySeed', 'starCount', 'galaxyAlgo')) {
-    $f = $gameDesc.Fields | Where-Object { $_.Name -eq $needed -and $_.IsPublic }
-    if (-not $f) {
-        $failures.Add("GameDesc.$needed is missing or no longer public; a galaxy cannot be identified for pinning.")
-    } else {
-        Write-Host "OK  GameDesc.$needed is public (galaxy identity)"
-    }
-}
-
 $gameMain = $gameAsm.MainModule.GetType('GameMain')
 $historyProp = $gameMain.Properties | Where-Object {
     $_.Name -eq 'history' -and $_.GetMethod -and $_.GetMethod.IsStatic -and $_.GetMethod.IsPublic

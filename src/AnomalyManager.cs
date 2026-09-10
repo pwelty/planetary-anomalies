@@ -51,62 +51,63 @@ namespace PlanetaryAnomalies
         /// only hauling remains.
         /// </summary>
         /// <summary>
-        /// Which rules this galaxy rolls under, and why.
+        /// Which rules this install rolls under, from the one setting that says so.
         ///
-        /// Pinned, the default: a galaxy keeps the rules it was first seen under. If it has never
-        /// been seen, how it arrived decides -- created this session, it is new and gets the
-        /// current rules; loaded from a save, it predates pinning and gets the original ones. That
-        /// second case is what protects a player who skips straight from 0.4 to 1.0 without ever
-        /// loading this version.
+        /// Paul's call, after two rounds of something cleverer: the rules version is a *setting*,
+        /// not a per-galaxy record. AnomalyRules = 1 means every galaxy on this install rolls
+        /// version 1; AnomalyRules = Latest means whatever is current. What makes that protect
+        /// existing players costs nothing: BepInEx writes a default only when the key is absent, so
+        /// an install upgraded from 0.5 keeps the 1 it already has, and a fresh 1.0 install gets
+        /// 1.0's default. No pin file, no new-versus-loaded detection, nothing written anywhere but
+        /// the config -- and "nothing is written to your saves" is true again with no footnote.
         ///
-        /// The galaxy behind the main menu is never pinned. It is a real galaxy as far as the game
-        /// is concerned, loaded from a resource and ticking, but nobody is playing it.
-        ///
-        /// Latest: the current rules, every galaxy, and the pin is brought up to date so that
-        /// switching back to Pinned later freezes things where they are rather than rolling
-        /// backwards.
+        /// The cost, accepted: it is per install, not per galaxy. On an upgraded install a
+        /// brand-new game also rolls the old version until the number is changed. The reason string
+        /// says so in the log every load, so nobody has to discover it.
         /// </summary>
-        private static int ResolveRuleVersion(GameData data, out string reason)
+        private static int ResolveRuleVersion(out string reason)
         {
-            GameDesc desc = data.gameDesc;
-            int seed = desc != null ? desc.galaxySeed : 0;
-            int stars = desc != null ? desc.starCount : 0;
-            int algo = desc != null ? desc.galaxyAlgo : 0;
+            string raw = Plugin.AnomalyRules != null ? Plugin.AnomalyRules.Value : null;
+            string setting = raw != null ? raw.Trim() : "";
 
-            if (DSPGame.IsMenuDemo)
+            if (setting.Length == 0)
             {
-                reason = "main menu demo galaxy; not pinned";
+                reason = "AnomalyRules is blank; using the current rules";
                 return CurrentAnomalySystemVersion;
             }
 
-            AnomalyRulesMode mode = Plugin.AnomalyRules != null ? Plugin.AnomalyRules.Value : AnomalyRulesMode.Pinned;
-
-            if (mode == AnomalyRulesMode.Latest)
+            if (string.Equals(setting, "latest", StringComparison.OrdinalIgnoreCase))
             {
-                AnomalyPins.Set(seed, stars, algo, CurrentAnomalySystemVersion);
                 reason = "AnomalyRules = Latest";
                 return CurrentAnomalySystemVersion;
             }
 
-            int pinned;
-            if (AnomalyPins.TryGet(seed, stars, algo, out pinned))
+            // "v1" is accepted as well as "1"; it is how people write it.
+            string digits = setting.StartsWith("v", StringComparison.OrdinalIgnoreCase) ? setting.Substring(1) : setting;
+
+            int requested;
+            if (!int.TryParse(digits, out requested))
             {
-                reason = "pinned when this galaxy was first seen";
-                return pinned;
+                Plugin.Log.LogWarning("AnomalyRules = '" + raw + "' was not understood. Use a rules version number (for example 1) or Latest. Using the current rules, v" + CurrentAnomalySystemVersion + ".");
+                reason = "AnomalyRules = '" + raw + "' not understood; using the current rules";
+                return CurrentAnomalySystemVersion;
             }
 
-            if (!_createdThisSession)
+            if (requested < OriginalAnomalySystemVersion || requested > CurrentAnomalySystemVersion)
             {
-                AnomalyPins.Set(seed, stars, algo, OriginalAnomalySystemVersion);
-                reason = "no pin and this galaxy was loaded from a save rather than created, so it predates pinning; kept on the original rules";
-                return OriginalAnomalySystemVersion;
+                Plugin.Log.LogWarning("AnomalyRules = " + requested + " is not a rules version this build knows (" + OriginalAnomalySystemVersion + " to " + CurrentAnomalySystemVersion + "). Using v" + CurrentAnomalySystemVersion + ".");
+                reason = "AnomalyRules = " + requested + " is outside " + OriginalAnomalySystemVersion + ".." + CurrentAnomalySystemVersion + "; using the current rules";
+                return CurrentAnomalySystemVersion;
             }
 
-            AnomalyPins.Set(seed, stars, algo, CurrentAnomalySystemVersion);
-            reason = "new galaxy, pinned to the current rules";
-            return CurrentAnomalySystemVersion;
+            reason = "AnomalyRules = " + requested;
+            if (requested < CurrentAnomalySystemVersion)
+            {
+                reason += " (older than the current v" + CurrentAnomalySystemVersion +
+                          "; set AnomalyRules = Latest to use the new rules -- for every galaxy on this install)";
+            }
+            return requested;
         }
-
         private static int ResolveOutputMultiplier(GameDesc desc, out string reason)
         {
             int configured = ConfiguredMultiplier();
@@ -138,12 +139,11 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>
-        /// The rules in force for the loaded galaxy. Part of every hash, so a galaxy pinned to
-        /// version 1 keeps rolling as version 1 after the current version moves on.
+        /// The rules in force. Part of every hash, so an install set to version 1 keeps rolling
+        /// version 1 after the current version moves on.
         ///
         /// Resolved once per galaxy, before density, because density is itself a function of it.
-        /// See <see cref="ResolveRuleVersion"/> for how a galaxy gets its version and
-        /// <see cref="AnomalyPins"/> for where that is remembered.
+        /// See <see cref="ResolveRuleVersion"/>: it is one config setting, nothing more.
         /// </summary>
         internal static int AnomalySystemVersion
         {
@@ -158,34 +158,13 @@ namespace PlanetaryAnomalies
         internal const int CurrentAnomalySystemVersion = 1;
 
         /// <summary>
-        /// The rules every galaxy used before pinning existed. A galaxy first seen with no pin and
-        /// a game already well under way is assumed to be one of those.
+        /// The oldest rules this build can still roll. Every 0.x release used version 1, and an
+        /// install that says 1 must keep getting exactly that forever.
         /// </summary>
         internal const int OriginalAnomalySystemVersion = 1;
 
         private static int _ruleVersion = CurrentAnomalySystemVersion;
 
-        /// <summary>
-        /// Whether the galaxy in hand was created in this session rather than loaded from a save.
-        ///
-        /// Set by GameData.NewGame and cleared by GameData.Import. GameMain.Start always calls
-        /// NewGame first and then, for a load, LoadCurrentGame -> Import over it; so at
-        /// GameMain.Begin this is true for a new game and false for a loaded one, with no
-        /// guessing. The first version of this used the game tick as a proxy for age, and the
-        /// first new game it saw read 515,221 ticks -- GameMain.gameTick is not the saved age of
-        /// anything. A direct signal, or none.
-        /// </summary>
-        private static bool _createdThisSession;
-
-        internal static void NoteGalaxyCreated()
-        {
-            _createdThisSession = true;
-        }
-
-        internal static void NoteGalaxyLoaded()
-        {
-            _createdThisSession = false;
-        }
 
         internal const int DensityMinPercent = AnomalyMath.DensityMinPercent;
         internal const int DensityMaxPercent = AnomalyMath.DensityMaxPercent;
@@ -221,20 +200,9 @@ namespace PlanetaryAnomalies
         private static string _waitReason;
 
         /// <summary>Drops all state. Called when the plugin unloads.</summary>
-        /// <summary>
-        /// Establishes the galaxy now rather than on first demand. Called from GameMain.Begin so
-        /// that pinning sees a new game at tick zero. Harmless if the game is not ready: the
-        /// manager reports why and is asked again later.
-        /// </summary>
-        internal static void Touch()
-        {
-            EnsureGalaxy();
-        }
-
         internal static void Reset()
         {
             _ruleVersion = CurrentAnomalySystemVersion;
-            AnomalyPins.Reset();
             _galaxySeed = 0;
             _birthPlanetId = -1;
             _galaxyKnown = false;
@@ -514,7 +482,7 @@ namespace PlanetaryAnomalies
             }
 
             string ruleReason;
-            _ruleVersion = ResolveRuleVersion(data, out ruleReason);
+            _ruleVersion = ResolveRuleVersion(out ruleReason);
 
             _densityPercent = ResolveDensity(seed);
 
