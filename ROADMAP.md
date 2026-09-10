@@ -542,6 +542,27 @@ Open questions:
 
 Low priority, high delight-per-line. A good thing to build on a day when the generator should not
 be touched.
+
+**Refined after pinning landed.** Paul's preference is for this to be a page the *mod* generates,
+from inside the game, rather than a WebAssembly recomputation -- and that preference resolves a
+worry he raised in the same breath: that such a page would need to see the player's config and pin.
+It does not need to *read* them, because it is written by the process that already holds them.
+The mod knows the rules version in force, the multiplier and why, the exclusions, the density, and
+which planets the game has scanned; the page simply bakes all of that into its header. Where the
+pin is stored is therefore irrelevant to the notebook. (Moving the pin into the BepInEx config file
+itself, as a `[Pins]` section keyed by seed, is possible and would satisfy "everything in one file",
+but BepInEx rewrites that file on every setting change and Gale would display a section of numeric
+keys; the sidecar is the quieter choice. Not decided.)
+
+Shape that follows: written on save, one file per galaxy named by seed, self-contained HTML with no
+external resources so it opens offline. Contents follow the disclosure rules exactly -- scanned
+planets only, and an unresearched anomaly shown the way `UnresearchedAnomalies` says to show it --
+so the notebook is never more revealing than the star map. A separate, explicit option could
+produce the full survey, as `LogEveryAnomaly` does for the log; it should not be the same switch,
+because one is a diagnostic and the other is a spoiler a player chooses.
+
+If the any-seed web page is ever built, it should emit the same document, so a player cannot tell
+which produced it except by the header saying so.
 ### Candidate: research cubes (matrices)
 
 Paul asked whether cubes can be anomalous. Today they cannot: matrix recipes are
