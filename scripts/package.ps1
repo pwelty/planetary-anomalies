@@ -122,6 +122,21 @@ foreach ($textFile in @('manifest.json', 'README.md', 'CHANGELOG.md')) {
     }
 }
 
+# --- the changelog is a public document; every heading in it must be a version --------------------
+#
+# Internal listing notes sat at the bottom of CHANGELOG.md for four releases under a heading that
+# said they were not part of the changelog. Thunderstore rendered them anyway. The shape rule is
+# simple and catches the whole class: a shipped changelog has version headings and nothing else.
+$changelogPath = Join-Path $packagingDir 'CHANGELOG.md'
+if (Test-Path $changelogPath) {
+    $headings = [System.IO.File]::ReadAllLines($changelogPath) | Where-Object { $_ -match '^##\s' }
+    foreach ($h in $headings) {
+        if ($h -notmatch '^##\s+\d+\.\d+\.\d+(\s*\(.*\))?\s*$') {
+            $problems.Add("packaging/CHANGELOG.md has a heading that is not a version and would be published as one: '$h'. Internal notes belong in docs/.")
+        }
+    }
+}
+
 # --- and the documentation, which is not shipped but is the project's memory --------------------
 #
 # Kept in its own script so it can be run without rebuilding anything. It used to live here, which

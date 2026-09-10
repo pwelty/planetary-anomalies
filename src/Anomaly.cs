@@ -21,6 +21,22 @@ namespace PlanetaryAnomalies
         Full
     }
 
+    /// <summary>
+    /// What a galaxy does when the mod's generation rules change underneath it.
+    /// </summary>
+    internal enum AnomalyRulesMode
+    {
+        /// <summary>
+        /// Each galaxy keeps the rules it was first seen under, forever. New galaxies get the
+        /// current rules. The default, because the player who never opens a config file should
+        /// keep the galaxy they are playing.
+        /// </summary>
+        Pinned,
+
+        /// <summary>The current rules, every galaxy, no matter what. A re-roll on every rule change.</summary>
+        Latest
+    }
+
     /// <summary>How much an anomaly says about itself before its recipe has been researched.</summary>
     internal enum UnresearchedDisplay
     {

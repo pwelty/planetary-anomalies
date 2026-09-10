@@ -14,6 +14,14 @@
   point at worlds you have not visited. If none of your scanned worlds has it but the galaxy does,
   it says only that -- that it exists somewhere you have not been, without saying where. Knowing
   something is out there is a reason to go looking; finding it is still the part worth earning.
+- Your galaxy now keeps its rules through updates. The mod records which generation rules each
+  galaxy was first seen under -- in a small `.pins` file beside the config, not in your save --
+  and keeps rolling that galaxy under those rules even after the mod's rules change. Every 0.x
+  release has used the same rules, so nothing changes today. It matters because 1.0 will change
+  them: with `AnomalyRules = Pinned` (the default) your current galaxy stays exactly as it is
+  through 1.0, and only new galaxies see the new rules. `AnomalyRules = Latest` opts every galaxy
+  into whatever is current instead. A save that skips straight from 0.4 to 1.0 is protected too:
+  a galaxy with no record and hours of play behind it is kept on the original rules.
 - Experimental, off by default: `MultiplierFromCombatSettings`. When on, a galaxy with the Dark Fog
   disabled or passive uses `PeacefulOutputMultiplier` (default 3) instead of `OutputMultiplier`;
   hostile galaxies are unchanged. The multiplier is a return on the cost of using an anomaly, and
@@ -96,28 +104,3 @@ First release.
 - Anomalies are shown in a planet's description tab once it has been scanned or visited, and
   machines running an anomalous recipe are marked in their own window.
 - Configurable anomaly density and output multiplier.
-
----
-
-## Listing notes (not part of the changelog)
-
-Thunderstore community: **Dyson Sphere Program**.
-
-Categories chosen for 0.1.0: **Assembling Machines**, **Logistics**, **Resources**.
-
-*Resources* is the loosest of the three -- in DSP it usually signals ore and veins (PlanetFinder
-is tagged that way for vein search), so browsers there are often after extraction tooling. Kept
-because the mod does change what a planet is worth travelling to, which is the same question.
-Categories are editable after publishing, so this is cheap to revisit.
-
-Deliberately not chosen:
-
-- *Nebula Compatible* -- multiplayer is untested and the README says so; claiming it would invite
-  bug reports that cannot be answered.
-- *Libraries* -- that is for APIs other mods depend on.
-- *Quality of Life* -- the busiest category and tempting for reach, but this adds a mechanic
-  rather than smoothing friction, and QoL users are not necessarily looking for a gameplay change.
-
-The category list is not fully discoverable from cached package data; "Assembling Machines" does
-not appear in any installed mod's metadata but exists on the upload page. Check the page rather
-than inferring the list.

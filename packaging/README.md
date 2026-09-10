@@ -6,6 +6,26 @@ A world where sorters come out ten at a time. A world that turns coal into energ
 
 The point is to make exploration industrially interesting. A planet stops being "does it have titanium?" and starts being "what is this place unreasonably good at, and is that worth building around?"
 
+## Before 1.0: your galaxy will keep its rules
+
+This is the last release before 1.0, and 1.0 will change how anomalies are drawn -- some
+combination of unique recipes, varied multipliers, and research cubes. Every 0.x release has used
+the same rules, which is why your anomalies have never moved. Under new rules they would.
+
+So this release adds the one thing that lets an update change the rules without changing your
+galaxy. The mod now remembers which rules each galaxy was first seen under and keeps rolling it
+that way, forever, even after the current rules move on. Your Kaus III stays your Kaus III.
+
+You do not have to do anything. `AnomalyRules = Pinned` is the default. When 1.0 arrives, your
+existing galaxies stay exactly as they are and only new galaxies get the new rules. If you would
+rather have the new rules everywhere, set `AnomalyRules = Latest`; if you want them on one galaxy
+only, the `.pins` file beside the config has one line per galaxy and is safe to edit.
+
+Two honest notes. The record lives beside the config on your machine, not in the save, so it does
+not travel: someone you hand a save to will see that galaxy for the first time under whatever rules
+are current for them. And pinning covers the *rules*, not the recipe list -- if 1.0 adds recipes
+to the pool, a few planets shift the way a handful did when refining and particle recipes joined
+in 0.2. Everything else stays put.
 ## What's new in 0.5
 
 **Finish a technology and the galaxy tells you where it is already cheap.** Research Antimatter
@@ -194,6 +214,7 @@ Settings live in `BepInEx/config/com.planetaryanomalies.dsp.cfg` after the first
 | `AnomalyChancePercent` | `-1` | How many non-home planets are anomalous. `-1` derives it from the galaxy seed, between 25% and 75%, so galaxies differ from one another. Any value from 0 to 100 forces that density instead. |
 | `OutputMultiplier` | `10` | How much more an anomalous recipe produces. |
 | `StarmapLabel` | `Detail` | What star map labels show. `Detail` names the affected items, `Marker` shows counts and a symbol, `Off` hides them. Unscanned planets show nothing either way. |
+| `AnomalyRules` | `Pinned` | What a galaxy does when the mod's generation rules change in an update. `Pinned` keeps each galaxy on the rules it was first seen under, so updates never rewrite a galaxy you are playing; new galaxies get the current rules. `Latest` re-rolls every galaxy to the current rules. See *Before 1.0* above. |
 | `ExcludedRecipes` | empty | Recipes that should never receive an anomaly, comma separated — by item name as it appears in game, or numeric id. The mod holds no opinion about which anomalies are worth having, because that depends entirely on how you play; this is where you state yours. Entries matching nothing are reported in the log rather than ignored. |
 | `AnnounceOnResearch` | `true` | When a technology completes, names any world you have already scanned that makes one of its recipes ten times over. Shown as the game's own brief tip, and always written to the log. Never names a planet you have not visited. |
 | `UnresearchedAnomalies` | `Hide` | What an anomaly says about itself before you have researched its recipe, everywhere it would appear. `Hide` says nothing. `Marker` shows the symbol without the name — somewhere to come back to. `Show` names everything, as in 0.3. Display only: generation is unchanged. |
@@ -214,7 +235,7 @@ Off by default, and may change or go away.
 
 - Built and tested against **DSP 0.10.34**.
 - **No mod dependencies** beyond BepInEx.
-- **Nothing is written to your saves.** Anomalies are recomputed from the galaxy seed every time you load, so removing this mod leaves a completely ordinary save behind. Recipe prototypes are never modified, so other mods reading them see vanilla values.
+- **Nothing is written to your saves.** Anomalies are recomputed from the galaxy seed every time you load, so removing this mod leaves a completely ordinary save behind. Recipe prototypes are never modified, so other mods reading them see vanilla values. The one thing the mod does write is a small `.pins` file beside its config, recording which rules each galaxy was first seen under -- see *Before 1.0*.
 - Mods that **add recipes** may shift the anomalies on a small number of planets, since new recipes join the pool that anomalies are drawn from. The rest of your galaxy is unaffected.
 - Multiplayer is untested.
 
@@ -235,8 +256,17 @@ Rough intentions, not promises, roughly in the order they are being thought abou
 
 **Softer descriptions.** Right now the panel tells you exactly what an anomaly does. There is an argument for saying only *what* is affected — "improved sorter output" — and letting you find out how much by building it. Existence stays free; magnitude becomes something you discover.
 
-**Version pinning.** The build now refuses to ship if the generator changes by accident, so updates do not quietly rewrite your galaxy. What is still missing is recording which generator version a galaxy was created under, which would let existing galaxies keep their anomalies even through a *deliberate* change. That single number is the one thing that genuinely needs saving.
 
 **Multi-output recipes**, and a considered answer to proliferator, rather than the current "does not crash".
 
-If you have opinions about any of this, or a galaxy that produced something memorable, the GitHub issues page is open.
+## Please tell me how it plays
+
+Every change since 0.1 came from someone playing it and saying what happened -- the star map
+labels, the recipe-name fix, the hiding, the markers, the research announcement. None of them were
+on a list beforehand. If you have opinions, a galaxy that produced something memorable, or a
+setting you changed and why, I would like to hear it:
+
+- GitHub issues: https://github.com/pwelty/planetary-anomalies/issues
+- Email: ponch@paulwelty.com
+
+Even "I installed it and never used an anomaly" is useful. Especially that one.

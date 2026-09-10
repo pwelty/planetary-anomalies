@@ -429,6 +429,29 @@ if (-not $passive) {
     Write-Host "OK  CombatSettings.isEnemyPassive getter is public"
 }
 
+# --- version pinning -----------------------------------------------------------------------------
+$gameMainType = $gameAsm.MainModule.GetType('GameMain')
+$begin = $gameMainType.Methods | Where-Object { $_.Name -eq 'Begin' -and $_.IsStatic -and $_.Parameters.Count -eq 0 }
+if (-not $begin) {
+    $failures.Add("Harmony target 'GameMain.Begin()' is gone; the galaxy would no longer be established at load, and pinning could not tell a new game from an old save.")
+} else {
+    Write-Host "OK  Harmony target: GameMain.Begin()"
+}
+$tickProp = $gameMainType.Properties | Where-Object { $_.Name -eq 'gameTick' -and $_.GetMethod -and $_.GetMethod.IsStatic -and $_.GetMethod.IsPublic }
+if (-not $tickProp) {
+    $failures.Add("GameMain.gameTick is missing or no longer a public static property; pinning cannot judge a galaxy's age.")
+} else {
+    Write-Host "OK  GameMain.gameTick is a public static property (new-galaxy rule)"
+}
+foreach ($needed in @('galaxySeed', 'starCount', 'galaxyAlgo')) {
+    $f = $gameDesc.Fields | Where-Object { $_.Name -eq $needed -and $_.IsPublic }
+    if (-not $f) {
+        $failures.Add("GameDesc.$needed is missing or no longer public; a galaxy cannot be identified for pinning.")
+    } else {
+        Write-Host "OK  GameDesc.$needed is public (galaxy identity)"
+    }
+}
+
 $gameMain = $gameAsm.MainModule.GetType('GameMain')
 $historyProp = $gameMain.Properties | Where-Object {
     $_.Name -eq 'history' -and $_.GetMethod -and $_.GetMethod.IsStatic -and $_.GetMethod.IsPublic

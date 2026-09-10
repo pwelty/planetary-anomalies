@@ -24,7 +24,7 @@ internal static class GoldenRunner
         int[] planets = { 101, 102, 103, 104, 201, 301, 1201, 1704, 3602, 5406, 6401 };
 
         StringBuilder sb = new StringBuilder();
-        sb.AppendLine("# Generator golden output. Regenerate ONLY with a deliberate AnomalySystemVersion bump.");
+        sb.AppendLine("# Generator golden output for anomaly rules version 1. Never regenerate: galaxies are pinned to this version and must reproduce it forever. A new rules version gets its own file.");
         sb.AppendLine("# Format: seed planetId version -> density anomalous recipeId");
 
         foreach (int version in new[] { 1, 2 })

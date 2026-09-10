@@ -50,6 +50,54 @@ namespace PlanetaryAnomalies
         /// and the largest cost is clearing a world and then holding it. Take the Dark Fog away and
         /// only hauling remains.
         /// </summary>
+        /// <summary>
+        /// Which rules this galaxy rolls under, and why.
+        ///
+        /// Pinned, the default: a galaxy keeps the rules it was first seen under. If it has never
+        /// been seen, its age decides -- at tick zero it is new and gets the current rules; hours
+        /// in, it predates pinning and gets the original ones. That second case is what protects a
+        /// player who skips straight from 0.4 to 1.0 without ever loading this version.
+        ///
+        /// Latest: the current rules, every galaxy, and the pin is brought up to date so that
+        /// switching back to Pinned later freezes things where they are rather than rolling
+        /// backwards.
+        /// </summary>
+        private static int ResolveRuleVersion(GameData data, out string reason)
+        {
+            GameDesc desc = data.gameDesc;
+            int seed = desc != null ? desc.galaxySeed : 0;
+            int stars = desc != null ? desc.starCount : 0;
+            int algo = desc != null ? desc.galaxyAlgo : 0;
+
+            AnomalyRulesMode mode = Plugin.AnomalyRules != null ? Plugin.AnomalyRules.Value : AnomalyRulesMode.Pinned;
+
+            if (mode == AnomalyRulesMode.Latest)
+            {
+                AnomalyPins.Set(seed, stars, algo, CurrentAnomalySystemVersion);
+                reason = "AnomalyRules = Latest";
+                return CurrentAnomalySystemVersion;
+            }
+
+            int pinned;
+            if (AnomalyPins.TryGet(seed, stars, algo, out pinned))
+            {
+                reason = "pinned when this galaxy was first seen";
+                return pinned;
+            }
+
+            long tick = GameMain.gameTick;
+            if (tick > NewGalaxyTickThreshold)
+            {
+                AnomalyPins.Set(seed, stars, algo, OriginalAnomalySystemVersion);
+                reason = "no pin and the game is " + tick + " ticks old, so it predates pinning; kept on the original rules";
+                return OriginalAnomalySystemVersion;
+            }
+
+            AnomalyPins.Set(seed, stars, algo, CurrentAnomalySystemVersion);
+            reason = "new galaxy, pinned to the current rules";
+            return CurrentAnomalySystemVersion;
+        }
+
         private static int ResolveOutputMultiplier(GameDesc desc, out string reason)
         {
             int configured = ConfiguredMultiplier();
@@ -81,12 +129,39 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>
-        /// Bumping this re-rolls every galaxy. It is part of the hash so that a future change to
-        /// generation can be introduced without silently rewriting anomalies in galaxies that
-        /// already exist -- but only once the version in force is recorded per save, which it is
-        /// not yet. Until then, changing this changes existing galaxies. See LOG.md.
+        /// The rules in force for the loaded galaxy. Part of every hash, so a galaxy pinned to
+        /// version 1 keeps rolling as version 1 after the current version moves on.
+        ///
+        /// Resolved once per galaxy, before density, because density is itself a function of it.
+        /// See <see cref="ResolveRuleVersion"/> for how a galaxy gets its version and
+        /// <see cref="AnomalyPins"/> for where that is remembered.
         /// </summary>
-        internal const int AnomalySystemVersion = 1;
+        internal static int AnomalySystemVersion
+        {
+            get { return _ruleVersion; }
+        }
+
+        /// <summary>
+        /// The rules a brand-new galaxy gets. Bump this when generation changes on purpose -- and
+        /// only then, because every galaxy that has already been pinned keeps the number it has.
+        /// The golden test locks each version's output permanently; a new version gets a new file.
+        /// </summary>
+        internal const int CurrentAnomalySystemVersion = 1;
+
+        /// <summary>
+        /// The rules every galaxy used before pinning existed. A galaxy first seen with no pin and
+        /// a game already well under way is assumed to be one of those.
+        /// </summary>
+        internal const int OriginalAnomalySystemVersion = 1;
+
+        private static int _ruleVersion = CurrentAnomalySystemVersion;
+
+        /// <summary>
+        /// A galaxy first seen at or below this many ticks is new. Five minutes of game time; the
+        /// eager first sight at GameMain.Begin means a new game is actually seen at tick zero, so
+        /// this is generous by design. A save that predates pinning has hours behind it.
+        /// </summary>
+        private const long NewGalaxyTickThreshold = 60L * 60L * 5L;
 
         internal const int DensityMinPercent = AnomalyMath.DensityMinPercent;
         internal const int DensityMaxPercent = AnomalyMath.DensityMaxPercent;
@@ -122,8 +197,20 @@ namespace PlanetaryAnomalies
         private static string _waitReason;
 
         /// <summary>Drops all state. Called when the plugin unloads.</summary>
+        /// <summary>
+        /// Establishes the galaxy now rather than on first demand. Called from GameMain.Begin so
+        /// that pinning sees a new game at tick zero. Harmless if the game is not ready: the
+        /// manager reports why and is asked again later.
+        /// </summary>
+        internal static void Touch()
+        {
+            EnsureGalaxy();
+        }
+
         internal static void Reset()
         {
+            _ruleVersion = CurrentAnomalySystemVersion;
+            AnomalyPins.Reset();
             _galaxySeed = 0;
             _birthPlanetId = -1;
             _galaxyKnown = false;
@@ -390,6 +477,9 @@ namespace PlanetaryAnomalies
                 return false;
             }
 
+            string ruleReason;
+            _ruleVersion = ResolveRuleVersion(data, out ruleReason);
+
             _densityPercent = ResolveDensity(seed);
 
             string multiplierReason;
@@ -403,7 +493,7 @@ namespace PlanetaryAnomalies
                 _densityPercent + "% of non-home planets anomalous" +
                 (IsDensityOverridden() ? " (forced by config)" : " (derived from the seed)") +
                 ", output x" + _outputMultiplier + " (" + multiplierReason + ")" +
-                ", anomaly system v" + AnomalySystemVersion + ".");
+                ", rules v" + _ruleVersion + " (" + ruleReason + ").");
 
             if (Plugin.LogEveryAnomaly != null && Plugin.LogEveryAnomaly.Value)
             {

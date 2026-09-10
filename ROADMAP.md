@@ -885,6 +885,13 @@ subsystem:
 Both are display-only. Neither can move a galaxy, which keeps the promise that the generator holds
 still until 1.0.
 
+**Version pinning -- built in 0.5.** Paul's framing shaped it: one config setting so every choice
+lives in one place, `AnomalyRules = Pinned | Latest`, and the pin file is the mod's memory in
+service of it rather than a second place to configure. A galaxy is identified by seed, star count
+and algorithm. A galaxy with no record is judged by age at `GameMain.Begin` -- tick zero is new,
+hours in predates pinning -- so a player who skips 0.5 entirely is still protected. The golden
+file is now a permanent contract for version 1.
+
 **Version pinning, because 1.0 depends on it.** Recording which generator version a galaxy was
 created under is the one thing that genuinely needs saving. It is also the thing that makes *The
 one re-roll* a choice rather than an imposition: with it, an existing save can keep its anomalies
