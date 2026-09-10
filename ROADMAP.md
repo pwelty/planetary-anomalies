@@ -175,6 +175,21 @@ Distribution notes from the same survey, useful for the duplicates question:
 - Any specific recipe has roughly a 37% chance of being absent from a galaxy this size. Absence is
   ordinary, not a bug -- worth remembering when someone reports "my galaxy has no X".
 
+### Downloads, as of 2026-09-10
+
+| Version | Published | Downloads | Notes |
+| --- | --- | --- | --- |
+| 0.1.0 | 27 Aug | 63 | |
+| 0.2.0 | 29 Aug | 12 | superseded by 0.3.0 within 23 minutes |
+| 0.3.0 | 29 Aug | 132 | eleven days as the current version |
+| 0.4.0 | 9 Sep | 48 | in its first day |
+
+255 in total. Two readings worth keeping. First, 48 in a day against 0.3.0's 132 in eleven suggests
+a returning audience now, not only people finding it -- updates get taken, which is the condition
+under which a changelog is read at all. Second, those 48 are the first players to run hiding with
+`Hide` as the default. Any report along the lines of "my anomalies disappeared" from here on is
+that feature working as designed, and the answer is in the README: `UnresearchedAnomalies = Show`.
+
 ### Player feedback after 0.1.x
 
 A player who actually installed it reported three things worth separating.
