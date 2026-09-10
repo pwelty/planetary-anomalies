@@ -362,6 +362,55 @@ if (-not $preTech) {
     Write-Host "OK  RecipeProto.preTech is public (names the blocking technology)"
 }
 
+# --- the research announcement -----------------------------------------------------------------
+
+$notify = $history.Methods | Where-Object {
+    $_.Name -eq 'NotifyTechUnlock' -and $_.Parameters.Count -eq 3 -and
+    $_.Parameters[0].ParameterType.FullName -eq 'System.Int32'
+}
+if (-not $notify) {
+    $failures.Add("Harmony target 'GameHistoryData.NotifyTechUnlock(int, int, bool)' is gone; research announcements would silently stop.")
+} else {
+    Write-Host "OK  Harmony target: GameHistoryData.NotifyTechUnlock(int, int, bool)"
+}
+
+$techProto = $gameAsm.MainModule.GetType('TechProto')
+$unlockRecipes = $techProto.Fields | Where-Object { $_.Name -eq 'UnlockRecipes' -and $_.IsPublic }
+if (-not $unlockRecipes) {
+    $failures.Add("TechProto.UnlockRecipes is missing or no longer public; a technology cannot be mapped to its recipes.")
+} else {
+    Write-Host "OK  TechProto.UnlockRecipes is public"
+}
+
+$tip = $gameAsm.MainModule.GetType('UIRealtimeTip')
+$popup = $null
+if ($tip) {
+    $popup = $tip.Methods | Where-Object {
+        $_.Name -eq 'Popup' -and $_.IsStatic -and $_.IsPublic -and $_.Parameters.Count -eq 3 -and
+        $_.Parameters[0].ParameterType.FullName -eq 'System.String' -and
+        $_.Parameters[1].ParameterType.FullName -eq 'System.Boolean' -and
+        $_.Parameters[2].ParameterType.FullName -eq 'System.Int32'
+    }
+}
+if (-not $popup) {
+    $failures.Add("UIRealtimeTip.Popup(string, bool, int) is gone; announcements would have no way to reach the screen.")
+} else {
+    Write-Host "OK  UIRealtimeTip.Popup(string, bool, int) is public static"
+}
+
+# The assumption that makes announcing safe. If Import ever starts unlocking technologies, loading
+# a mature save would fire one announcement per researched tech -- a wall of tips at the worst
+# possible moment. This is behaviour rather than shape, so nothing else would catch it.
+$import = ($history.Methods | Where-Object { $_.Name -eq 'Import' })[0]
+$unlocksOnImport = $import.Body.Instructions | Where-Object {
+    $_.Operand -and ($_.Operand.Name -eq 'NotifyTechUnlock' -or $_.Operand.Name -eq 'UnlockTech' -or $_.Operand.Name -eq 'AddTechHash')
+}
+if ($unlocksOnImport) {
+    $failures.Add("GameHistoryData.Import now calls the technology unlock path; loading a save would announce every researched technology at once.")
+} else {
+    Write-Host "OK  GameHistoryData.Import still does not unlock technologies (announcements stay quiet on load)"
+}
+
 $gameMain = $gameAsm.MainModule.GetType('GameMain')
 $historyProp = $gameMain.Properties | Where-Object {
     $_.Name -eq 'history' -and $_.GetMethod -and $_.GetMethod.IsStatic -and $_.GetMethod.IsPublic

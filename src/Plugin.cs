@@ -27,6 +27,7 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<int> OutputMultiplier;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
         internal static ConfigEntry<UnresearchedDisplay> UnresearchedAnomalies;
+        internal static ConfigEntry<bool> AnnounceOnResearch;
 
         /// <summary>
         /// Superseded by <see cref="UnresearchedAnomalies"/> in 0.5, and still bound so that a
@@ -56,6 +57,7 @@ namespace PlanetaryAnomalies
             _harmony.PatchAll(typeof(UIAssemblerWindowPatch));
             _harmony.PatchAll(typeof(UIStarmapPlanetPatch));
             _harmony.PatchAll(typeof(UIStarmapStarPatch));
+            _harmony.PatchAll(typeof(TechUnlockPatch));
 
             // The production hook only fires once a planet has a factory to tick, which does not
             // happen until something is built there -- not merely when a save is loaded.
@@ -132,6 +134,18 @@ namespace PlanetaryAnomalies
                 "Show:   everything, as in 0.3 and earlier.\n" +
                 "Display only: this changes nothing about which planets are anomalous.");
 
+            AnnounceOnResearch = Config.Bind(
+                "Display",
+                "AnnounceOnResearch",
+                true,
+                "When you finish a technology, says whether a world you have already scanned makes\n" +
+                "one of its recipes ten times over. Shown as the game's own brief tip, and always\n" +
+                "written to the log.\n" +
+                "This is the other half of hiding unresearched anomalies: the mod stays quiet while\n" +
+                "a recipe means nothing to you, and speaks at the moment it starts to. Only planets\n" +
+                "you have already found are named -- it will not point at worlds you have not\n" +
+                "visited, which would be a spoiler rather than a reminder.");
+
             LegacyHideUnresearched = Config.Bind(
                 "Display",
                 "HideUnresearchedAnomalies",
@@ -172,6 +186,7 @@ namespace PlanetaryAnomalies
 
             AnomalyManager.Reset();
             PlanetFactoryBeforeGameTickPatch.Reset();
+            TechUnlockPatch.Reset();
         }
     }
 }

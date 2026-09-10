@@ -1070,6 +1070,95 @@ namespace PlanetaryAnomalies
             }
         }
 
+        /// <summary>
+        /// A recipe named the way a planet label names it -- "Antimatter Capsule ×10" -- for the
+        /// cases where the recipe is known but no particular planet is in hand.
+        /// </summary>
+        internal static string RecipeLabel(int recipeId)
+        {
+            RecipeProtoSet recipes = LDB.recipes;
+            if (recipes == null || !recipes.Exist(recipeId))
+            {
+                return null;
+            }
+
+            string name = PlayerFacingRecipeName(recipes.Select(recipeId));
+            if (string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+
+            return name + " ×" + OutputMultiplier;
+        }
+
+        /// <summary>
+        /// Scanned planets whose anomaly is on this recipe, named, or null if there are none.
+        ///
+        /// Only planets the player has already found are considered. The point of announcing on a
+        /// research unlock is to connect a new capability to somewhere the player has *been*, not
+        /// to hand them a list of places they have not looked -- that would be the answer key with
+        /// extra steps, and would spoil exactly the exploration the mod exists to reward.
+        ///
+        /// Deriving anomalies for scanned planets is what the star map does anyway, so this adds no
+        /// log noise beyond what normal play already produces.
+        /// </summary>
+        internal static string KnownPlanetsWithRecipe(int recipeId, int maxNamed, out int total)
+        {
+            total = 0;
+
+            GameData data = GameMain.data;
+            if (data == null || data.galaxy == null || data.galaxy.stars == null)
+            {
+                return null;
+            }
+
+            string names = "";
+            int named = 0;
+
+            for (int s = 0; s < data.galaxy.stars.Length; s++)
+            {
+                StarData star = data.galaxy.stars[s];
+                if (star == null || star.planets == null)
+                {
+                    continue;
+                }
+
+                for (int p = 0; p < star.planets.Length; p++)
+                {
+                    PlanetData planet = star.planets[p];
+                    if (planet == null || !planet.scanned)
+                    {
+                        continue;
+                    }
+
+                    PlanetAnomaly anomaly = AnomalyFor(planet.id);
+                    if (anomaly == null || anomaly.RecipeId != recipeId)
+                    {
+                        continue;
+                    }
+
+                    total++;
+                    if (named < maxNamed)
+                    {
+                        names += (named > 0 ? ", " : "") + planet.displayName;
+                        named++;
+                    }
+                }
+            }
+
+            if (total == 0)
+            {
+                return null;
+            }
+
+            if (total > named)
+            {
+                names += " and " + (total - named) + " more";
+            }
+
+            return names;
+        }
+
         private static string PlanetName(int planetId)
         {
             GameData data = GameMain.data;

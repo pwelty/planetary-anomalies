@@ -2,6 +2,16 @@
 
 ## 0.5.0 (in development)
 
+- When you finish a technology, the mod says whether a world you have already scanned makes one of
+  its recipes ten times over. Research Antimatter Capsule and it tells you Iclarkrav I has been
+  making them ×10 the whole time. Shown as the game's own brief tip and written to the log.
+  `AnnounceOnResearch = false` turns it off.
+
+  This is the other half of hiding unresearched anomalies. On its own, hiding is a subtraction --
+  information you had in 0.3 and lost in 0.4. With this, the mod stays quiet while a recipe means
+  nothing to you and speaks the moment it starts to, which is a better moment than discovery
+  because it is when you can act on it. Only planets you have already found are named; it will not
+  point at worlds you have not visited.
 - Anomalies on recipes you have not researched can now show a marker without naming what they are.
   `UnresearchedAnomalies = Marker` marks the planet so you know something is there and worth coming
   back for, while withholding the name until the recipe means something to you. `Hide` is the 0.4
