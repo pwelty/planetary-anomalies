@@ -175,7 +175,29 @@ ANOMALY
 Sorter Mk.III: 2 → 20
 ```
 
-That is the whole discovery mechanic — no hunting, no guessing. Knowing a planet means knowing the anomalies you can act on: an anomaly on a recipe you have not researched yet stays quiet until the research lands, so the map fills in as the game opens up rather than naming things you cannot build. A machine actually running an anomalous recipe also marks itself in its own window, so you are never left wondering why a number looks wrong.
+That is the whole discovery mechanic -- no hunting, no guessing. A machine actually running an
+anomalous recipe also marks itself in its own window, so you are never left wondering why a number
+looks wrong.
+
+**What you see depends on whether you have researched the recipe.** Knowing a planet means knowing
+the anomalies you can act on. An anomaly on a recipe you have researched is shown in full, as above.
+One on a recipe you have *not* researched yet is handled by `UnresearchedAnomalies`:
+
+- `Hide` (the default): nothing at all. The planet reads as ordinary until the research lands,
+  so the map fills in as the game opens up rather than naming things you cannot build.
+- `Marker`: the planet gets the bare symbol -- `Å` with no name -- its star counts it as `+1`
+  after the names it can show, and the description tab says only *"On a recipe you have not
+  researched yet."* You know something is there and worth coming back for, but not what. This is
+  the mode for a fresh start: the map is full of places to remember long before you can read them.
+- `Show`: everything, always, as the mod behaved before 0.4.
+
+(Not to be confused with `StarmapLabel = Marker`, which is about *how much* every label says --
+symbols and counts instead of names -- regardless of research. The two combine sensibly.)
+
+**And when the research does land, the galaxy tells you.** Finish a technology and, if a world you
+have already scanned makes one of its recipes ×10, you get a brief tip naming it. If only worlds
+you have not found have it, you are told that much and no more. If the mod says nothing, your
+galaxy has no anomaly on that recipe anywhere. `AnnounceOnResearch = false` turns this off.
 
 Your **home planet never has an anomaly**. The starting world stays ordinary, deliberately: anomalies are a reason to look outward.
 
