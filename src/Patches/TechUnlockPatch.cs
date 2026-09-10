@@ -93,20 +93,35 @@ namespace PlanetaryAnomalies
 
         private static void Announce(int recipeId)
         {
-            int total;
-            string where = AnomalyManager.KnownPlanetsWithRecipe(recipeId, MaxNamed, out total);
-            if (where == null)
-            {
-                return;
-            }
-
             string what = AnomalyManager.RecipeLabel(recipeId);
             if (string.IsNullOrEmpty(what))
             {
                 return;
             }
 
-            string message = "ANOMALY: " + what + " on " + where;
+            int total;
+            string where = AnomalyManager.KnownPlanetsWithRecipe(recipeId, MaxNamed, out total);
+
+            string message;
+            if (where != null)
+            {
+                message = "ANOMALY: " + what + " on " + where;
+            }
+            else if (AnomalyManager.AnyUnknownPlanetWithRecipe(recipeId))
+            {
+                // Existence without location. The same trade Marker mode makes about a place, made
+                // one level up about a recipe: knowing it is out there is a reason to go looking,
+                // and finding it is still the part worth earning.
+                //
+                // Paul's phrasing, and deliberately the plain one rather than the joke he offered
+                // alongside it. Every other line this mod writes is plain; one that is not would
+                // read as a different mod talking.
+                message = "ANOMALY: " + what + " exists on a world you have not found.";
+            }
+            else
+            {
+                return;
+            }
 
             Plugin.Log.LogInfo("Announced on research: " + message);
 

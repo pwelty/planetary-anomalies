@@ -17,8 +17,16 @@ This is what makes the trade honest: the mod stays quiet while a recipe means no
 speaks at the moment it starts to. That moment is a better one than discovery, because it is when
 you can act.
 
-Only worlds you have already scanned are named. It will not point at planets you have never
-visited, which would be a spoiler rather than a reminder. `AnnounceOnResearch = false` turns it off.
+Only worlds you have already scanned are named. If none of them has it but the galaxy does, you are
+told that much and no more: *Antimatter Capsule ×10 exists on a world you have not found.* Knowing
+something is out there is a reason to go looking; where it is stays the part worth earning.
+
+One consequence, since it is easy to miss: this makes silence meaningful. If a technology completes
+and the mod says nothing, your galaxy has no anomaly on that recipe anywhere. About one recipe in
+three is absent from any given galaxy, so that will happen often, and it is worth knowing rather
+than searching for something that was never there.
+
+`AnnounceOnResearch = false` turns all of it off.
 
 **An anomaly you cannot use yet can now show a marker instead of vanishing.** `UnresearchedAnomalies
 = Marker` puts the symbol on the planet without naming the recipe: you know something is there and

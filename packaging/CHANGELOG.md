@@ -11,7 +11,9 @@
   information you had in 0.3 and lost in 0.4. With this, the mod stays quiet while a recipe means
   nothing to you and speaks the moment it starts to, which is a better moment than discovery
   because it is when you can act on it. Only planets you have already found are named; it will not
-  point at worlds you have not visited.
+  point at worlds you have not visited. If none of your scanned worlds has it but the galaxy does,
+  it says only that -- that it exists somewhere you have not been, without saying where. Knowing
+  something is out there is a reason to go looking; finding it is still the part worth earning.
 - Anomalies on recipes you have not researched can now show a marker without naming what they are.
   `UnresearchedAnomalies = Marker` marks the planet so you know something is there and worth coming
   back for, while withholding the name until the recipe means something to you. `Hide` is the 0.4

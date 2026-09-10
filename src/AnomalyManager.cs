@@ -104,6 +104,19 @@ namespace PlanetaryAnomalies
         /// </summary>
         internal static PlanetAnomaly AnomalyFor(int planetId)
         {
+            return AnomalyFor(planetId, true);
+        }
+
+        /// <summary>
+        /// As <see cref="AnomalyFor(int)"/>, but able to derive without logging.
+        ///
+        /// Quiet derivation exists for one caller: the sweep that answers "does this galaxy contain
+        /// X anywhere", which must look at planets the player has never scanned. Logging those
+        /// would write the whole galaxy to the log the first time anyone researched anything --
+        /// which is precisely what LogEveryAnomaly does on purpose, and must not happen by accident.
+        /// </summary>
+        private static PlanetAnomaly AnomalyFor(int planetId, bool log)
+        {
             if (!EnsureGalaxy())
             {
                 return null;
@@ -121,13 +134,16 @@ namespace PlanetaryAnomalies
             // remembering, not a reason to recompute every tick.
             _byPlanet[planetId] = derived;
 
-            if (derived != null)
+            if (log)
             {
-                LogAnomaly(derived, planetId);
-            }
-            else
-            {
-                LogNoAnomaly(planetId);
+                if (derived != null)
+                {
+                    LogAnomaly(derived, planetId);
+                }
+                else
+                {
+                    LogNoAnomaly(planetId);
+                }
             }
 
             return derived;
@@ -1157,6 +1173,50 @@ namespace PlanetaryAnomalies
             }
 
             return names;
+        }
+
+        /// <summary>
+        /// Whether any planet in the galaxy carries this recipe on a world the player has not
+        /// scanned. Used to say that something exists without saying where.
+        ///
+        /// The same reasoning as Marker mode, one level up: existence is cheap information and
+        /// gives a reason to go looking, while the location is the part worth earning. This does
+        /// mean silence becomes meaningful -- hearing nothing now implies the galaxy does not carry
+        /// the recipe at all, where before it only meant "not on anything you have seen".
+        /// </summary>
+        internal static bool AnyUnknownPlanetWithRecipe(int recipeId)
+        {
+            GameData data = GameMain.data;
+            if (data == null || data.galaxy == null || data.galaxy.stars == null)
+            {
+                return false;
+            }
+
+            for (int s = 0; s < data.galaxy.stars.Length; s++)
+            {
+                StarData star = data.galaxy.stars[s];
+                if (star == null || star.planets == null)
+                {
+                    continue;
+                }
+
+                for (int p = 0; p < star.planets.Length; p++)
+                {
+                    PlanetData planet = star.planets[p];
+                    if (planet == null || planet.scanned)
+                    {
+                        continue;
+                    }
+
+                    PlanetAnomaly anomaly = AnomalyFor(planet.id, false);
+                    if (anomaly != null && anomaly.RecipeId == recipeId)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private static string PlanetName(int planetId)
