@@ -70,34 +70,41 @@ namespace PlanetaryAnomalies
             string raw = Plugin.AnomalyRules != null ? Plugin.AnomalyRules.Value : null;
             string setting = raw != null ? raw.Trim() : "";
 
-            if (setting.Length == 0)
-            {
-                reason = "AnomalyRules is blank; using the current rules";
-                return CurrentAnomalySystemVersion;
-            }
-
             if (string.Equals(setting, "latest", StringComparison.OrdinalIgnoreCase))
             {
                 reason = "AnomalyRules = Latest";
                 return CurrentAnomalySystemVersion;
             }
 
+            // A development build of 0.5 briefly wrote the word "Pinned" here. It meant "keep what
+            // you have", which is the oldest rules; rewrite it so the file says what it means.
+            if (string.Equals(setting, "pinned", StringComparison.OrdinalIgnoreCase))
+            {
+                Plugin.AnomalyRules.Value = OriginalAnomalySystemVersion.ToString();
+                reason = "AnomalyRules = Pinned, from an early 0.5 build; rewritten as " + OriginalAnomalySystemVersion;
+                return OriginalAnomalySystemVersion;
+            }
+
             // "v1" is accepted as well as "1"; it is how people write it.
             string digits = setting.StartsWith("v", StringComparison.OrdinalIgnoreCase) ? setting.Substring(1) : setting;
 
+            // Anything not understood falls back to the OLDEST rules, not the current ones. The
+            // value most likely to be blank, mistyped or stale belongs to a player who has been
+            // here a while, and re-rolling their galaxy is the one harm this setting exists to
+            // prevent. A new player with a typo gets old rules and a warning, which is cheap.
             int requested;
-            if (!int.TryParse(digits, out requested))
+            if (setting.Length == 0 || !int.TryParse(digits, out requested))
             {
-                Plugin.Log.LogWarning("AnomalyRules = '" + raw + "' was not understood. Use a rules version number (for example 1) or Latest. Using the current rules, v" + CurrentAnomalySystemVersion + ".");
-                reason = "AnomalyRules = '" + raw + "' not understood; using the current rules";
-                return CurrentAnomalySystemVersion;
+                Plugin.Log.LogWarning("AnomalyRules = '" + raw + "' was not understood. Use a rules version number (for example 1) or Latest. Keeping the original rules, v" + OriginalAnomalySystemVersion + ", to be safe.");
+                reason = "AnomalyRules = '" + raw + "' not understood; kept on the original rules to be safe";
+                return OriginalAnomalySystemVersion;
             }
 
             if (requested < OriginalAnomalySystemVersion || requested > CurrentAnomalySystemVersion)
             {
-                Plugin.Log.LogWarning("AnomalyRules = " + requested + " is not a rules version this build knows (" + OriginalAnomalySystemVersion + " to " + CurrentAnomalySystemVersion + "). Using v" + CurrentAnomalySystemVersion + ".");
-                reason = "AnomalyRules = " + requested + " is outside " + OriginalAnomalySystemVersion + ".." + CurrentAnomalySystemVersion + "; using the current rules";
-                return CurrentAnomalySystemVersion;
+                Plugin.Log.LogWarning("AnomalyRules = " + requested + " is not a rules version this build knows (" + OriginalAnomalySystemVersion + " to " + CurrentAnomalySystemVersion + "). Keeping the original rules, v" + OriginalAnomalySystemVersion + ", to be safe.");
+                reason = "AnomalyRules = " + requested + " is outside " + OriginalAnomalySystemVersion + ".." + CurrentAnomalySystemVersion + "; kept on the original rules to be safe";
+                return OriginalAnomalySystemVersion;
             }
 
             reason = "AnomalyRules = " + requested;
