@@ -411,6 +411,24 @@ if ($unlocksOnImport) {
     Write-Host "OK  GameHistoryData.Import still does not unlock technologies (announcements stay quiet on load)"
 }
 
+# --- the experimental combat-settings multiplier ------------------------------------------------
+$gameDesc = $gameAsm.MainModule.GetType('GameDesc')
+foreach ($needed in @('isPeaceMode', 'combatSettings')) {
+    $f = $gameDesc.Fields | Where-Object { $_.Name -eq $needed -and $_.IsPublic }
+    if (-not $f) {
+        $failures.Add("GameDesc.$needed is missing or no longer public; the combat-settings multiplier cannot read it.")
+    } else {
+        Write-Host "OK  GameDesc.$needed is public"
+    }
+}
+$combat = $gameAsm.MainModule.GetType('CombatSettings')
+$passive = $combat.Properties | Where-Object { $_.Name -eq 'isEnemyPassive' -and $_.GetMethod -and $_.GetMethod.IsPublic }
+if (-not $passive) {
+    $failures.Add("CombatSettings.isEnemyPassive is missing or no longer public; passive enemies cannot be detected.")
+} else {
+    Write-Host "OK  CombatSettings.isEnemyPassive getter is public"
+}
+
 $gameMain = $gameAsm.MainModule.GetType('GameMain')
 $historyProp = $gameMain.Properties | Where-Object {
     $_.Name -eq 'history' -and $_.GetMethod -and $_.GetMethod.IsStatic -and $_.GetMethod.IsPublic

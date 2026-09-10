@@ -839,9 +839,17 @@ The one caution is silence. A number that changes because of a setting elsewhere
 unless the mod says so, and it must be logged plainly at load -- "peace mode: output multiplier
 resolved to ×N" -- for the same reason every other hidden decision here ended up in the log.
 
-Whether `-1` should be the *default* is the real question. In a combat game it resolves to ×10 and
-nothing changes for anyone; only peaceful galaxies see a difference, and those are the galaxies
-where the current number is wrong. That argues for yes.
+Whether `-1` should be the *default* was the real question, and Paul answered it: **optional, in
+config, and labelled experimental.** Built that way in 0.5 -- not as `-1` but as its own
+`Experimental` section, `MultiplierFromCombatSettings` off by default with `PeacefulOutputMultiplier`
+beside it, so the word "experimental" is on the setting itself rather than in a comment. Resolved
+once per galaxy next to density, because every anomaly bakes the multiplier in at derivation and a
+live read would let a mid-session edit produce planets at two values. The choice is logged with its
+reason.
+
+Not the default for a reason worth keeping: a number that changes because of a setting elsewhere
+is confusing even when it is right, and this one has had no play at all. It earns a default by
+being used, or it goes.
 ## What 0.5 should be
 
 Mostly decided by what 0.4 left behind rather than by what is next on the wishlist.

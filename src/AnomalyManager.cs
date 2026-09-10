@@ -23,7 +23,61 @@ namespace PlanetaryAnomalies
         /// </summary>
         internal static int OutputMultiplier
         {
-            get { return Plugin.OutputMultiplier != null ? Plugin.OutputMultiplier.Value : 10; }
+            get { return _galaxyKnown ? _outputMultiplier : ConfiguredMultiplier(); }
+        }
+
+        /// <summary>
+        /// The multiplier in force for the loaded galaxy. Resolved once when the galaxy is first
+        /// seen, next to density, because every anomaly bakes the multiplier in at derivation --
+        /// reading the config live would let a mid-session edit produce planets at two different
+        /// values, with nothing in the log to explain why.
+        /// </summary>
+        private static int _outputMultiplier = 10;
+
+        private static int ConfiguredMultiplier()
+        {
+            return Plugin.OutputMultiplier != null ? Plugin.OutputMultiplier.Value : 10;
+        }
+
+        /// <summary>
+        /// The configured multiplier, unless the experimental combat-settings derivation is on and
+        /// the galaxy is peaceful. Reports its reasoning, because a number that changes on account
+        /// of a setting elsewhere is exactly the kind of silent decision that has cost an hour here
+        /// before.
+        ///
+        /// Paul's finding, and the condition he attached to it: "I like x10. If no dark fog, then
+        /// ok, could be much less." The multiplier is a return on the cost of using an anomaly,
+        /// and the largest cost is clearing a world and then holding it. Take the Dark Fog away and
+        /// only hauling remains.
+        /// </summary>
+        private static int ResolveOutputMultiplier(GameDesc desc, out string reason)
+        {
+            int configured = ConfiguredMultiplier();
+
+            if (Plugin.MultiplierFromCombatSettings == null || !Plugin.MultiplierFromCombatSettings.Value)
+            {
+                reason = "from config";
+                return configured;
+            }
+
+            if (desc == null)
+            {
+                reason = "from config; no game description to read combat settings from";
+                return configured;
+            }
+
+            bool peaceMode = desc.isPeaceMode;
+            bool passive = desc.combatSettings.isEnemyPassive;
+            if (!peaceMode && !passive)
+            {
+                reason = "from config; the Dark Fog is hostile here, so the experimental derivation leaves it alone";
+                return configured;
+            }
+
+            int peaceful = Plugin.PeacefulOutputMultiplier != null ? Plugin.PeacefulOutputMultiplier.Value : 3;
+            reason = (peaceMode ? "peace mode" : "enemies are passive") +
+                     ", so PeacefulOutputMultiplier applies (EXPERIMENTAL)";
+            return peaceful;
         }
 
         /// <summary>
@@ -73,6 +127,7 @@ namespace PlanetaryAnomalies
             _galaxySeed = 0;
             _birthPlanetId = -1;
             _galaxyKnown = false;
+            _outputMultiplier = 10;
             _byPlanet.Clear();
             _withheldLogged.Clear();
             _eligible = null;
@@ -336,6 +391,10 @@ namespace PlanetaryAnomalies
             }
 
             _densityPercent = ResolveDensity(seed);
+
+            string multiplierReason;
+            _outputMultiplier = ResolveOutputMultiplier(data.gameDesc, out multiplierReason);
+
             _galaxyKnown = true;
 
             LogGameVersionOnce();
@@ -343,6 +402,7 @@ namespace PlanetaryAnomalies
                 "Galaxy seed " + seed + ": " + _eligible.Length + " eligible recipes, " +
                 _densityPercent + "% of non-home planets anomalous" +
                 (IsDensityOverridden() ? " (forced by config)" : " (derived from the seed)") +
+                ", output x" + _outputMultiplier + " (" + multiplierReason + ")" +
                 ", anomaly system v" + AnomalySystemVersion + ".");
 
             if (Plugin.LogEveryAnomaly != null && Plugin.LogEveryAnomaly.Value)

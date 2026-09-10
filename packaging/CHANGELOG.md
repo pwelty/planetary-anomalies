@@ -14,6 +14,13 @@
   point at worlds you have not visited. If none of your scanned worlds has it but the galaxy does,
   it says only that -- that it exists somewhere you have not been, without saying where. Knowing
   something is out there is a reason to go looking; finding it is still the part worth earning.
+- Experimental, off by default: `MultiplierFromCombatSettings`. When on, a galaxy with the Dark Fog
+  disabled or passive uses `PeacefulOutputMultiplier` (default 3) instead of `OutputMultiplier`;
+  hostile galaxies are unchanged. The multiplier is a return on the cost of using an anomaly, and
+  the largest cost is clearing a world and then holding it -- without the Dark Fog only hauling
+  remains, so the same ×10 that is fair against a garrison is a giveaway without one. Resolved once
+  when a save loads and written to the log. Changes neither which planets are anomalous nor which
+  recipe each carries.
 - Anomalies on recipes you have not researched can now show a marker without naming what they are.
   `UnresearchedAnomalies = Marker` marks the planet so you know something is there and worth coming
   back for, while withholding the name until the recipe means something to you. `Hide` is the 0.4

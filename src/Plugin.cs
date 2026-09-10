@@ -29,6 +29,10 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<UnresearchedDisplay> UnresearchedAnomalies;
         internal static ConfigEntry<bool> AnnounceOnResearch;
 
+        // Experimental. Off by default, and everything about them says so.
+        internal static ConfigEntry<bool> MultiplierFromCombatSettings;
+        internal static ConfigEntry<int> PeacefulOutputMultiplier;
+
         /// <summary>
         /// Superseded by <see cref="UnresearchedAnomalies"/> in 0.5, and still bound so that a
         /// player who set it in 0.4 does not have their choice silently ignored.
@@ -49,7 +53,11 @@ namespace PlanetaryAnomalies
             Log.LogInfo("Anomalies derived from the galaxy seed; output x" + OutputMultiplier.Value +
                         (AnomalyChancePercent.Value >= 0
                             ? ". Density forced to " + AnomalyChancePercent.Value + "% by config."
-                            : ". Density drawn per galaxy, 25-75%."));
+                            : ". Density drawn per galaxy, 25-75%.") +
+                        (MultiplierFromCombatSettings.Value
+                            ? " EXPERIMENTAL: peaceful galaxies use x" + PeacefulOutputMultiplier.Value +
+                              " instead; resolved when a save loads."
+                            : ""));
 
             _harmony = new Harmony(PluginGuid);
             _harmony.PatchAll(typeof(PlanetFactoryBeforeGameTickPatch));
@@ -165,6 +173,30 @@ namespace PlanetaryAnomalies
                             "the old setting; Marker is the middle option if you want the symbol " +
                             "without the name.");
             }
+
+            MultiplierFromCombatSettings = Config.Bind(
+                "Experimental",
+                "MultiplierFromCombatSettings",
+                false,
+                "EXPERIMENTAL. Off by default.\n" +
+                "When on, a galaxy with the Dark Fog disabled or set to passive uses\n" +
+                "PeacefulOutputMultiplier instead of OutputMultiplier. Hostile galaxies are unchanged.\n" +
+                "The reasoning: the multiplier is a return on the cost of using an anomaly, and the\n" +
+                "largest cost is clearing a world and then holding it. Without the Dark Fog that\n" +
+                "cost is gone and only hauling remains, so the same x10 that is fair against a\n" +
+                "garrison is a giveaway without one.\n" +
+                "Resolved once per galaxy when a save is loaded, and the choice is written to the\n" +
+                "log. Changes neither which planets are anomalous nor which recipe each carries.");
+
+            PeacefulOutputMultiplier = Config.Bind(
+                "Experimental",
+                "PeacefulOutputMultiplier",
+                3,
+                new ConfigDescription(
+                    "EXPERIMENTAL. Only used when MultiplierFromCombatSettings is on and the galaxy\n" +
+                    "is peaceful or its enemies passive. 3 is what players who found x10 too high\n" +
+                    "have settled on.",
+                    new AcceptableValueRange<int>(2, 1000)));
 
             LogEveryAnomaly = Config.Bind(
                 "Diagnostics",

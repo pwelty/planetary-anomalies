@@ -201,6 +201,15 @@ Settings live in `BepInEx/config/com.planetaryanomalies.dsp.cfg` after the first
 
 Changes take effect when a save is next loaded.
 
+### Experimental
+
+Off by default, and may change or go away.
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `MultiplierFromCombatSettings` | `false` | When on, a galaxy with the Dark Fog disabled or set to passive uses `PeacefulOutputMultiplier` instead of `OutputMultiplier`. Hostile galaxies are unchanged. The multiplier is a return on the cost of using an anomaly, and the largest cost is holding a world against the fog; without that cost the same ×10 is a giveaway. Resolved once per save load, and the choice is written to the log. |
+| `PeacefulOutputMultiplier` | `3` | The multiplier a peaceful galaxy gets when the setting above is on. 3 is what players who found ×10 too high have settled on. |
+
 ## Compatibility
 
 - Built and tested against **DSP 0.10.34**.
