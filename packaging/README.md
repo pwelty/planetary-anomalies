@@ -263,25 +263,54 @@ Off by default, and may change or go away.
 - Proliferator interaction is untested beyond not crashing.
 - English only.
 
-## Roadmap
+## What is (tentatively) coming in 1.0
 
-Rough intentions, not promises, roughly in the order they are being thought about.
+Tentative, and in no promised order. What these have in common is that every one of them changes
+how anomalies are drawn, which is why they are waiting for each other: they ship together as a
+single change to the rules, and your existing galaxies keep the old rules unless you opt in. See
+*Before 1.0* above.
 
-**More kinds of anomaly.** Output multipliers are the simplest possible effect and the only one implemented. The interesting ones are different in kind: a recipe that needs half as much of an ingredient, one that runs several times faster, one that swaps an ingredient for something cheaper, one that produces an unexpected byproduct. A galaxy where every anomaly is "more stuff" is a thinner galaxy than one where planets are strange in different ways.
+**No duplicate anomalies within a system.** Three sorter worlds around one star dilute what an
+anomaly means. Within a system, each recipe would appear at most once. Galaxy-wide uniqueness is
+being resisted on purpose -- if one Crystal Silicon world exists and it is twenty light years out
+through hostile space, you have no choice; two or three is a decision about which one you can hold.
 
-**Anomalies worth remembering.** Most should be useful; a few should be absurd. Rarity tiers, so that occasionally you find a world that genuinely changes your plans rather than mildly improving them.
+**Varied multipliers.** Not every anomaly at the same number. Most modest, a few absurd, so that
+occasionally you find a world that genuinely changes your plans rather than mildly improving them.
 
-**Softer descriptions.** Right now the panel tells you exactly what an anomaly does. There is an argument for saying only *what* is affected — "improved sorter output" — and letting you find out how much by building it. Existence stays free; magnitude becomes something you discover.
+**Research cubes.** Matrices are not eligible today. They are the one thing a player would restructure
+a galaxy around, and they are consumed forever rather than built once -- so a cube world is a
+permanent commitment, which is exactly the trade this mod is about. It waits for varied multipliers,
+because a flat ×10 on Universe Matrix is a different order of thing from ×10 on iron.
 
+**Recipes with a by-product.** Antimatter and plasma refining are excluded only because hydrogen
+falls out alongside. The single-output rule is standing in for "one clear product", and those two
+are where it comes apart.
 
-**Multi-output recipes**, and a considered answer to proliferator, rather than the current "does not crash".
+## Further out
 
-## Please tell me how it plays
+**More kinds of anomaly.** Output multipliers are the simplest possible effect and the only one
+implemented. The interesting ones are different in kind: a recipe that needs half as much of an
+ingredient, one that runs faster, one that swaps an ingredient for something cheaper, one with an
+unexpected by-product. A galaxy where every anomaly is "more stuff" is thinner than one where
+planets are strange in different ways.
+
+**Softer descriptions.** The panel tells you exactly what an anomaly does. There is an argument for
+saying only *what* is affected -- "improved sorter output" -- and letting you find out how much by
+building it. Existence stays free; magnitude becomes something you discover.
+
+**A page for your galaxy.** A single file listing every anomaly you have found, grouped by system,
+to keep on a second monitor or hand to someone playing the same seed. Only what you have
+discovered -- a field notebook, not the answer key.
+
+**A considered answer to proliferator**, rather than the current "does not crash".
+
+## Feedback, ideas, bugs -- all welcome
 
 Every change since 0.1 came from someone playing it and saying what happened -- the star map
 labels, the recipe-name fix, the hiding, the markers, the research announcement. None of them were
-on a list beforehand. If you have opinions, a galaxy that produced something memorable, or a
-setting you changed and why, I would like to hear it:
+on a list beforehand. Bug reports, ideas, disagreements with anything above, a galaxy that
+produced something memorable, a setting you changed and why -- I would like to hear all of it:
 
 - GitHub issues: https://github.com/pwelty/planetary-anomalies/issues
 - Email: ponch@paulwelty.com
