@@ -197,6 +197,11 @@ also an experimental setting, below, meant to scale the reward to how hostile yo
 it simply uses a smaller number when the Dark Fog is off or passive, so a peaceful game does not get
 paid for a war it never has to fight.
 
+Even without the fog, the trade is not free. A peaceful galaxy still makes you wrestle with
+distance, logistics, and what the anomalous world actually has to offer -- and, most of all, with
+building there without the layouts and blueprints you already know, which is the part most players
+find hardest. The war is the largest cost. It is not the only one.
+
 ### The galaxy does the balancing
 
 Anomalies are not balanced against each other. Using one is balanced anyway, and not by anything
