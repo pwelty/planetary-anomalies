@@ -21,7 +21,8 @@
   them: with `AnomalyRules = Pinned` (the default) your current galaxy stays exactly as it is
   through 1.0, and only new galaxies see the new rules. `AnomalyRules = Latest` opts every galaxy
   into whatever is current instead. A save that skips straight from 0.4 to 1.0 is protected too:
-  a galaxy with no record and hours of play behind it is kept on the original rules.
+  a galaxy with no record that was loaded from a save, rather than started fresh, is kept on the
+  original rules.
 - Experimental, off by default: `MultiplierFromCombatSettings`. When on, a galaxy with the Dark Fog
   disabled or passive uses `PeacefulOutputMultiplier` (default 3) instead of `OutputMultiplier`;
   hostile galaxies are unchanged. The multiplier is a return on the cost of using an anomaly, and

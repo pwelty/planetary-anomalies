@@ -888,9 +888,25 @@ still until 1.0.
 **Version pinning -- built in 0.5.** Paul's framing shaped it: one config setting so every choice
 lives in one place, `AnomalyRules = Pinned | Latest`, and the pin file is the mod's memory in
 service of it rather than a second place to configure. A galaxy is identified by seed, star count
-and algorithm. A galaxy with no record is judged by age at `GameMain.Begin` -- tick zero is new,
-hours in predates pinning -- so a player who skips 0.5 entirely is still protected. The golden
-file is now a permanent contract for version 1.
+and algorithm. A galaxy with no record is judged by how it arrived: `GameData.NewGame` fired and
+`GameData.Import` did not means created this session; otherwise it was loaded from a save and
+predates pinning. So a player who skips 0.5 entirely is still protected. The golden file is now a
+permanent contract for version 1.
+
+**Two things the first run taught, both worth keeping.** The first version judged age from
+`GameMain.gameTick`, and the very first "new" galaxy it saw read 515,221 ticks -- that property
+returns `GameMain.instance.timei`, which is not the saved age of anything. A direct signal or none;
+verify.ps1 now asserts the call order the signal depends on. And the galaxy it saw was not a new
+game at all: it was the one behind the **main menu**, which DSP loads from a resource save and ticks
+like a real game. The mod had never noticed it in five releases because everything was lazy; the
+eager hook added for pinning noticed it immediately and pinned it. `DSPGame.IsMenuDemo` now
+excludes it everywhere pinning is decided.
+
+Related, and older than it looks: `GameMain.Start` calls `GalaxyData.StartAutoScanning()`, so DSP
+scans planets in the background from the first minute. `PlanetData.scanned`, the discovery gate
+since 0.1, has therefore always meant "the game has scanned it", which is broader than "you have
+been there". Consistent with what the README says -- "scan or visit" -- but worth knowing when a
+far planet's label appears before anyone has flown anywhere.
 
 **Version pinning, because 1.0 depends on it.** Recording which generator version a galaxy was
 created under is the one thing that genuinely needs saving. It is also the thing that makes *The

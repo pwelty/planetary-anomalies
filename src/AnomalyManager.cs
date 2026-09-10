@@ -54,9 +54,13 @@ namespace PlanetaryAnomalies
         /// Which rules this galaxy rolls under, and why.
         ///
         /// Pinned, the default: a galaxy keeps the rules it was first seen under. If it has never
-        /// been seen, its age decides -- at tick zero it is new and gets the current rules; hours
-        /// in, it predates pinning and gets the original ones. That second case is what protects a
-        /// player who skips straight from 0.4 to 1.0 without ever loading this version.
+        /// been seen, how it arrived decides -- created this session, it is new and gets the
+        /// current rules; loaded from a save, it predates pinning and gets the original ones. That
+        /// second case is what protects a player who skips straight from 0.4 to 1.0 without ever
+        /// loading this version.
+        ///
+        /// The galaxy behind the main menu is never pinned. It is a real galaxy as far as the game
+        /// is concerned, loaded from a resource and ticking, but nobody is playing it.
         ///
         /// Latest: the current rules, every galaxy, and the pin is brought up to date so that
         /// switching back to Pinned later freezes things where they are rather than rolling
@@ -68,6 +72,12 @@ namespace PlanetaryAnomalies
             int seed = desc != null ? desc.galaxySeed : 0;
             int stars = desc != null ? desc.starCount : 0;
             int algo = desc != null ? desc.galaxyAlgo : 0;
+
+            if (DSPGame.IsMenuDemo)
+            {
+                reason = "main menu demo galaxy; not pinned";
+                return CurrentAnomalySystemVersion;
+            }
 
             AnomalyRulesMode mode = Plugin.AnomalyRules != null ? Plugin.AnomalyRules.Value : AnomalyRulesMode.Pinned;
 
@@ -85,11 +95,10 @@ namespace PlanetaryAnomalies
                 return pinned;
             }
 
-            long tick = GameMain.gameTick;
-            if (tick > NewGalaxyTickThreshold)
+            if (!_createdThisSession)
             {
                 AnomalyPins.Set(seed, stars, algo, OriginalAnomalySystemVersion);
-                reason = "no pin and the game is " + tick + " ticks old, so it predates pinning; kept on the original rules";
+                reason = "no pin and this galaxy was loaded from a save rather than created, so it predates pinning; kept on the original rules";
                 return OriginalAnomalySystemVersion;
             }
 
@@ -157,11 +166,26 @@ namespace PlanetaryAnomalies
         private static int _ruleVersion = CurrentAnomalySystemVersion;
 
         /// <summary>
-        /// A galaxy first seen at or below this many ticks is new. Five minutes of game time; the
-        /// eager first sight at GameMain.Begin means a new game is actually seen at tick zero, so
-        /// this is generous by design. A save that predates pinning has hours behind it.
+        /// Whether the galaxy in hand was created in this session rather than loaded from a save.
+        ///
+        /// Set by GameData.NewGame and cleared by GameData.Import. GameMain.Start always calls
+        /// NewGame first and then, for a load, LoadCurrentGame -> Import over it; so at
+        /// GameMain.Begin this is true for a new game and false for a loaded one, with no
+        /// guessing. The first version of this used the game tick as a proxy for age, and the
+        /// first new game it saw read 515,221 ticks -- GameMain.gameTick is not the saved age of
+        /// anything. A direct signal, or none.
         /// </summary>
-        private const long NewGalaxyTickThreshold = 60L * 60L * 5L;
+        private static bool _createdThisSession;
+
+        internal static void NoteGalaxyCreated()
+        {
+            _createdThisSession = true;
+        }
+
+        internal static void NoteGalaxyLoaded()
+        {
+            _createdThisSession = false;
+        }
 
         internal const int DensityMinPercent = AnomalyMath.DensityMinPercent;
         internal const int DensityMaxPercent = AnomalyMath.DensityMaxPercent;
