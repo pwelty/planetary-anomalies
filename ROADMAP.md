@@ -182,13 +182,20 @@ Distribution notes from the same survey, useful for the duplicates question:
 | 0.1.0 | 27 Aug | 63 | |
 | 0.2.0 | 29 Aug | 12 | superseded by 0.3.0 within 23 minutes |
 | 0.3.0 | 29 Aug | 132 | eleven days as the current version |
-| 0.4.0 | 9 Sep | 48 | in its first day |
+| 0.4.0 | 9 Sep | 48, then 67 | 48 in its first day, 67 by the second |
 
 255 in total. Two readings worth keeping. First, 48 in a day against 0.3.0's 132 in eleven suggests
 a returning audience now, not only people finding it -- updates get taken, which is the condition
 under which a changelog is read at all. Second, those 48 are the first players to run hiding with
 `Hide` as the default. Any report along the lines of "my anomalies disappeared" from here on is
 that feature working as designed, and the answer is in the README: `UnresearchedAnomalies = Show`.
+
+The second day added 19. So the first-day figure was a burst, not a rate -- which is what the
+returning-audience reading predicts: existing players take an update quickly and then stop, and
+discovery by new players runs underneath at a much lower level. First public reaction arrived the
+same week, on Reddit: "I think it's game changing. Love it." Encouraging, and says nothing about
+which part landed; the two questions worth asking back are whether they moved production anywhere,
+and whether their blueprints got in the way.
 
 ### Player feedback after 0.1.x
 
