@@ -437,6 +437,45 @@ if (-not $menuDemo) {
 } else {
     Write-Host "OK  DSPGame.IsMenuDemo is public static (menu demo excluded)"
 }
+# --- announcement tips stay long enough to read ------------------------------------------------
+# TechUnlockPatch stretches its own tips after the game creates them. Two of the fields it needs are
+# private and reached by name, which the compiler cannot check -- so they are asserted here. If
+# either goes, tips silently fall back to the game's 1.5 seconds, which play showed is unreadable.
+$generalTipsType = $gameAsm.MainModule.GetType('UIGeneralTips')
+$tipsField = $generalTipsType.Fields | Where-Object { $_.Name -eq 'realtimeTips' -and $_.FieldType.FullName -match 'List`1<UIRealtimeTip>' }
+if (-not $tipsField) {
+    $failures.Add("UIGeneralTips.realtimeTips (List<UIRealtimeTip>) is gone; announcement tips would fall back to the game's unreadable 1.5 seconds.")
+} else {
+    Write-Host "OK  UIGeneralTips.realtimeTips : List<UIRealtimeTip> (reached by name)"
+}
+$realtimeTipType = $gameAsm.MainModule.GetType('UIRealtimeTip')
+$lifeField = $realtimeTipType.Fields | Where-Object { $_.Name -eq 'lifeTime' -and $_.FieldType.FullName -eq 'System.Single' }
+if (-not $lifeField) {
+    $failures.Add("UIRealtimeTip.lifeTime (float) is gone; announcement tips could not be kept on screen long enough to read.")
+} else {
+    Write-Host "OK  UIRealtimeTip.lifeTime : float (reached by name)"
+}
+foreach ($needed in @('upSpeed', 'delayTime', 'textComp')) {
+    $pf = $realtimeTipType.Fields | Where-Object { $_.Name -eq $needed -and $_.IsPublic }
+    if (-not $pf) {
+        $failures.Add("UIRealtimeTip.$needed is missing or no longer public; announcement tips cannot be slowed and queued.")
+    } else {
+        Write-Host "OK  UIRealtimeTip.$needed is public"
+    }
+}
+# The six seconds are computed from the rate Update burns lifeTime at. Behaviour, not shape: if the
+# rate changes, the duration silently changes with it.
+$tipUpdate = $realtimeTipType.Methods | Where-Object { $_.Name -eq 'Update' } | Select-Object -First 1
+$decay = $null
+if ($tipUpdate -and $tipUpdate.HasBody) {
+    $decay = $tipUpdate.Body.Instructions | Where-Object { $_.OpCode.Name -eq 'ldc.r4' -and [Math]::Abs([double]$_.Operand - 0.6666666) -lt 0.00001 }
+}
+if (-not $decay) {
+    $failures.Add("UIRealtimeTip.Update no longer burns lifeTime at 0.6666666 per second; the announcement duration in TechUnlockPatch would be wrong.")
+} else {
+    Write-Host "OK  UIRealtimeTip.Update still burns lifeTime at 2/3 per second (announcement duration)"
+}
+
 $gameMain = $gameAsm.MainModule.GetType('GameMain')
 $historyProp = $gameMain.Properties | Where-Object {
     $_.Name -eq 'history' -and $_.GetMethod -and $_.GetMethod.IsStatic -and $_.GetMethod.IsPublic

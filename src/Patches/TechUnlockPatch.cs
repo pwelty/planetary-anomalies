@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using HarmonyLib;
 
 namespace PlanetaryAnomalies
@@ -76,9 +77,20 @@ namespace PlanetaryAnomalies
                     return;
                 }
 
+                List<string> messages = new List<string>();
                 for (int i = 0; i < tech.UnlockRecipes.Length; i++)
                 {
-                    Announce(tech.UnlockRecipes[i]);
+                    string message = MessageFor(tech.UnlockRecipes[i]);
+                    if (message != null)
+                    {
+                        Plugin.Log.LogInfo("Announced on research: " + message);
+                        messages.Add(message);
+                    }
+                }
+
+                if (messages.Count > 0)
+                {
+                    Show(messages);
                 }
             }
             catch (Exception e)
@@ -91,23 +103,23 @@ namespace PlanetaryAnomalies
             }
         }
 
-        private static void Announce(int recipeId)
+        /// <summary>The announcement for one recipe, or null if there is nothing to say.</summary>
+        private static string MessageFor(int recipeId)
         {
             string what = AnomalyManager.RecipeLabel(recipeId);
             if (string.IsNullOrEmpty(what))
             {
-                return;
+                return null;
             }
 
             int total;
             string where = AnomalyManager.KnownPlanetsWithRecipe(recipeId, MaxNamed, out total);
-
-            string message;
             if (where != null)
             {
-                message = "ANOMALY: " + what + " on " + where;
+                return "ANOMALY: " + what + " on " + where;
             }
-            else if (AnomalyManager.AnyUnknownPlanetWithRecipe(recipeId))
+
+            if (AnomalyManager.AnyUnknownPlanetWithRecipe(recipeId))
             {
                 // Existence without location. The same trade Marker mode makes about a place, made
                 // one level up about a recipe: knowing it is out there is a reason to go looking,
@@ -116,28 +128,120 @@ namespace PlanetaryAnomalies
                 // Paul's phrasing, and deliberately the plain one rather than the joke he offered
                 // alongside it. Every other line this mod writes is plain; one that is not would
                 // read as a different mod talking.
-                message = "ANOMALY: " + what + " exists on a world you have not found.";
+                return "ANOMALY: " + what + " exists on a world you have not found.";
             }
-            else
+
+            return null;
+        }
+
+        /// <summary>
+        /// Seconds an announcement stays fully readable.
+        ///
+        /// The first version used the game's realtime tip exactly as it comes, and Paul's verdict
+        /// from play was "cool but REALLY fast -- I couldn't read it all". The game's duration is
+        /// right for what the game uses that tip for, a few words like "can't build here" beside
+        /// the cursor: SetText gives it a lifeTime of 1 and UIRealtimeTip.Update burns that at two
+        /// thirds per second, so it is gone in 1.5 seconds and fully opaque for about 1.3 of them.
+        /// A sentence naming a recipe and two planets needs several times that.
+        /// </summary>
+        private const float ReadSeconds = 6f;
+
+        /// <summary>Pause between queued announcements, so one clearly ends before the next begins.</summary>
+        private const float GapSeconds = 0.5f;
+
+        /// <summary>
+        /// Upward drift in pixels per second. The game's 40 suits a tip that lives 1.5 seconds; over
+        /// six it would carry the text 240 pixels up the screen while you were reading it.
+        /// </summary>
+        private const float DriftPixelsPerSecond = 6f;
+
+        /// <summary>The rate UIRealtimeTip.Update burns lifeTime at. verify.ps1 asserts it still is.</summary>
+        private const float LifeDecayPerSecond = 0.6666666f;
+
+        private static FieldInfo _realtimeTipsField;
+        private static FieldInfo _lifeTimeField;
+
+        /// <summary>
+        /// Shows a technology's announcements one after another rather than all at once. Every tip
+        /// appears at the cursor; at the game's fast drift simultaneous tips pull apart on their
+        /// own, but slowed down enough to read they would sit on top of each other.
+        ///
+        /// Still the game's own realtime tip, not a message box: this is worth noticing, not worth
+        /// interrupting for.
+        /// </summary>
+        private static void Show(List<string> messages)
+        {
+            for (int i = 0; i < messages.Count; i++)
+            {
+                try
+                {
+                    // One sound per technology, not one per line.
+                    UIRealtimeTip.Popup(messages[i], i == 0, 0);
+                    Linger(messages[i], i);
+                }
+                catch (Exception e)
+                {
+                    if (!_errorLogged)
+                    {
+                        _errorLogged = true;
+                        Plugin.Log.LogError("Could not show a tip; the announcement is in the log only: " + e);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Stretches the tip the game just created for this message and queues it behind earlier
+        /// ones. Only this mod's tips are touched; the game's own keep their normal duration.
+        ///
+        /// Two of the fields involved are not public and are reached by name, which the compiler
+        /// cannot check, so verify.ps1 asserts both. If either ever goes missing this does nothing
+        /// and the tip shows for the game's default 1.5 seconds: short again, but not broken.
+        /// </summary>
+        private static void Linger(string message, int queuePosition)
+        {
+            UIRoot root = UIRoot.instance;
+            if (root == null || root.uiGame == null || root.uiGame.generalTips == null)
             {
                 return;
             }
 
-            Plugin.Log.LogInfo("Announced on research: " + message);
-
-            // The game's own transient tip, used here the way DSP uses it elsewhere. Deliberately
-            // not a message box: this is worth noticing, not worth interrupting for.
-            try
+            if (_realtimeTipsField == null)
             {
-                UIRealtimeTip.Popup(message, true, 0);
+                _realtimeTipsField = AccessTools.Field(typeof(UIGeneralTips), "realtimeTips");
             }
-            catch (Exception e)
+
+            if (_lifeTimeField == null)
             {
-                if (!_errorLogged)
+                _lifeTimeField = AccessTools.Field(typeof(UIRealtimeTip), "lifeTime");
+            }
+
+            if (_realtimeTipsField == null || _lifeTimeField == null)
+            {
+                return;
+            }
+
+            List<UIRealtimeTip> tips = _realtimeTipsField.GetValue(root.uiGame.generalTips) as List<UIRealtimeTip>;
+            if (tips == null)
+            {
+                return;
+            }
+
+            for (int i = tips.Count - 1; i >= 0; i--)
+            {
+                UIRealtimeTip tip = tips[i];
+                if (tip == null || tip.textComp == null || !tip.gameObject.activeSelf || tip.textComp.text != message)
                 {
-                    _errorLogged = true;
-                    Plugin.Log.LogError("Could not show a tip; the announcement is in the log only: " + e);
+                    continue;
                 }
+
+                _lifeTimeField.SetValue(tip, ReadSeconds * LifeDecayPerSecond);
+                tip.upSpeed = DriftPixelsPerSecond;
+
+                // Hidden while delayTime counts down, and its lifetime only starts burning once that
+                // reaches zero -- so this queues the tip without shortening it.
+                tip.delayTime = queuePosition * (ReadSeconds + GapSeconds);
+                return;
             }
         }
     }

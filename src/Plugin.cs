@@ -174,8 +174,8 @@ namespace PlanetaryAnomalies
                 "AnnounceOnResearch",
                 true,
                 "When you finish a technology, says whether a world you have already scanned makes\n" +
-                "one of its recipes ten times over. Shown as the game's own brief tip, and always\n" +
-                "written to the log.\n" +
+                "one of its recipes ten times over. Shown beside your cursor for about six seconds --\n" +
+                "several from one technology appear in turn -- and always written to the log.\n" +
                 "This is the other half of hiding unresearched anomalies: the mod stays quiet while\n" +
                 "a recipe means nothing to you, and speaks at the moment it starts to. Only planets\n" +
                 "you have already found are named -- it will not point at worlds you have not\n" +

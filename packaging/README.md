@@ -198,7 +198,7 @@ One on a recipe you have *not* researched yet is handled by `UnresearchedAnomali
 symbols and counts instead of names -- regardless of research. The two combine sensibly.)
 
 **And when the research does land, the galaxy tells you.** Finish a technology and, if a world you
-have already scanned makes one of its recipes ×10, you get a brief tip naming it. If only worlds
+have already scanned makes one of its recipes ×10, a tip beside your cursor names it for about six seconds. If only worlds
 you have not found have it, you are told that much and no more. If the mod says nothing, your
 galaxy has no anomaly on that recipe anywhere. `AnnounceOnResearch = false` turns this off.
 
@@ -259,7 +259,7 @@ Settings live in `BepInEx/config/com.planetaryanomalies.dsp.cfg` after the first
 | `StarmapLabel` | `Detail` | What star map labels show. `Detail` names the affected items, `Marker` shows counts and a symbol, `Off` hides them. Unscanned planets show nothing either way. |
 | `AnomalyRules` | `1` | The version of the anomaly rules this install uses: a number, or `Latest`. Written once and never changed by the mod, so an upgraded install keeps rolling its galaxies as before when 1.0 introduces version 2. Set `Latest` or the new number to take the new rules, for every galaxy on this install. See *Before 1.0* above. |
 | `ExcludedRecipes` | empty | Recipes that should never receive an anomaly, comma separated — by item name as it appears in game, or numeric id. The mod holds no opinion about which anomalies are worth having, because that depends entirely on how you play; this is where you state yours. Entries matching nothing are reported in the log rather than ignored. |
-| `AnnounceOnResearch` | `true` | When a technology completes, names any world you have already scanned that makes one of its recipes ten times over. Shown as the game's own brief tip, and always written to the log. Never names a planet you have not visited. |
+| `AnnounceOnResearch` | `true` | When a technology completes, names any world you have already scanned that makes one of its recipes ten times over. Shown beside your cursor for about six seconds, and always written to the log. Never names a planet you have not visited. |
 | `UnresearchedAnomalies` | `Hide` | What an anomaly says about itself before you have researched its recipe, everywhere it would appear. `Hide` says nothing. `Marker` shows the symbol without the name — somewhere to come back to. `Show` names everything, as in 0.3. Display only: generation is unchanged. |
 | `LogEveryAnomaly` | `false` | Writes every anomaly in the galaxy to the log, including planets you have never scanned. Spoils discovery on purpose; for troubleshooting. |
 

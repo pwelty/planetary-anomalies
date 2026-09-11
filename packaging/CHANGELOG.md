@@ -4,7 +4,7 @@
 
 - When you finish a technology, the mod says whether a world you have already scanned makes one of
   its recipes ten times over. Research Antimatter Capsule and it tells you Iclarkrav I has been
-  making them ×10 the whole time. Shown as the game's own brief tip and written to the log.
+  making them ×10 the whole time. Shown beside your cursor for about six seconds and written to the log.
   `AnnounceOnResearch = false` turns it off.
 
   This is the other half of hiding unresearched anomalies. On its own, hiding is a subtraction --
