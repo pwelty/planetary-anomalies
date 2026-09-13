@@ -437,6 +437,34 @@ if (-not $menuDemo) {
 } else {
     Write-Host "OK  DSPGame.IsMenuDemo is public static (menu demo excluded)"
 }
+# --- announcements wait for a UI that can show them --------------------------------------------
+# UIRealtimeTip.Popup begins "if (!UIRoot.instance.uiGame.active) return", so a tip raised during a
+# load is silently discarded. That happened in play: eight announcements fired while a save was
+# loading and none of them ever reached the screen. The queue now drains from UIGeneralTips._OnUpdate
+# only while the game is running and the UI is up, so these three must exist.
+$generalTipsForPump = $gameAsm.MainModule.GetType('UIGeneralTips')
+$tipsUpdate = $generalTipsForPump.Methods | Where-Object { $_.Name -eq '_OnUpdate' -and -not $_.IsStatic }
+if (-not $tipsUpdate) {
+    $failures.Add("Harmony target 'UIGeneralTips._OnUpdate' is gone; queued announcements would never be shown.")
+} else {
+    Write-Host "OK  Harmony target: UIGeneralTips._OnUpdate (announcement queue)"
+}
+$manual = $gameAsm.MainModule.GetType('ManualBehaviour')
+$activeProp = $manual.Properties | Where-Object { $_.Name -eq 'active' -and $_.GetMethod -and $_.GetMethod.IsPublic }
+if (-not $activeProp) {
+    $failures.Add("ManualBehaviour.active is missing or no longer public; the mod could not tell whether the UI can show a tip.")
+} else {
+    Write-Host "OK  ManualBehaviour.active is public (UI-ready gate)"
+}
+foreach ($needed in @('isRunning', 'isPaused', 'isLoading')) {
+    $gp = $gameAsm.MainModule.GetType('GameMain').Properties | Where-Object { $_.Name -eq $needed -and $_.GetMethod -and $_.GetMethod.IsPublic -and $_.GetMethod.IsStatic }
+    if (-not $gp) {
+        $failures.Add("GameMain.$needed is missing or no longer a public static property; announcements could fire during a load again.")
+    } else {
+        Write-Host "OK  GameMain.$needed is a public static property"
+    }
+}
+
 # --- announcement tips stay long enough to read ------------------------------------------------
 # TechUnlockPatch stretches its own tips after the game creates them. Two of the fields it needs are
 # private and reached by name, which the compiler cannot check -- so they are asserted here. If

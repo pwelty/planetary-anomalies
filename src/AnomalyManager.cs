@@ -1328,8 +1328,9 @@ namespace PlanetaryAnomalies
         /// to hand them a list of places they have not looked -- that would be the answer key with
         /// extra steps, and would spoil exactly the exploration the mod exists to reward.
         ///
-        /// Deriving anomalies for scanned planets is what the star map does anyway, so this adds no
-        /// log noise beyond what normal play already produces.
+        /// Derives quietly. The first version logged, and on a mature save where the whole galaxy
+        /// has been scanned that wrote a thousand lines the moment the first technology completed --
+        /// a galaxy dump triggered by an announcement, which is what LogEveryAnomaly is for.
         /// </summary>
         internal static string KnownPlanetsWithRecipe(int recipeId, int maxNamed, out int total)
         {
@@ -1360,7 +1361,7 @@ namespace PlanetaryAnomalies
                         continue;
                     }
 
-                    PlanetAnomaly anomaly = AnomalyFor(planet.id);
+                    PlanetAnomaly anomaly = AnomalyFor(planet.id, false);
                     if (anomaly == null || anomaly.RecipeId != recipeId)
                     {
                         continue;

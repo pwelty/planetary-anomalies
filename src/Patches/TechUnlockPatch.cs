@@ -38,6 +38,9 @@ namespace PlanetaryAnomalies
         internal static void Reset()
         {
             _announced.Clear();
+            _pending.Clear();
+            _overflow = 0;
+            _nextShowTime = 0f;
         }
 
         /// <summary>
@@ -88,10 +91,7 @@ namespace PlanetaryAnomalies
                     }
                 }
 
-                if (messages.Count > 0)
-                {
-                    Show(messages);
-                }
+                Enqueue(messages);
             }
             catch (Exception e)
             {
@@ -162,43 +162,141 @@ namespace PlanetaryAnomalies
         private static FieldInfo _lifeTimeField;
 
         /// <summary>
-        /// Shows a technology's announcements one after another rather than all at once. Every tip
-        /// appears at the cursor; at the game's fast drift simultaneous tips pull apart on their
-        /// own, but slowed down enough to read they would sit on top of each other.
+        /// Announcements waiting for a UI that can show them.
         ///
-        /// Still the game's own realtime tip, not a message box: this is worth noticing, not worth
-        /// interrupting for.
+        /// Two findings from play forced a real queue. UIRealtimeTip.Popup opens with
+        /// "if (!UIRoot.instance.uiGame.active) return", so anything raised while the game is
+        /// loading is thrown away without a word -- eight announcements fired during a save load
+        /// and not one of them reached the screen. And technologies do not finish one at a time:
+        /// several can complete in the same instant, and tips all spawn at the cursor, so showing
+        /// them immediately stacked them on top of each other.
+        ///
+        /// So nothing is shown on the spot. Announcements go in here and are released one at a
+        /// time, only while the game is running and the UI is up.
         /// </summary>
-        private static void Show(List<string> messages)
+        private static readonly Queue<string> _pending = new Queue<string>();
+
+        /// <summary>
+        /// How many wait in line before the rest become a single count. A burst of finished
+        /// research should not drip for minutes; the log always has every one of them.
+        /// </summary>
+        private const int MaxQueued = 5;
+
+        private static int _overflow;
+        private static float _nextShowTime;
+
+        private static void Enqueue(List<string> messages)
         {
             for (int i = 0; i < messages.Count; i++)
             {
-                try
+                if (_pending.Count < MaxQueued)
                 {
-                    // One sound per technology, not one per line.
-                    UIRealtimeTip.Popup(messages[i], i == 0, 0);
-                    Linger(messages[i], i);
+                    _pending.Enqueue(messages[i]);
                 }
-                catch (Exception e)
+                else
                 {
-                    if (!_errorLogged)
-                    {
-                        _errorLogged = true;
-                        Plugin.Log.LogError("Could not show a tip; the announcement is in the log only: " + e);
-                    }
+                    _overflow++;
                 }
             }
         }
 
         /// <summary>
-        /// Stretches the tip the game just created for this message and queues it behind earlier
-        /// ones. Only this mod's tips are touched; the game's own keep their normal duration.
+        /// Releases one waiting announcement when there is room for it on screen.
+        ///
+        /// Driven from UIGeneralTips._OnUpdate, which is the component that draws the tips: if it
+        /// is updating, a tip raised now can be seen.
+        /// </summary>
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(UIGeneralTips), "_OnUpdate")]
+        internal static void AfterTipsUpdate()
+        {
+            try
+            {
+                if (_pending.Count == 0 && _overflow == 0)
+                {
+                    return;
+                }
+
+                if (!CanShow())
+                {
+                    return;
+                }
+
+                float now = UnityEngine.Time.realtimeSinceStartup;
+                if (now < _nextShowTime)
+                {
+                    return;
+                }
+
+                string message;
+                if (_pending.Count > 0)
+                {
+                    message = _pending.Dequeue();
+                }
+                else
+                {
+                    message = "ANOMALY: " + _overflow + " more you can now use -- see the log.";
+                    _overflow = 0;
+                }
+
+                Show(message);
+                _nextShowTime = now + ReadSeconds + GapSeconds;
+            }
+            catch (Exception e)
+            {
+                if (!_errorLogged)
+                {
+                    _errorLogged = true;
+                    Plugin.Log.LogError("Failed to show a queued announcement: " + e);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Whether a tip raised right now would actually be drawn. Popup discards anything raised
+        /// while the game UI is down and reports nothing, so this has to be asked first.
+        /// </summary>
+        private static bool CanShow()
+        {
+            if (!GameMain.isRunning || GameMain.isPaused || GameMain.isLoading)
+            {
+                return false;
+            }
+
+            UIRoot root = UIRoot.instance;
+            return root != null && root.uiGame != null && root.uiGame.active && root.uiGame.generalTips != null;
+        }
+
+        /// <summary>
+        /// Still the game's own realtime tip, not a message box: this is worth noticing, not worth
+        /// interrupting for.
+        /// </summary>
+        private static void Show(string message)
+        {
+            try
+            {
+                UIRealtimeTip.Popup(message, true, 0);
+                Linger(message);
+            }
+            catch (Exception e)
+            {
+                if (!_errorLogged)
+                {
+                    _errorLogged = true;
+                    Plugin.Log.LogError("Could not show a tip; the announcement is in the log only: " + e);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Stretches the tip the game just created for this message. Only this mod's tips are
+        /// touched; the game's own keep their normal duration.
         ///
         /// Two of the fields involved are not public and are reached by name, which the compiler
         /// cannot check, so verify.ps1 asserts both. If either ever goes missing this does nothing
         /// and the tip shows for the game's default 1.5 seconds: short again, but not broken.
         /// </summary>
-        private static void Linger(string message, int queuePosition)
+        private static void Linger(string message)
         {
             UIRoot root = UIRoot.instance;
             if (root == null || root.uiGame == null || root.uiGame.generalTips == null)
@@ -238,9 +336,9 @@ namespace PlanetaryAnomalies
                 _lifeTimeField.SetValue(tip, ReadSeconds * LifeDecayPerSecond);
                 tip.upSpeed = DriftPixelsPerSecond;
 
-                // Hidden while delayTime counts down, and its lifetime only starts burning once that
-                // reaches zero -- so this queues the tip without shortening it.
-                tip.delayTime = queuePosition * (ReadSeconds + GapSeconds);
+                // Spacing is the queue's job now, so this one shows immediately. The game may have
+                // set a delay of its own if it raised a tip in the same frame.
+                tip.delayTime = 0f;
                 return;
             }
         }
