@@ -22,11 +22,13 @@ namespace PlanetaryAnomalies
     /// The mechanics are shaped by three findings from play, each of which first looked like "I
     /// never saw any announcements":
     ///
-    /// Research finishes on worker threads. Labs tick in FactorySystem.GameTickLabResearchMode,
-    /// which DSP runs in parallel and guards with GameHistoryData.techLock, and NotifyTechUnlock is
-    /// called while that write lock is held. Unity's UI cannot be touched from there and this mod's
-    /// caches are not thread-safe, so the patch on NotifyTechUnlock records the technology id and
-    /// does nothing else. Everything real happens on the main thread.
+    /// Research completion is not assumed to arrive on the main thread. NotifyTechUnlock is called
+    /// from FactorySystem.GameTickLabResearchMode under GameHistoryData.techLock; in play it has
+    /// been observed on the main thread (lab research has no _Parallel twin, unlike lab produce),
+    /// but the lock exists for a reason and this mod's caches are not thread-safe. So the patch on
+    /// NotifyTechUnlock records the technology id and does nothing else; everything real happens on
+    /// the main thread, and the log line for each completed technology says which thread reported
+    /// it, so the assumption is checked on every load rather than trusted.
     ///
     /// Tips raised while the game UI is down are discarded without a word: UIRealtimeTip.Popup opens
     /// with "if (!UIRoot.instance.uiGame.active) return". So announcements wait in a queue drained
@@ -106,9 +108,10 @@ namespace PlanetaryAnomalies
         /// <summary>
         /// Records that a technology finished, and nothing more.
         ///
-        /// This usually runs on a worker thread while the game holds its tech write lock, so it must
-        /// be trivial: no galaxy sweep, no anomaly cache, no Unity. Postfix rather than the
-        /// onTechUnlocked event, so the subscription cannot outlive the plugin.
+        /// This runs while the game holds its tech write lock, on whichever thread ticked the lab --
+        /// observed to be the main thread, not guaranteed to be -- so it must be trivial: no galaxy
+        /// sweep, no anomaly cache, no Unity. Postfix rather than the onTechUnlocked event, so the
+        /// subscription cannot outlive the plugin.
         ///
         /// Safe against load: GameHistoryData.Import does not call the unlock path, so loading a
         /// save with two hundred technologies already researched records nothing.
