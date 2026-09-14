@@ -1016,9 +1016,14 @@ has nothing to say.
 
 **To settle before building:**
 
-- *Tone.* DSP's universe has one alien presence and it is not friendly. "Visitor" may need to become
-  a probe, a signal, an echo, a resonance from that world -- the mechanic does not depend on the
-  fiction, and the mod's voice has been plain throughout.
+- *Tone -- settled.* Paul: "since no aliens, maybe we call it a solar flare or cosmic storm or
+  whatever." A natural phenomenon fits better than any visitor would, and not only because DSP's
+  one alien presence is hostile: anomalies are already a property of *place*, industrial physics
+  being strange *there*. A storm that carries that strangeness to your home world for a while is
+  the same idea in motion, and it ends the way storms end. The word "anomaly" stays on it, per
+  PRODUCT.md -- something like *an anomalous storm from BatenKaitos I has reached Minelauva IV;
+  for the next thirty minutes copper smelts ten to one here too* -- and the closing line names the
+  world that has it for good. Exact wording is a writing job for the build, not a design question.
 - *The expiry.* ×10 dropping to ×1 across the home factory must not read as machines breaking
   (see *Randomize the strategic situation, not machine reliability*). A countdown on the panel and an
   announcement at the end -- "the visit is over; BatenKaitos I still makes them ten at a time" --
