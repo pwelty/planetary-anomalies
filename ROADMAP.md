@@ -990,6 +990,48 @@ Two answers, and they address different players:
   one needs DSP's galaxy generation outside the game, so unlike the notebook it cannot avoid
   Seed Finder's WASM engine or a contribution upstream. The spoiler concern mostly dissolves here,
   because choosing a galaxy is not the same as being told about the one you are playing.
+### Candidate for 1.0: the visit
+
+Paul: "what if in the early game, you get 'visited' by an alien from an anomalous planet, and you
+get their buff on home planet for like 30 mins."
+
+The best early-game idea so far, because it **previews** an anomaly rather than **granting** one.
+The weighted home draw makes home better, which quietly removes the reason to leave. A visit does
+the opposite: for thirty minutes your smelters run ×10, and you are told exactly where that came
+from -- *Copper Ingot, from BatenKaitos I* -- and then it ends. You have felt what ×10 does,
+watched it leave, and you know the one world that has it for good. That manufactures a want for
+somewhere specific, which is the thesis in one mechanic, aimed at the hours where the mod currently
+has nothing to say.
+
+**Cheaper than it sounds:**
+
+- *No save state.* Derive the schedule from the seed exactly as anomalies are: at tick T, a visit
+  brings recipe R for duration D. Recomputable on every load. "Nothing is written to your saves"
+  holds without a footnote.
+- *The seam exists.* Production already swaps output per planet and already copes with anomalies
+  appearing and disappearing -- `ExcludedRecipes` proved it. A time-boxed anomaly on the home
+  planet is the same mechanism with a clock. The panel and the machine marker show it for free.
+- *It moves no planet.* Existing anomalies are untouched; the golden test holds. It does not need
+  the re-roll, though it may well ship in 1.0 alongside it.
+
+**To settle before building:**
+
+- *Tone.* DSP's universe has one alien presence and it is not friendly. "Visitor" may need to become
+  a probe, a signal, an echo, a resonance from that world -- the mechanic does not depend on the
+  fiction, and the mod's voice has been plain throughout.
+- *The expiry.* ×10 dropping to ×1 across the home factory must not read as machines breaking
+  (see *Randomize the strategic situation, not machine reliability*). A countdown on the panel and an
+  announcement at the end -- "the visit is over; BatenKaitos I still makes them ten at a time" --
+  turn the loss into the hook.
+- *Which anomaly.* The nearest world with a recipe the player can build early, so the want it creates
+  is one they can act on. This reuses the early-buildable filter the weighted home draw needs.
+- *How often.* One visit in the first half hour feels like a tutorial; rare recurrence feels like a
+  mechanic. Start with one, and let play decide whether more is better or just noisier.
+
+Against it, honestly: it is thirty minutes of free items at home, which *Create another logistics
+problem, not free items* would normally refuse. What answers that is the purpose -- it is a
+demonstration whose entire point is to send you outward, and it takes itself away.
+
 ### The multiplier is not a number, it is a price
 
 Paul, asked whether ×10 was too high: *"it's generally a LOT of work to set stuff up. For me anyway.
