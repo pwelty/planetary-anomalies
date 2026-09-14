@@ -158,6 +158,7 @@ namespace PlanetaryAnomalies
                     _mainThreadId = Thread.CurrentThread.ManagedThreadId;
                 }
 
+                RestoreReusedTips();
                 DrainCompleted();
                 QueueTestIfAsked();
 
@@ -374,20 +375,68 @@ namespace PlanetaryAnomalies
         /// <summary>The rate UIRealtimeTip.Update burns lifeTime at. verify.ps1 asserts it still is.</summary>
         private const float LifeDecayPerSecond = 0.6666666f;
 
+        /// <summary>
+        /// Where the announcement sits relative to the game's own "Research complete" notice, in
+        /// panel pixels below it. That notice is where the eye already is at the moment research
+        /// finishes; a tip at the cursor, which is where the game puts them, was "really hard to
+        /// see" even at six seconds.
+        /// </summary>
+        private const float BelowNoticePixels = 44f;
+
+        /// <summary>If the notice cannot be located, top-centre of the panel, this fraction up.</summary>
+        private const float FallbackHeightFraction = 0.82f;
+
+        /// <summary>Points added to the prefab's font size. Added, not multiplied: tips are pooled.</summary>
+        private const int FontBoost = 8;
+
+        /// <summary>The mod's colour everywhere else it writes on the star map.</summary>
+        private static readonly UnityEngine.Color AnnouncementColour = new UnityEngine.Color(1f, 0.769f, 0.329f, 1f);
+
         private static FieldInfo _realtimeTipsField;
         private static FieldInfo _lifeTimeField;
 
         /// <summary>
+        /// What a pooled tip looked like before this mod styled it, so it can be put back.
+        ///
+        /// UIGeneralTips keeps its tips in a pool and reuses inactive ones for the game's own
+        /// messages, and SetText resets only the text, position and lifetime. Anything else this
+        /// mod changes -- size, colour, pivot -- would otherwise turn up on the next "can't build
+        /// here". So every styled tip is remembered here and restored the moment it stops showing
+        /// one of ours.
+        /// </summary>
+        private sealed class TipStyle
+        {
+            internal int FontSize;
+            internal UnityEngine.Color Colour;
+            internal UnityEngine.TextAnchor Alignment;
+            internal UnityEngine.Vector2 Pivot;
+            internal string Message;
+        }
+
+        private static readonly Dictionary<UIRealtimeTip, TipStyle> _styled = new Dictionary<UIRealtimeTip, TipStyle>();
+        private static readonly List<UIRealtimeTip> _restoreScratch = new List<UIRealtimeTip>();
+
+        /// <summary>
         /// Still the game's own realtime tip, not a message box: this is worth noticing, not worth
-        /// interrupting for. Logs what actually happened on screen, not what was intended.
+        /// interrupting for. Placed under the research notice rather than at the cursor, and given
+        /// no sound of its own -- the game has just played its research chime. Logs what actually
+        /// happened on screen, not what was intended.
         /// </summary>
         private static void Show(string message)
         {
             try
             {
-                UIRealtimeTip.Popup(message, true, 0);
+                UIRoot root = UIRoot.instance;
+                UIGeneralTips tips = (root != null && root.uiGame != null) ? root.uiGame.generalTips : null;
+                if (tips == null)
+                {
+                    Plugin.Log.LogWarning("No tip layer to show an announcement on: " + message);
+                    return;
+                }
 
-                if (Linger(message))
+                tips.InvokeRealtimeTip(message, AnnouncementPosition(tips), DriftPixelsPerSecond, 0f);
+
+                if (Linger(tips, message))
                 {
                     Plugin.Log.LogInfo("Shown on screen: " + message);
                 }
@@ -409,20 +458,45 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>
-        /// Finds the tip the game just created for this message and stretches it. Returns whether
-        /// the tip was found. Only this mod's tips are touched; the game's own keep their duration.
-        ///
-        /// Two of the fields involved are not public and are reached by name, which the compiler
-        /// cannot check, so verify.ps1 asserts both.
+        /// Directly beneath the game's "Research complete" notice, in the coordinates the game uses
+        /// for its tips: the panel's own rect, origin bottom-left. (For the cursor the game computes
+        /// mouse / screen * panel size; this is the same space, taken from the notice instead.)
         /// </summary>
-        private static bool Linger(string message)
+        private static UnityEngine.Vector2 AnnouncementPosition(UIGeneralTips tips)
         {
-            UIRoot root = UIRoot.instance;
-            if (root == null || root.uiGame == null || root.uiGame.generalTips == null)
+            UnityEngine.RectTransform panel = tips.tipPanelRect;
+            if (panel == null)
             {
-                return false;
+                return UnityEngine.Vector2.zero;
             }
 
+            UnityEngine.Rect rect = panel.rect;
+
+            UnityEngine.UI.Text notice = tips.researchCompleteText;
+            if (notice != null && notice.rectTransform != null)
+            {
+                UnityEngine.Vector3 local = panel.InverseTransformPoint(notice.rectTransform.position);
+                float x = local.x - rect.xMin;
+                float y = local.y - rect.yMin - BelowNoticePixels;
+                if (x > 0f && x < rect.width && y > 0f && y < rect.height)
+                {
+                    return new UnityEngine.Vector2(x, y);
+                }
+            }
+
+            return new UnityEngine.Vector2(rect.width * 0.5f, rect.height * FallbackHeightFraction);
+        }
+
+        /// <summary>
+        /// Finds the tip the game just created for this message, stretches it and styles it.
+        /// Returns whether the tip was found. Only this mod's tips are touched, and only while they
+        /// show this mod's text -- see <see cref="RestoreReusedTips"/>.
+        ///
+        /// lifeTime and the tip list are not public and are reached by name, which the compiler
+        /// cannot check, so verify.ps1 asserts both.
+        /// </summary>
+        private static bool Linger(UIGeneralTips tips, string message)
+        {
             if (_realtimeTipsField == null)
             {
                 _realtimeTipsField = AccessTools.Field(typeof(UIGeneralTips), "realtimeTips");
@@ -438,30 +512,105 @@ namespace PlanetaryAnomalies
                 return false;
             }
 
-            List<UIRealtimeTip> tips = _realtimeTipsField.GetValue(root.uiGame.generalTips) as List<UIRealtimeTip>;
-            if (tips == null)
+            List<UIRealtimeTip> list = _realtimeTipsField.GetValue(tips) as List<UIRealtimeTip>;
+            if (list == null)
             {
                 return false;
             }
 
-            for (int i = tips.Count - 1; i >= 0; i--)
+            for (int i = list.Count - 1; i >= 0; i--)
             {
-                UIRealtimeTip tip = tips[i];
+                UIRealtimeTip tip = list[i];
                 if (tip == null || tip.textComp == null || !tip.gameObject.activeSelf || tip.textComp.text != message)
                 {
                     continue;
                 }
 
                 _lifeTimeField.SetValue(tip, ReadSeconds * LifeDecayPerSecond);
-                tip.upSpeed = DriftPixelsPerSecond;
-
-                // Spacing is the queue's job, so this one shows immediately. The game may have set
-                // a delay of its own if it raised a tip in the same frame.
-                tip.delayTime = 0f;
+                Style(tip, tips.realtimeTipPrefab, message);
                 return true;
             }
 
             return false;
+        }
+
+        private static void Style(UIRealtimeTip tip, UIRealtimeTip prefab, string message)
+        {
+            TipStyle original;
+            if (!_styled.TryGetValue(tip, out original))
+            {
+                original = new TipStyle();
+                original.FontSize = tip.textComp.fontSize;
+                original.Colour = tip.textComp.color;
+                original.Alignment = tip.textComp.alignment;
+                original.Pivot = tip.rectTrans != null ? tip.rectTrans.pivot : new UnityEngine.Vector2(0.5f, 0.5f);
+                _styled[tip] = original;
+            }
+            original.Message = message;
+
+            // Sized from the prefab, never from the tip's current value: a reused tip may already
+            // carry a previous boost, and boosts must not stack.
+            int baseSize = prefab != null && prefab.textComp != null ? prefab.textComp.fontSize : original.FontSize;
+            tip.textComp.fontSize = baseSize + FontBoost;
+
+            // Update rewrites only the alpha each frame, so the colour survives the fade.
+            UnityEngine.Color c = AnnouncementColour;
+            c.a = tip.textComp.color.a;
+            tip.textComp.color = c;
+
+            // Centred on the position given, so the line sits under the notice rather than
+            // starting at it and running off to the right.
+            tip.textComp.alignment = UnityEngine.TextAnchor.MiddleCenter;
+            if (tip.rectTrans != null)
+            {
+                tip.rectTrans.pivot = new UnityEngine.Vector2(0.5f, 0.5f);
+            }
+        }
+
+        /// <summary>
+        /// Puts back any styled tip that is no longer showing one of this mod's messages -- because
+        /// it faded out, or because the game reused it for a message of its own.
+        /// </summary>
+        private static void RestoreReusedTips()
+        {
+            if (_styled.Count == 0)
+            {
+                return;
+            }
+
+            _restoreScratch.Clear();
+            foreach (KeyValuePair<UIRealtimeTip, TipStyle> entry in _styled)
+            {
+                UIRealtimeTip tip = entry.Key;
+                bool gone = tip == null || tip.textComp == null;
+                bool ours = !gone && tip.gameObject.activeSelf && tip.textComp.text == entry.Value.Message;
+                if (!ours)
+                {
+                    _restoreScratch.Add(tip);
+                }
+            }
+
+            for (int i = 0; i < _restoreScratch.Count; i++)
+            {
+                UIRealtimeTip tip = _restoreScratch[i];
+                TipStyle original = _styled[tip];
+                _styled.Remove(tip);
+
+                if (tip == null || tip.textComp == null)
+                {
+                    continue;
+                }
+
+                tip.textComp.fontSize = original.FontSize;
+                UnityEngine.Color c = original.Colour;
+                c.a = tip.textComp.color.a;
+                tip.textComp.color = c;
+                tip.textComp.alignment = original.Alignment;
+                if (tip.rectTrans != null)
+                {
+                    tip.rectTrans.pivot = original.Pivot;
+                }
+            }
         }
     }
 }

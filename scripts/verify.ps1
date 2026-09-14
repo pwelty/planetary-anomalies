@@ -382,20 +382,34 @@ if (-not $unlockRecipes) {
     Write-Host "OK  TechProto.UnlockRecipes is public"
 }
 
-$tip = $gameAsm.MainModule.GetType('UIRealtimeTip')
-$popup = $null
-if ($tip) {
-    $popup = $tip.Methods | Where-Object {
-        $_.Name -eq 'Popup' -and $_.IsStatic -and $_.IsPublic -and $_.Parameters.Count -eq 3 -and
-        $_.Parameters[0].ParameterType.FullName -eq 'System.String' -and
-        $_.Parameters[1].ParameterType.FullName -eq 'System.Boolean' -and
-        $_.Parameters[2].ParameterType.FullName -eq 'System.Int32'
+# Announcements are raised through the positioned overload, so they can sit under the game's own
+# "Research complete" notice instead of at the cursor, and the notice's text is what they anchor to.
+$tipsType = $gameAsm.MainModule.GetType('UIGeneralTips')
+$positioned = $tipsType.Methods | Where-Object {
+    $_.Name -eq 'InvokeRealtimeTip' -and $_.IsPublic -and $_.Parameters.Count -eq 4 -and
+    $_.Parameters[0].ParameterType.FullName -eq 'System.String' -and
+    $_.Parameters[1].ParameterType.Name -eq 'Vector2' -and
+    $_.Parameters[2].ParameterType.FullName -eq 'System.Single' -and
+    $_.Parameters[3].ParameterType.FullName -eq 'System.Single'
+}
+if (-not $positioned) {
+    $failures.Add("UIGeneralTips.InvokeRealtimeTip(string, Vector2, float, float) is gone; announcements could not be placed on screen.")
+} else {
+    Write-Host "OK  UIGeneralTips.InvokeRealtimeTip(string, Vector2, float, float) is public (positioned announcements)"
+}
+foreach ($needed in @('researchCompleteText', 'tipPanelRect', 'realtimeTipPrefab')) {
+    $tf = $tipsType.Fields | Where-Object { $_.Name -eq $needed -and $_.IsPublic }
+    if (-not $tf) {
+        $failures.Add("UIGeneralTips.$needed is missing or no longer public; announcements could not be placed under the research notice.")
+    } else {
+        Write-Host "OK  UIGeneralTips.$needed is public"
     }
 }
-if (-not $popup) {
-    $failures.Add("UIRealtimeTip.Popup(string, bool, int) is gone; announcements would have no way to reach the screen.")
+$rectField = $gameAsm.MainModule.GetType('UIRealtimeTip').Fields | Where-Object { $_.Name -eq 'rectTrans' -and $_.IsPublic }
+if (-not $rectField) {
+    $failures.Add("UIRealtimeTip.rectTrans is missing or no longer public; announcements could not be centred.")
 } else {
-    Write-Host "OK  UIRealtimeTip.Popup(string, bool, int) is public static"
+    Write-Host "OK  UIRealtimeTip.rectTrans is public"
 }
 
 # The assumption that makes announcing safe. If Import ever starts unlocking technologies, loading

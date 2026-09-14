@@ -57,6 +57,9 @@ $references = @(
     (Join-Path $managed 'UnityEngine.CoreModule.dll')
     # UnityEngine.UI: the planet detail panel's brief is a UnityEngine.UI.Text.
     (Join-Path $managed 'UnityEngine.UI.dll')
+    # TextRenderingModule: TextAnchor lives here, not in UnityEngine.dll. Needed to centre the
+    # research announcement under the game's notice.
+    (Join-Path $managed 'UnityEngine.TextRenderingModule.dll')
     (Join-Path $BepInExDir 'core\BepInEx.dll')
     (Join-Path $BepInExDir 'core\0Harmony.dll')
 )
