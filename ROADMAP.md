@@ -641,8 +641,11 @@ Two things the page would have to declare, or it lies: the rules version (v1 unt
 galaxies stay v1 after) and the DSP version's recipe pool. Config-dependent results --
 `ExcludedRecipes`, forced density -- cannot be shown and should be said not to be.
 
-Not for 0.5. A good first post-1.0 project, once the rules have moved and there are two versions
-to show.
+Promoted to 1.0 on 14 Sep. Paul, after hours in a fresh galaxy with nothing usable nearby: "we might
+need to create a website in 1.0 like galaxy finder/searcher... it takes a long time to know what
+you get." The query that matters is *seeds where an early-buildable recipe is within N light-years
+of home*. See *The early game is where the mod is thinnest* for why a searcher alone is half an
+answer.
 
 **The notebook, decided in shape.** Paul: the notebook should be a generated web page -- not WASM
 -- that you open with your seed. Agreed, and it is simpler than the seed-finder version because the
@@ -965,6 +968,28 @@ the player has nothing else to notice.
 Open questions: guaranteed or merely likelier; whether it should carry a smaller multiplier than
 the rest; and whether `HomePlanetNeverAnomalous = false` should switch to the weighted draw at 1.0
 rather than keeping the uniform one.
+
+**Third data point, and the sharpest.** Paul, after a long fresh run at a forced 60%: "I got no
+good nearby anomalies after hours and hours of play. It takes a long time to know what you get."
+
+That is not about reaching anomalies; it is about what is there when you arrive. The pool is 150
+recipes, mostly mid- and late-game, drawn uniformly. So the few worlds reachable in the first hours
+carry, in the main, things the player cannot build for another twenty -- Marker mode shows a map
+full of somewhere-to-look with nothing to use. Density does not fix this; 60% just means more
+markers you cannot read.
+
+Two answers, and they address different players:
+
+- **Weight by distance from home.** Not only the home planet: the draw for the nearest systems
+  leans toward early-buildable recipes and relaxes outward, so what you can reach first is what
+  you can use first. A generation change, in the 1.0 re-roll with the rest. This is the fix for
+  the player who does not shop for a seed.
+- **A seed searcher**, promoted from post-1.0 to 1.0 at Paul's request. *Seeds where a recipe I can
+  build early is within N light-years of home* is the query -- the same shape as Seed Finder's vein
+  searches, for the same audience. See *Candidate: anomalies for any seed, outside the game*: this
+  one needs DSP's galaxy generation outside the game, so unlike the notebook it cannot avoid
+  Seed Finder's WASM engine or a contribution upstream. The spoiler concern mostly dissolves here,
+  because choosing a galaxy is not the same as being told about the one you are playing.
 ### The multiplier is not a number, it is a price
 
 Paul, asked whether ×10 was too high: *"it's generally a LOT of work to set stuff up. For me anyway.
