@@ -60,6 +60,8 @@ $references = @(
     # TextRenderingModule: TextAnchor lives here, not in UnityEngine.dll. Needed to centre the
     # research announcement under the game's notice.
     (Join-Path $managed 'UnityEngine.TextRenderingModule.dll')
+    # UIModule: CanvasRenderer, which the item-tooltip line keeps when it clones the description.
+    (Join-Path $managed 'UnityEngine.UIModule.dll')
     (Join-Path $BepInExDir 'core\BepInEx.dll')
     (Join-Path $BepInExDir 'core\0Harmony.dll')
 )

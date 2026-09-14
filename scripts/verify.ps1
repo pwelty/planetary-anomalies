@@ -451,6 +451,45 @@ if (-not $menuDemo) {
 } else {
     Write-Host "OK  DSPGame.IsMenuDemo is public static (menu demo excluded)"
 }
+# --- the anomaly line in the item tooltip ------------------------------------------------------
+# Harmony binds the postfix's parameters by NAME, so SetTip must still have an int named itemId and a
+# bool named isRecipe. A rename would not fail to compile; it would fail to patch, at load, silently.
+$itemTip = $gameAsm.MainModule.GetType('UIItemTip')
+$setTip = $itemTip.Methods | Where-Object { $_.Name -eq 'SetTip' -and $_.IsPublic } | Select-Object -First 1
+if (-not $setTip) {
+    $failures.Add("Harmony target 'UIItemTip.SetTip' is gone; the tooltip anomaly line would never appear.")
+} else {
+    $pItem = $setTip.Parameters | Where-Object { $_.Name -eq 'itemId' -and $_.ParameterType.FullName -eq 'System.Int32' }
+    $pRecipe = $setTip.Parameters | Where-Object { $_.Name -eq 'isRecipe' -and $_.ParameterType.FullName -eq 'System.Boolean' }
+    if (-not $pItem -or -not $pRecipe) {
+        $failures.Add("UIItemTip.SetTip no longer has parameters named 'itemId' (int) and 'isRecipe' (bool); the postfix would fail to bind.")
+    } else {
+        Write-Host "OK  Harmony target: UIItemTip.SetTip, with itemId and isRecipe bound by name"
+    }
+}
+foreach ($needed in @('trans', 'descText')) {
+    $f = $itemTip.Fields | Where-Object { $_.Name -eq $needed -and $_.IsPublic }
+    if (-not $f) {
+        $failures.Add("UIItemTip.$needed is missing or no longer public; the tooltip anomaly line could not be placed.")
+    } else {
+        Write-Host "OK  UIItemTip.$needed is public"
+    }
+}
+$itemProto = $gameAsm.MainModule.GetType('ItemProto')
+$recipesField = $itemProto.Fields | Where-Object { $_.Name -eq 'recipes' -and $_.IsPublic }
+if (-not $recipesField) {
+    $failures.Add("ItemProto.recipes is missing or no longer public; an item could not be mapped to the recipes that make it.")
+} else {
+    Write-Host "OK  ItemProto.recipes is public (item -> recipes)"
+}
+$uiRootType = $gameAsm.MainModule.GetType('UIRoot')
+$tipArea = $uiRootType.Fields | Where-Object { $_.Name -eq 'itemTipTransform' -and $_.IsPublic }
+if (-not $tipArea) {
+    $failures.Add("UIRoot.itemTipTransform is missing or no longer public; a grown tooltip could not be kept on screen.")
+} else {
+    Write-Host "OK  UIRoot.itemTipTransform is public (tooltip clamp)"
+}
+
 # --- announcements wait for a UI that can show them --------------------------------------------
 # UIRealtimeTip.Popup begins "if (!UIRoot.instance.uiGame.active) return", so a tip raised during a
 # load is silently discarded. That happened in play: eight announcements fired while a save was

@@ -2,6 +2,12 @@
 
 ## 0.5.0 (in development)
 
+- Hover an item -- in the replicator, your inventory, the build menu, anywhere -- and its tooltip
+  now names the worlds you know of that make it ten times over: *Anomaly: Copper Ingot ×10 on
+  BatenKaitos I*. One line per recipe where an item has several. Same rules as the star map:
+  worlds you have scanned, recipes you have researched, and unresearched ones as
+  `UnresearchedAnomalies` allows. It is what the star map already knows, sorted by the thing you
+  are holding instead of by where it is.
 - When you finish a technology, the mod says whether a world you have already scanned makes one of
   its recipes ten times over. Research Antimatter Capsule and it tells you Iclarkrav I has been
   making them ×10 the whole time. Shown in gold just under the game's own "Research complete" notice for about six seconds, and written to the log.

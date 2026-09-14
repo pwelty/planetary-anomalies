@@ -74,6 +74,7 @@ namespace PlanetaryAnomalies
             _harmony.PatchAll(typeof(UIStarmapPlanetPatch));
             _harmony.PatchAll(typeof(UIStarmapStarPatch));
             _harmony.PatchAll(typeof(TechUnlockPatch));
+            _harmony.PatchAll(typeof(ItemTipPatch));
 
 
             // The production hook only fires once a planet has a factory to tick, which does not

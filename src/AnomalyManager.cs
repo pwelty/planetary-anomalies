@@ -322,7 +322,30 @@ namespace PlanetaryAnomalies
                 return AnomalyVisibility.None;
             }
 
-            if (IsRecipeResearched(anomaly.RecipeId))
+            AnomalyVisibility visibility = VisibilityOfRecipe(anomaly.RecipeId);
+
+            // A feature that hides things must be able to say what it hid and why, or every
+            // question about a missing label becomes a guess. Once per planet, not per frame.
+            if (visibility == AnomalyVisibility.None && !_withheldLogged.Contains(planetId))
+            {
+                _withheldLogged.Add(planetId);
+                string tech = UnlockingTechName(anomaly.RecipeId);
+                Plugin.Log.LogInfo("Withheld on " + PlanetName(planetId) + " (planet id " + planetId +
+                                   "): recipe " + anomaly.RecipeId + " is not researched" +
+                                   (tech != null ? ", unlocked by " + tech : "") + ". " +
+                                   "Set UnresearchedAnomalies = Marker or Show to reveal it.");
+            }
+
+            return visibility;
+        }
+
+        /// <summary>
+        /// How much may be said about an anomaly on this recipe, wherever it is: everything once
+        /// the recipe is researched, and before that whatever UnresearchedAnomalies allows.
+        /// </summary>
+        private static AnomalyVisibility VisibilityOfRecipe(int recipeId)
+        {
+            if (IsRecipeResearched(recipeId))
             {
                 return AnomalyVisibility.Full;
             }
@@ -339,18 +362,6 @@ namespace PlanetaryAnomalies
             if (mode == UnresearchedDisplay.Marker)
             {
                 return AnomalyVisibility.Marker;
-            }
-
-            // A feature that hides things must be able to say what it hid and why, or every
-            // question about a missing label becomes a guess. Once per planet, not per frame.
-            if (!_withheldLogged.Contains(planetId))
-            {
-                _withheldLogged.Add(planetId);
-                string tech = UnlockingTechName(anomaly.RecipeId);
-                Plugin.Log.LogInfo("Withheld on " + PlanetName(planetId) + " (planet id " + planetId +
-                                   "): recipe " + anomaly.RecipeId + " is not researched" +
-                                   (tech != null ? ", unlocked by " + tech : "") + ". " +
-                                   "Set UnresearchedAnomalies = Marker or Show to reveal it.");
             }
 
             return AnomalyVisibility.None;
@@ -1299,6 +1310,134 @@ namespace PlanetaryAnomalies
             }
         }
 
+        /// <summary>How many worlds a tooltip names before summarising the rest.</summary>
+        private const int TooltipMaxNamed = 3;
+
+        /// <summary>
+        /// The tooltip lines for an item: one per recipe that makes it and has an anomaly on a world
+        /// you have scanned, or null if there is nothing to say. Same disclosure rules as every
+        /// other surface, so this is the star map's knowledge sorted by item rather than by place.
+        /// </summary>
+        internal static string TooltipLinesForItem(int itemId)
+        {
+            ItemProtoSet items = LDB.items;
+            if (items == null || !items.Exist(itemId))
+            {
+                return null;
+            }
+
+            ItemProto item = items.Select(itemId);
+            if (item == null || item.recipes == null)
+            {
+                return null;
+            }
+
+            List<string> lines = null;
+            for (int i = 0; i < item.recipes.Count; i++)
+            {
+                string line = TooltipLineForRecipe(item.recipes[i]);
+                if (line == null)
+                {
+                    continue;
+                }
+
+                if (lines == null)
+                {
+                    lines = new List<string>();
+                }
+                lines.Add(line);
+            }
+
+            return lines != null ? string.Join("\n", lines.ToArray()) : null;
+        }
+
+        /// <summary>The tooltip line for one recipe, when the tooltip is for a recipe rather than an item.</summary>
+        internal static string TooltipLinesForRecipe(int recipeId)
+        {
+            RecipeProtoSet recipes = LDB.recipes;
+            if (recipes == null || !recipes.Exist(recipeId))
+            {
+                return null;
+            }
+
+            return TooltipLineForRecipe(recipes.Select(recipeId));
+        }
+
+        private static string TooltipLineForRecipe(RecipeProto recipe)
+        {
+            if (recipe == null || !_galaxyKnown)
+            {
+                return null;
+            }
+
+            GameData data = GameMain.data;
+            if (data == null || data.galaxy == null || data.galaxy.stars == null)
+            {
+                return null;
+            }
+
+            // Scanned worlds only, derived quietly: a hover must not add a log line per planet.
+            string names = "";
+            int named = 0;
+            int total = 0;
+            for (int s = 0; s < data.galaxy.stars.Length; s++)
+            {
+                StarData star = data.galaxy.stars[s];
+                if (star == null || star.planets == null)
+                {
+                    continue;
+                }
+
+                for (int p = 0; p < star.planets.Length; p++)
+                {
+                    PlanetData planet = star.planets[p];
+                    if (planet == null || !planet.scanned)
+                    {
+                        continue;
+                    }
+
+                    PlanetAnomaly anomaly = AnomalyFor(planet.id, false);
+                    if (anomaly == null || anomaly.RecipeId != recipe.ID)
+                    {
+                        continue;
+                    }
+
+                    total++;
+                    if (named < TooltipMaxNamed)
+                    {
+                        names += (named > 0 ? ", " : "") + planet.displayName;
+                        named++;
+                    }
+                }
+            }
+
+            if (total == 0)
+            {
+                return null;
+            }
+
+            AnomalyVisibility visibility = VisibilityOfRecipe(recipe.ID);
+            if (visibility == AnomalyVisibility.None)
+            {
+                return null;
+            }
+
+            if (visibility == AnomalyVisibility.Marker)
+            {
+                // The place is known; the recipe is not yet. Say that much and no more.
+                return "Anomaly: " + (total == 1 ? "a world you have scanned makes this" : total + " worlds you have scanned make this") +
+                       " ten to one, on a recipe you have not researched yet.";
+            }
+
+            if (total > named)
+            {
+                names += " and " + (total - named) + " more";
+            }
+
+            string recipeName = PlayerFacingRecipeName(recipe);
+            return "Anomaly: " + (string.IsNullOrEmpty(recipeName) ? "" : recipeName + " ") +
+                   "×" + OutputMultiplier + " on " + names;
+        }
         /// <summary>
         /// A recipe named the way a planet label names it -- "Antimatter Capsule ×10" -- for the
         /// cases where the recipe is known but no particular planet is in hand.

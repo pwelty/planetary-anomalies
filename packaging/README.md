@@ -31,6 +31,15 @@ shift the way a handful did when refining and particle recipes joined in 0.2. Ev
 stays put.
 ## What's new in 0.5
 
+**Hover an item and its tooltip tells you where it is cheap.** In the replicator, your inventory,
+the build menu -- anywhere the game shows an item tooltip -- there is now a line naming the worlds
+you know of that make it ten times over: *Anomaly: Copper Ingot ×10 on BatenKaitos I*. Where an
+item has more than one recipe, one line each.
+
+*Why:* every other surface tells you about a place. This is the first that answers the question
+you are actually asking, at the moment you ask it -- you are holding the thing, deciding where to
+make it. It follows the same rules as the star map, so it never tells you anything you could not
+already find by looking; it just sorts it by item instead of by system.
 **Finish a technology and the galaxy tells you where it is already cheap.** Research Antimatter
 Capsule, and the mod mentions that Iclarkrav I -- a world you scanned twenty hours ago and forgot --
 makes them ten at a time.
@@ -180,7 +189,8 @@ Sorter Mk.III: 2 → 20
 
 That is the whole discovery mechanic -- no hunting, no guessing. A machine actually running an
 anomalous recipe also marks itself in its own window, so you are never left wondering why a number
-looks wrong.
+looks wrong. And hovering any item shows, in its tooltip, the worlds you know of that make it ten
+to one -- the same knowledge, sorted by the thing rather than the place.
 
 **What you see depends on whether you have researched the recipe.** Knowing a planet means knowing
 the anomalies you can act on. An anomaly on a recipe you have researched is shown in full, as above.
