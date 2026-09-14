@@ -1328,9 +1328,9 @@ namespace PlanetaryAnomalies
         /// to hand them a list of places they have not looked -- that would be the answer key with
         /// extra steps, and would spoil exactly the exploration the mod exists to reward.
         ///
-        /// Derives quietly. The first version logged, and on a mature save where the whole galaxy
-        /// has been scanned that wrote a thousand lines the moment the first technology completed --
-        /// a galaxy dump triggered by an announcement, which is what LogEveryAnomaly is for.
+        /// Derives quietly: a sweep made on behalf of an announcement should not add a log line per
+        /// planet. (The thousand-line block seen at every load is not this. It comes from the star
+        /// map deriving every planet as it builds its labels, and predates announcements.)
         /// </summary>
         internal static string KnownPlanetsWithRecipe(int recipeId, int maxNamed, out int total)
         {

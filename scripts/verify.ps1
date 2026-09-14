@@ -465,6 +465,35 @@ foreach ($needed in @('isRunning', 'isPaused', 'isLoading')) {
     }
 }
 
+# The queue is drained from UIGeneralTips._OnUpdate, and that only runs because UIGame._OnUpdate calls
+# generalTips._Update() and ManualBehaviour._Update calls _OnUpdate. Behaviour, not shape: if either
+# link breaks, announcements queue forever and nothing else would notice.
+$uiGameType = $gameAsm.MainModule.GetType('UIGame')
+$uiGameUpdate = $uiGameType.Methods | Where-Object { $_.Name -eq '_OnUpdate' } | Select-Object -First 1
+$drivesTips = $false
+if ($uiGameUpdate -and $uiGameUpdate.HasBody) {
+    $ins = $uiGameUpdate.Body.Instructions
+    for ($k = 0; $k -lt $ins.Count - 1; $k++) {
+        if ($ins[$k].Operand -and $ins[$k].Operand.Name -eq 'generalTips') {
+            for ($j = $k + 1; $j -le [Math]::Min($k + 3, $ins.Count - 1); $j++) {
+                if ($ins[$j].Operand -and $ins[$j].Operand.Name -eq '_Update') { $drivesTips = $true }
+            }
+        }
+    }
+}
+if (-not $drivesTips) {
+    $failures.Add("UIGame._OnUpdate no longer calls generalTips._Update(); queued announcements would never drain.")
+} else {
+    Write-Host "OK  UIGame._OnUpdate still calls generalTips._Update() (announcement queue is driven)"
+}
+$manualUpdate = $gameAsm.MainModule.GetType('ManualBehaviour').Methods | Where-Object { $_.Name -eq '_Update' } | Select-Object -First 1
+$callsOnUpdate = $manualUpdate -and $manualUpdate.HasBody -and ($manualUpdate.Body.Instructions | Where-Object { $_.Operand -and $_.Operand.Name -eq '_OnUpdate' })
+if (-not $callsOnUpdate) {
+    $failures.Add("ManualBehaviour._Update no longer calls _OnUpdate; the announcement queue hook would never run.")
+} else {
+    Write-Host "OK  ManualBehaviour._Update still calls _OnUpdate"
+}
+
 # --- announcement tips stay long enough to read ------------------------------------------------
 # TechUnlockPatch stretches its own tips after the game creates them. Two of the fields it needs are
 # private and reached by name, which the compiler cannot check -- so they are asserted here. If

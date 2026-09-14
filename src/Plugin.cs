@@ -40,6 +40,7 @@ namespace PlanetaryAnomalies
         /// </summary>
         internal static ConfigEntry<bool> LegacyHideUnresearched;
         internal static ConfigEntry<bool> LogEveryAnomaly;
+        internal static ConfigEntry<bool> TestAnnouncement;
         internal static ConfigEntry<string> ExcludedRecipes;
         internal static ConfigEntry<string> AnomalyRules;
 
@@ -48,6 +49,10 @@ namespace PlanetaryAnomalies
         private void Awake()
         {
             Log = Logger;
+
+            // Before anything can be patched: research finishes on worker threads, and the
+            // announcement code needs to know which thread is Unity's.
+            TechUnlockPatch.CaptureMainThread();
 
             BindConfig();
 
@@ -233,6 +238,15 @@ namespace PlanetaryAnomalies
                 "including planets you have never scanned. This spoils discovery on purpose. It " +
                 "exists for development and for answering \"does this galaxy contain X anywhere?\". " +
                 "It changes nothing in game and shows nothing on screen -- it only writes to the log.");
+
+            TestAnnouncement = Config.Bind(
+                "Diagnostics",
+                "TestAnnouncement",
+                false,
+                "Shows one test announcement a moment after a save loads, through exactly the path a\n" +
+                "real one takes. A quick way to check announcements work on your setup without\n" +
+                "waiting for research to finish. The log records whether it reached the screen.\n" +
+                "Turn it off again afterwards.");
         }
 
         private void OnDestroy()

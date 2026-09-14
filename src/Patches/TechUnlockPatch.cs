@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using HarmonyLib;
 
 namespace PlanetaryAnomalies
@@ -16,8 +17,24 @@ namespace PlanetaryAnomalies
     ///
     /// Without this, hiding is a subtraction: information a player had in 0.3 and lost in 0.4.
     /// With it, the trade is honest -- the mod stays quiet while a recipe means nothing to you, and
-    /// speaks at the exact moment it starts to. That moment is a better one than discovery, because
-    /// it is when you can act.
+    /// speaks at the exact moment it starts to.
+    ///
+    /// The mechanics are shaped by three findings from play, each of which first looked like "I
+    /// never saw any announcements":
+    ///
+    /// Research finishes on worker threads. Labs tick in FactorySystem.GameTickLabResearchMode,
+    /// which DSP runs in parallel and guards with GameHistoryData.techLock, and NotifyTechUnlock is
+    /// called while that write lock is held. Unity's UI cannot be touched from there and this mod's
+    /// caches are not thread-safe, so the patch on NotifyTechUnlock records the technology id and
+    /// does nothing else. Everything real happens on the main thread.
+    ///
+    /// Tips raised while the game UI is down are discarded without a word: UIRealtimeTip.Popup opens
+    /// with "if (!UIRoot.instance.uiGame.active) return". So announcements wait in a queue drained
+    /// from UIGeneralTips._OnUpdate, which UIGame drives every frame the tip layer is open. While the
+    /// star map is up the tip layer is closed, and announcements simply wait until you leave it.
+    ///
+    /// The game's tip lasts 1.5 seconds, unreadable for a sentence, so each announcement is
+    /// lengthened after the game creates it.
     ///
     /// Only planets already scanned are named. Announcing anomalies on worlds the player has never
     /// visited would be the answer key with extra steps.
@@ -25,31 +42,76 @@ namespace PlanetaryAnomalies
     internal static class TechUnlockPatch
     {
         private static bool _errorLogged;
+        private static bool _handoffErrorLogged;
+
+        // ---------------------------------------------------------------------------------------
+        // The handoff. Written from whichever thread finished the research; read on the main thread.
+        // ---------------------------------------------------------------------------------------
+
+        private struct Completed
+        {
+            internal int TechId;
+            internal bool OnMainThread;
+        }
+
+        private static readonly object _handoffLock = new object();
+        private static readonly List<Completed> _completed = new List<Completed>();
+        private static int _mainThreadId = -1;
+
+        /// <summary>Called from Plugin.Awake, which Unity runs on the main thread.</summary>
+        internal static void CaptureMainThread()
+        {
+            _mainThreadId = Thread.CurrentThread.ManagedThreadId;
+        }
+
+        // ---------------------------------------------------------------------------------------
+        // Main-thread state.
+        // ---------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Technologies already announced this session. NotifyTechUnlock fires per level, and
+        /// Technologies already handled this session. NotifyTechUnlock fires per level, and
         /// multi-level technologies would otherwise repeat themselves for as long as you research.
         /// </summary>
-        private static readonly HashSet<int> _announced = new HashSet<int>();
+        private static readonly HashSet<int> _handled = new HashSet<int>();
+
+        private static readonly Queue<string> _pending = new Queue<string>();
+
+        /// <summary>
+        /// How many announcements wait in line before the rest become a single count. A burst of
+        /// finished research should not drip for minutes; the log always has every one.
+        /// </summary>
+        private const int MaxQueued = 5;
 
         /// <summary>How many worlds to name before summarising the rest.</summary>
         private const int MaxNamed = 3;
 
+        private static int _overflow;
+        private static float _nextShowTime;
+        private static bool _testQueued;
+
         internal static void Reset()
         {
-            _announced.Clear();
+            lock (_handoffLock)
+            {
+                _completed.Clear();
+            }
+
+            _handled.Clear();
             _pending.Clear();
             _overflow = 0;
             _nextShowTime = 0f;
+            _testQueued = false;
         }
 
         /// <summary>
-        /// Postfix rather than the onTechUnlocked event, so the subscription cannot outlive the
-        /// plugin: Harmony removes this on unpatch, where a stray event handler would keep firing
-        /// against a manager that had been reset.
+        /// Records that a technology finished, and nothing more.
+        ///
+        /// This usually runs on a worker thread while the game holds its tech write lock, so it must
+        /// be trivial: no galaxy sweep, no anomaly cache, no Unity. Postfix rather than the
+        /// onTechUnlocked event, so the subscription cannot outlive the plugin.
         ///
         /// Safe against load: GameHistoryData.Import does not call the unlock path, so loading a
-        /// save with two hundred technologies already researched announces nothing.
+        /// save with two hundred technologies already researched records nothing.
         /// </summary>
         [HarmonyPostfix]
         [HarmonyPatch(typeof(GameHistoryData), "NotifyTechUnlock")]
@@ -57,154 +119,30 @@ namespace PlanetaryAnomalies
         {
             try
             {
-                if (Plugin.AnnounceOnResearch != null && !Plugin.AnnounceOnResearch.Value)
-                {
-                    return;
-                }
+                Completed entry = new Completed();
+                entry.TechId = _techId;
+                entry.OnMainThread = Thread.CurrentThread.ManagedThreadId == _mainThreadId;
 
-                if (_announced.Contains(_techId))
+                lock (_handoffLock)
                 {
-                    return;
+                    _completed.Add(entry);
                 }
-                _announced.Add(_techId);
-
-                TechProtoSet techs = LDB.techs;
-                if (techs == null || !techs.Exist(_techId))
-                {
-                    return;
-                }
-
-                TechProto tech = techs.Select(_techId);
-                if (tech == null || tech.UnlockRecipes == null)
-                {
-                    return;
-                }
-
-                List<string> messages = new List<string>();
-                for (int i = 0; i < tech.UnlockRecipes.Length; i++)
-                {
-                    string message = MessageFor(tech.UnlockRecipes[i]);
-                    if (message != null)
-                    {
-                        Plugin.Log.LogInfo("Announced on research: " + message);
-                        messages.Add(message);
-                    }
-                }
-
-                Enqueue(messages);
             }
             catch (Exception e)
             {
-                if (!_errorLogged)
+                // ManualLogSource is safe to call from any thread. Never throw back into the game's
+                // lab tick while it holds a lock.
+                if (!_handoffErrorLogged)
                 {
-                    _errorLogged = true;
-                    Plugin.Log.LogError("Failed to announce anomalies for a technology: " + e);
-                }
-            }
-        }
-
-        /// <summary>The announcement for one recipe, or null if there is nothing to say.</summary>
-        private static string MessageFor(int recipeId)
-        {
-            string what = AnomalyManager.RecipeLabel(recipeId);
-            if (string.IsNullOrEmpty(what))
-            {
-                return null;
-            }
-
-            int total;
-            string where = AnomalyManager.KnownPlanetsWithRecipe(recipeId, MaxNamed, out total);
-            if (where != null)
-            {
-                return "ANOMALY: " + what + " on " + where;
-            }
-
-            if (AnomalyManager.AnyUnknownPlanetWithRecipe(recipeId))
-            {
-                // Existence without location. The same trade Marker mode makes about a place, made
-                // one level up about a recipe: knowing it is out there is a reason to go looking,
-                // and finding it is still the part worth earning.
-                //
-                // Paul's phrasing, and deliberately the plain one rather than the joke he offered
-                // alongside it. Every other line this mod writes is plain; one that is not would
-                // read as a different mod talking.
-                return "ANOMALY: " + what + " exists on a world you have not found.";
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Seconds an announcement stays fully readable.
-        ///
-        /// The first version used the game's realtime tip exactly as it comes, and Paul's verdict
-        /// from play was "cool but REALLY fast -- I couldn't read it all". The game's duration is
-        /// right for what the game uses that tip for, a few words like "can't build here" beside
-        /// the cursor: SetText gives it a lifeTime of 1 and UIRealtimeTip.Update burns that at two
-        /// thirds per second, so it is gone in 1.5 seconds and fully opaque for about 1.3 of them.
-        /// A sentence naming a recipe and two planets needs several times that.
-        /// </summary>
-        private const float ReadSeconds = 6f;
-
-        /// <summary>Pause between queued announcements, so one clearly ends before the next begins.</summary>
-        private const float GapSeconds = 0.5f;
-
-        /// <summary>
-        /// Upward drift in pixels per second. The game's 40 suits a tip that lives 1.5 seconds; over
-        /// six it would carry the text 240 pixels up the screen while you were reading it.
-        /// </summary>
-        private const float DriftPixelsPerSecond = 6f;
-
-        /// <summary>The rate UIRealtimeTip.Update burns lifeTime at. verify.ps1 asserts it still is.</summary>
-        private const float LifeDecayPerSecond = 0.6666666f;
-
-        private static FieldInfo _realtimeTipsField;
-        private static FieldInfo _lifeTimeField;
-
-        /// <summary>
-        /// Announcements waiting for a UI that can show them.
-        ///
-        /// Two findings from play forced a real queue. UIRealtimeTip.Popup opens with
-        /// "if (!UIRoot.instance.uiGame.active) return", so anything raised while the game is
-        /// loading is thrown away without a word -- eight announcements fired during a save load
-        /// and not one of them reached the screen. And technologies do not finish one at a time:
-        /// several can complete in the same instant, and tips all spawn at the cursor, so showing
-        /// them immediately stacked them on top of each other.
-        ///
-        /// So nothing is shown on the spot. Announcements go in here and are released one at a
-        /// time, only while the game is running and the UI is up.
-        /// </summary>
-        private static readonly Queue<string> _pending = new Queue<string>();
-
-        /// <summary>
-        /// How many wait in line before the rest become a single count. A burst of finished
-        /// research should not drip for minutes; the log always has every one of them.
-        /// </summary>
-        private const int MaxQueued = 5;
-
-        private static int _overflow;
-        private static float _nextShowTime;
-
-        private static void Enqueue(List<string> messages)
-        {
-            for (int i = 0; i < messages.Count; i++)
-            {
-                if (_pending.Count < MaxQueued)
-                {
-                    _pending.Enqueue(messages[i]);
-                }
-                else
-                {
-                    _overflow++;
+                    _handoffErrorLogged = true;
+                    Plugin.Log.LogError("Failed to record a completed technology: " + e);
                 }
             }
         }
 
         /// <summary>
-        /// Releases one waiting announcement when there is room for it on screen.
-        ///
-        /// Driven from UIGeneralTips._OnUpdate, which is the component that draws the tips: if it
-        /// is updating, a tip raised now can be seen.
+        /// Main thread, every frame the tip layer is open. Turns recorded technologies into
+        /// announcements, then releases one waiting announcement when there is room on screen.
         /// </summary>
         [HarmonyPostfix]
         [HarmonyPatch(typeof(UIGeneralTips), "_OnUpdate")]
@@ -212,6 +150,14 @@ namespace PlanetaryAnomalies
         {
             try
             {
+                if (_mainThreadId < 0)
+                {
+                    _mainThreadId = Thread.CurrentThread.ManagedThreadId;
+                }
+
+                DrainCompleted();
+                QueueTestIfAsked();
+
                 if (_pending.Count == 0 && _overflow == 0)
                 {
                     return;
@@ -247,9 +193,141 @@ namespace PlanetaryAnomalies
                 if (!_errorLogged)
                 {
                     _errorLogged = true;
-                    Plugin.Log.LogError("Failed to show a queued announcement: " + e);
+                    Plugin.Log.LogError("Failed to process research announcements: " + e);
                 }
             }
+        }
+
+        private static void DrainCompleted()
+        {
+            Completed[] batch;
+            lock (_handoffLock)
+            {
+                if (_completed.Count == 0)
+                {
+                    return;
+                }
+
+                batch = _completed.ToArray();
+                _completed.Clear();
+            }
+
+            for (int i = 0; i < batch.Length; i++)
+            {
+                Process(batch[i]);
+            }
+        }
+
+        private static void Process(Completed entry)
+        {
+            if (_handled.Contains(entry.TechId))
+            {
+                return;
+            }
+            _handled.Add(entry.TechId);
+
+            TechProtoSet techs = LDB.techs;
+            if (techs == null || !techs.Exist(entry.TechId))
+            {
+                return;
+            }
+
+            TechProto tech = techs.Select(entry.TechId);
+            if (tech == null)
+            {
+                return;
+            }
+
+            string techName = string.IsNullOrEmpty(tech.name) ? "technology " + entry.TechId : tech.name;
+            int recipeCount = tech.UnlockRecipes != null ? tech.UnlockRecipes.Length : 0;
+            bool enabled = Plugin.AnnounceOnResearch == null || Plugin.AnnounceOnResearch.Value;
+
+            int announced = 0;
+            if (enabled && tech.UnlockRecipes != null)
+            {
+                for (int i = 0; i < tech.UnlockRecipes.Length; i++)
+                {
+                    string message = MessageFor(tech.UnlockRecipes[i]);
+                    if (message != null)
+                    {
+                        Plugin.Log.LogInfo("Announced on research: " + message);
+                        Enqueue(message);
+                        announced++;
+                    }
+                }
+            }
+
+            // Every completed technology gets a line, including the ones with nothing to say.
+            // Without it, a session where research produced no anomalies looked identical in the
+            // log to one where announcements were broken -- and three rounds of guessing followed.
+            Plugin.Log.LogInfo(
+                "Research completed: " + techName + " -- " + recipeCount + " recipe(s), " +
+                (enabled ? announced + " announced" : "announcements off") +
+                " (reported on the " + (entry.OnMainThread ? "main" : "a worker") + " thread).");
+        }
+
+        /// <summary>The announcement for one recipe, or null if there is nothing to say.</summary>
+        private static string MessageFor(int recipeId)
+        {
+            string what = AnomalyManager.RecipeLabel(recipeId);
+            if (string.IsNullOrEmpty(what))
+            {
+                return null;
+            }
+
+            int total;
+            string where = AnomalyManager.KnownPlanetsWithRecipe(recipeId, MaxNamed, out total);
+            if (where != null)
+            {
+                return "ANOMALY: " + what + " on " + where;
+            }
+
+            if (AnomalyManager.AnyUnknownPlanetWithRecipe(recipeId))
+            {
+                // Existence without location. The same trade Marker mode makes about a place, made
+                // one level up about a recipe: knowing it is out there is a reason to go looking,
+                // and finding it is still the part worth earning.
+                //
+                // Paul's phrasing, and deliberately the plain one rather than the joke he offered
+                // alongside it. Every other line this mod writes is plain; one that is not would
+                // read as a different mod talking.
+                return "ANOMALY: " + what + " exists on a world you have not found.";
+            }
+
+            return null;
+        }
+
+        private static void Enqueue(string message)
+        {
+            if (_pending.Count < MaxQueued)
+            {
+                _pending.Enqueue(message);
+            }
+            else
+            {
+                _overflow++;
+            }
+        }
+
+        /// <summary>
+        /// With TestAnnouncement on, queues one announcement once the game is up, so the whole
+        /// display path can be checked in seconds instead of waiting for research to finish.
+        /// </summary>
+        private static void QueueTestIfAsked()
+        {
+            if (_testQueued || Plugin.TestAnnouncement == null || !Plugin.TestAnnouncement.Value)
+            {
+                return;
+            }
+
+            if (!CanShow())
+            {
+                return;
+            }
+
+            _testQueued = true;
+            Enqueue("ANOMALY: test announcement. If you can read this, announcements work.");
+            Plugin.Log.LogInfo("TestAnnouncement is on: queued a test announcement.");
         }
 
         /// <summary>
@@ -267,16 +345,55 @@ namespace PlanetaryAnomalies
             return root != null && root.uiGame != null && root.uiGame.active && root.uiGame.generalTips != null;
         }
 
+        // ---------------------------------------------------------------------------------------
+        // Drawing.
+        // ---------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Seconds an announcement stays fully readable.
+        ///
+        /// Paul's verdict on the game's own duration: "cool but REALLY fast -- I couldn't read it
+        /// all". SetText gives a tip lifeTime 1 and UIRealtimeTip.Update burns that at two thirds
+        /// per second, so it is gone in 1.5 seconds -- right for "can't build here", wrong for a
+        /// sentence naming a recipe and two planets.
+        /// </summary>
+        private const float ReadSeconds = 6f;
+
+        /// <summary>Pause between queued announcements, so one clearly ends before the next begins.</summary>
+        private const float GapSeconds = 0.5f;
+
+        /// <summary>
+        /// Upward drift in pixels per second. The game's 40 suits a tip that lives 1.5 seconds; over
+        /// six it would carry the text 240 pixels up the screen while you were reading it.
+        /// </summary>
+        private const float DriftPixelsPerSecond = 6f;
+
+        /// <summary>The rate UIRealtimeTip.Update burns lifeTime at. verify.ps1 asserts it still is.</summary>
+        private const float LifeDecayPerSecond = 0.6666666f;
+
+        private static FieldInfo _realtimeTipsField;
+        private static FieldInfo _lifeTimeField;
+
         /// <summary>
         /// Still the game's own realtime tip, not a message box: this is worth noticing, not worth
-        /// interrupting for.
+        /// interrupting for. Logs what actually happened on screen, not what was intended.
         /// </summary>
         private static void Show(string message)
         {
             try
             {
                 UIRealtimeTip.Popup(message, true, 0);
-                Linger(message);
+
+                if (Linger(message))
+                {
+                    Plugin.Log.LogInfo("Shown on screen: " + message);
+                }
+                else
+                {
+                    // The game declined to draw it, or its tip list could not be read. Either way
+                    // this is the line that answers "why did I not see it".
+                    Plugin.Log.LogWarning("Raised a tip, but the game did not draw one: " + message);
+                }
             }
             catch (Exception e)
             {
@@ -289,19 +406,18 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>
-        /// Stretches the tip the game just created for this message. Only this mod's tips are
-        /// touched; the game's own keep their normal duration.
+        /// Finds the tip the game just created for this message and stretches it. Returns whether
+        /// the tip was found. Only this mod's tips are touched; the game's own keep their duration.
         ///
         /// Two of the fields involved are not public and are reached by name, which the compiler
-        /// cannot check, so verify.ps1 asserts both. If either ever goes missing this does nothing
-        /// and the tip shows for the game's default 1.5 seconds: short again, but not broken.
+        /// cannot check, so verify.ps1 asserts both.
         /// </summary>
-        private static void Linger(string message)
+        private static bool Linger(string message)
         {
             UIRoot root = UIRoot.instance;
             if (root == null || root.uiGame == null || root.uiGame.generalTips == null)
             {
-                return;
+                return false;
             }
 
             if (_realtimeTipsField == null)
@@ -316,13 +432,13 @@ namespace PlanetaryAnomalies
 
             if (_realtimeTipsField == null || _lifeTimeField == null)
             {
-                return;
+                return false;
             }
 
             List<UIRealtimeTip> tips = _realtimeTipsField.GetValue(root.uiGame.generalTips) as List<UIRealtimeTip>;
             if (tips == null)
             {
-                return;
+                return false;
             }
 
             for (int i = tips.Count - 1; i >= 0; i--)
@@ -336,11 +452,13 @@ namespace PlanetaryAnomalies
                 _lifeTimeField.SetValue(tip, ReadSeconds * LifeDecayPerSecond);
                 tip.upSpeed = DriftPixelsPerSecond;
 
-                // Spacing is the queue's job now, so this one shows immediately. The game may have
-                // set a delay of its own if it raised a tip in the same frame.
+                // Spacing is the queue's job, so this one shows immediately. The game may have set
+                // a delay of its own if it raised a tip in the same frame.
                 tip.delayTime = 0f;
-                return;
+                return true;
             }
+
+            return false;
         }
     }
 }
