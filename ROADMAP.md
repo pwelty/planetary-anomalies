@@ -182,7 +182,7 @@ Distribution notes from the same survey, useful for the duplicates question:
 | 0.1.0 | 27 Aug | 63 | |
 | 0.2.0 | 29 Aug | 12 | superseded by 0.3.0 within 23 minutes |
 | 0.3.0 | 29 Aug | 132 | eleven days as the current version |
-| 0.4.0 | 9 Sep | 48, then 67 | 48 in its first day, 67 by the second |
+| 0.4.0 | 9 Sep | 94 | 48 in its first day, 67 by the second, 94 by 14 Sep |
 
 255 in total. Two readings worth keeping. First, 48 in a day against 0.3.0's 132 in eleven suggests
 a returning audience now, not only people finding it -- updates get taken, which is the condition
