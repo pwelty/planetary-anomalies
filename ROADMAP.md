@@ -990,6 +990,34 @@ Two answers, and they address different players:
   one needs DSP's galaxy generation outside the game, so unlike the notebook it cannot avoid
   Seed Finder's WASM engine or a contribution upstream. The spoiler concern mostly dissolves here,
   because choosing a galaxy is not the same as being told about the one you are playing.
+### Candidate: the anomaly line in the item tooltip
+
+Paul: "would it be possible to add a line to the popup text box you get when you hover over an
+item to show where you know in the galaxy there's an anomaly?" -- the replicator, the inventory,
+the build menu; anywhere an item tooltip appears.
+
+It is the notebook in the one place you would actually consult it. You are hovering Copper Ingot
+deciding where to smelt, and the tooltip says *BatenKaitos I makes these ten to one*. Every other
+surface so far tells you about a *place*; this is the first that tells you about a *thing*, which is
+the question a player is asking at that moment.
+
+**The seam.** `UIItemTip` is the one tooltip used everywhere. `SetTip` is public and lays the
+panel out top to bottom -- name, category, description, properties, values, pre-tech, the
+proliferator block, then the recipe entries -- and sizes `trans` after all of it, then clamps the
+panel onto the screen. So a line appended to the description would sit under the properties and
+recipes, which do not move. The clean way is a text element of the mod's own at the bottom, cloned
+from `descText` for font and colour, then the panel grown by its height and re-clamped the way
+SetTip does. That is the planet-panel patch's technique with one more step, and it needs a run or
+two in game to get the pixels right; it is not a one-shot.
+
+**The content.** `ItemProto.recipes` gives every recipe that makes the item, so a tooltip can name
+each -- *Space Warper (advanced)* on Sirrah III, *Space Warper* on Theta Puppis IV -- using the
+same disclosure rules as everywhere else: scanned planets only, unresearched recipes by
+`UnresearchedAnomalies`. Nothing here is the answer key; it is what the star map already shows,
+sorted by item instead of by place.
+
+Cheap to run: a galaxy sweep per hover is a few hundred dictionary lookups.
+
 ### Candidate for 1.0: the visit
 
 Paul: "what if in the early game, you get 'visited' by an alien from an anomalous planet, and you
