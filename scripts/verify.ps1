@@ -466,6 +466,21 @@ if (-not $setTip) {
     } else {
         Write-Host "OK  Harmony target: UIItemTip.SetTip, with itemId and isRecipe bound by name"
     }
+
+    # The replicator grid passes a recipe as a NEGATIVE itemId, and the postfix relies on that: a
+    # negative id is looked up as a recipe. SetTip's own prologue is the proof -- it negates the
+    # argument (ldarg.1; neg) to recover the recipe id. If that ever goes, the grid would silently
+    # lose its anomaly line again, which is how this was found in the first place.
+    $ins = $setTip.Body.Instructions
+    $negatesArg = $false
+    for ($i = 1; $i -lt [Math]::Min($ins.Count, 40); $i++) {
+        if ($ins[$i].OpCode.Name -eq 'neg' -and $ins[$i - 1].OpCode.Name -eq 'ldarg.1') { $negatesArg = $true; break }
+    }
+    if (-not $negatesArg) {
+        $failures.Add("UIItemTip.SetTip no longer negates a negative itemId in its prologue; the replicator grid may no longer pass recipe ids as negative numbers, and the tooltip line would vanish from the grid.")
+    } else {
+        Write-Host "OK  UIItemTip.SetTip treats a negative itemId as a recipe id (the replicator grid's convention)"
+    }
 }
 foreach ($needed in @('trans', 'descText')) {
     $f = $itemTip.Fields | Where-Object { $_.Name -eq $needed -and $_.IsPublic }

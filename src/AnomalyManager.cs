@@ -1352,6 +1352,22 @@ namespace PlanetaryAnomalies
         }
 
 
+        /// <summary>
+        /// The tooltip line for one specific recipe -- the replicator grid hovers a recipe, not an
+        /// item, and passes its id negated. Naming just that recipe is better than naming every
+        /// recipe for the product: it is the one under the cursor.
+        /// </summary>
+        internal static string TooltipLinesForRecipe(int recipeId)
+        {
+            RecipeProtoSet recipes = LDB.recipes;
+            if (recipes == null || !recipes.Exist(recipeId))
+            {
+                return null;
+            }
+
+            return TooltipLineForRecipe(recipes.Select(recipeId));
+        }
+
         private static string TooltipLineForRecipe(RecipeProto recipe)
         {
             if (recipe == null || !_galaxyKnown)

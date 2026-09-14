@@ -54,12 +54,13 @@ namespace PlanetaryAnomalies
         /// Harmony binds parameters by name: itemId and isRecipe are two of SetTip's eleven, and
         /// verify.ps1 asserts both names are still there.
         ///
-        /// itemId is an item id whatever isRecipe says. The first version read isRecipe as "itemId
-        /// is a recipe id", looked the item up in the recipe table, found nothing, and showed
-        /// nothing -- silently -- for every icon in the replicator's grid, which is the one place
-        /// the tooltip passes isRecipe = true. SetTip itself resolves the ItemProto and reads its
-        /// handcraft, maincraft and recipes; isRecipe only means "this tooltip is for a recipe
-        /// entry, show the recipe details".
+        /// The replicator grid hovers recipes, not items, and passes the recipe id NEGATED as
+        /// itemId -- the game's own convention, resolved at the top of SetTip. It took two wrong
+        /// readings to find that: first "isRecipe means itemId is a recipe id" (it is not the flag
+        /// that says so), then "itemId is always an item id" (it is not, when negative). Both
+        /// showed nothing, silently, for every icon in the grid. The once-only log below is what
+        /// finally printed "item -53" and settled it. A negative id names one recipe; a positive
+        /// id names an item and every recipe that makes it.
         /// </summary>
         [HarmonyPostfix]
         [HarmonyPatch(typeof(UIItemTip), "SetTip")]
@@ -72,12 +73,14 @@ namespace PlanetaryAnomalies
                     return;
                 }
 
-                string body = AnomalyManager.TooltipLinesForItem(itemId);
+                string body = itemId < 0
+                    ? AnomalyManager.TooltipLinesForRecipe(-itemId)
+                    : AnomalyManager.TooltipLinesForItem(itemId);
 
-                if (isRecipe && !_recipeEntryLogged)
+                if (itemId < 0 && !_recipeEntryLogged)
                 {
                     _recipeEntryLogged = true;
-                    Plugin.Log.LogInfo("Recipe-entry tooltip (once): item " + itemId + ", " +
+                    Plugin.Log.LogInfo("Recipe-entry tooltip (once): recipe " + (-itemId) + " (passed as " + itemId + "), " +
                                        (string.IsNullOrEmpty(body) ? "no anomaly line" : "anomaly line shown") + ".");
                 }
 
