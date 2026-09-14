@@ -40,8 +40,12 @@ namespace PlanetaryAnomalies
         /// </summary>
         private const float BottomPadding = 10f;
 
-        /// <summary>The mod's colour everywhere else it writes.</summary>
-        private static readonly Color LineColour = new Color(1f, 0.769f, 0.329f, 1f);
+        /// <summary>
+        /// A muted gold. The star map's full-brightness gold reads fine as a label against space and
+        /// was, in Paul's words, "really bright" as a line of body text on the tooltip's dark panel.
+        /// The alpha is taken from the description text at clone time, so it dims as the game dims.
+        /// </summary>
+        private static readonly Color LineColour = new Color(0.86f, 0.73f, 0.46f, 1f);
 
         /// <summary>One line per tooltip instance; the game keeps very few.</summary>
         private static readonly Dictionary<UIItemTip, Text> _lines = new Dictionary<UIItemTip, Text>();
@@ -141,8 +145,10 @@ namespace PlanetaryAnomalies
 
         /// <summary>
         /// The mod's text element for this tooltip, made on first use by cloning the description
-        /// so the font, size and wrapping width match without guessing. Anything else the clone
-        /// carried -- a localiser, say -- is removed, since it would fight over the text.
+        /// so the font, size, wrapping width and -- importantly -- outline or shadow match. The
+        /// first version stripped every component but the text, which threw away the outline DSP
+        /// puts on tooltip text for legibility; only a localiser is removed now, since that would
+        /// fight over the text.
         /// </summary>
         private static Text LineFor(UIItemTip tip)
         {
@@ -167,14 +173,15 @@ namespace PlanetaryAnomalies
             for (int i = 0; i < components.Length; i++)
             {
                 Component c = components[i];
-                if (c is Text || c is RectTransform || c is CanvasRenderer)
+                if (c != null && c.GetType().Name.IndexOf("Locali", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    continue;
+                    UnityEngine.Object.Destroy(c);
                 }
-                UnityEngine.Object.Destroy(c);
             }
 
-            line.color = LineColour;
+            Color colour = LineColour;
+            colour.a = source.color.a;
+            line.color = colour;
             line.supportRichText = true;
             line.raycastTarget = false;
 
