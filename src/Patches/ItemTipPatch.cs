@@ -29,6 +29,7 @@ namespace PlanetaryAnomalies
     {
         private static bool _errorLogged;
         private static bool _geometryLogged;
+        private static bool _recipeEntryLogged;
 
         /// <summary>Gap between the game's last element and the anomaly line.</summary>
         private const float Spacing = 6f;
@@ -48,6 +49,13 @@ namespace PlanetaryAnomalies
         /// <summary>
         /// Harmony binds parameters by name: itemId and isRecipe are two of SetTip's eleven, and
         /// verify.ps1 asserts both names are still there.
+        ///
+        /// itemId is an item id whatever isRecipe says. The first version read isRecipe as "itemId
+        /// is a recipe id", looked the item up in the recipe table, found nothing, and showed
+        /// nothing -- silently -- for every icon in the replicator's grid, which is the one place
+        /// the tooltip passes isRecipe = true. SetTip itself resolves the ItemProto and reads its
+        /// handcraft, maincraft and recipes; isRecipe only means "this tooltip is for a recipe
+        /// entry, show the recipe details".
         /// </summary>
         [HarmonyPostfix]
         [HarmonyPatch(typeof(UIItemTip), "SetTip")]
@@ -60,9 +68,14 @@ namespace PlanetaryAnomalies
                     return;
                 }
 
-                string body = isRecipe
-                    ? AnomalyManager.TooltipLinesForRecipe(itemId)
-                    : AnomalyManager.TooltipLinesForItem(itemId);
+                string body = AnomalyManager.TooltipLinesForItem(itemId);
+
+                if (isRecipe && !_recipeEntryLogged)
+                {
+                    _recipeEntryLogged = true;
+                    Plugin.Log.LogInfo("Recipe-entry tooltip (once): item " + itemId + ", " +
+                                       (string.IsNullOrEmpty(body) ? "no anomaly line" : "anomaly line shown") + ".");
+                }
 
                 Text line = LineFor(__instance);
 
@@ -91,11 +104,13 @@ namespace PlanetaryAnomalies
                 float lineHeight = line.preferredHeight;
 
                 // Under the last thing the game placed: the panel's bottom edge is at -height (the
-                // panel hangs from its top), so the top of the line goes where the bottom padding
-                // starts. Same horizontal position as the description.
+                // panel hangs from its top), the game's content ends where its bottom padding
+                // begins, and the line goes one gap below that. Same horizontal position as the
+                // description. The first run left the gap out of the position and put it only in
+                // the height, so the line sat flush against the recipe entries.
                 Vector2 pos = rect.anchoredPosition;
                 pos.x = desc.anchoredPosition.x;
-                pos.y = -panelHeight + BottomPadding;
+                pos.y = -panelHeight + BottomPadding - Spacing;
                 rect.anchoredPosition = pos;
 
                 Vector2 size = panel.sizeDelta;

@@ -1351,17 +1351,6 @@ namespace PlanetaryAnomalies
             return lines != null ? string.Join("\n", lines.ToArray()) : null;
         }
 
-        /// <summary>The tooltip line for one recipe, when the tooltip is for a recipe rather than an item.</summary>
-        internal static string TooltipLinesForRecipe(int recipeId)
-        {
-            RecipeProtoSet recipes = LDB.recipes;
-            if (recipes == null || !recipes.Exist(recipeId))
-            {
-                return null;
-            }
-
-            return TooltipLineForRecipe(recipes.Select(recipeId));
-        }
 
         private static string TooltipLineForRecipe(RecipeProto recipe)
         {
