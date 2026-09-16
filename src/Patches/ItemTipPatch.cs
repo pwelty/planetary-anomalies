@@ -30,6 +30,7 @@ namespace PlanetaryAnomalies
         private static bool _errorLogged;
         private static bool _geometryLogged;
         private static bool _recipeEntryLogged;
+        private static bool _styleLogged;
 
         /// <summary>Gap between the game's last element and the anomaly line.</summary>
         private const float Spacing = 6f;
@@ -41,11 +42,19 @@ namespace PlanetaryAnomalies
         private const float BottomPadding = 10f;
 
         /// <summary>
-        /// A muted gold. The star map's full-brightness gold reads fine as a label against space and
-        /// was, in Paul's words, "really bright" as a line of body text on the tooltip's dark panel.
-        /// The alpha is taken from the description text at clone time, so it dims as the game dims.
+        /// The label's colour, as a rich-text tag: the star map's gold, turned down. Only the word
+        /// "Anomaly:" wears it. The rest of the line keeps the description's own colour.
+        ///
+        /// Two versions coloured the whole line. Full gold was, in Paul's words, "really bright";
+        /// this muted gold was still "glowy" and hard to read at times. DSP's UI blooms bright text,
+        /// and a whole line of it fights the panel. The game's description colour is the one colour
+        /// proven legible on this panel over every background the tooltip lands on, so the line
+        /// borrows it and marks itself with the label alone.
         /// </summary>
-        private static readonly Color LineColour = new Color(0.86f, 0.73f, 0.46f, 1f);
+        private const string LabelColour = "#DBBA75";
+
+        /// <summary>The word every line opens with; the only part drawn in gold.</summary>
+        private const string Label = "Anomaly:";
 
         /// <summary>One line per tooltip instance; the game keeps very few.</summary>
         private static readonly Dictionary<UIItemTip, Text> _lines = new Dictionary<UIItemTip, Text>();
@@ -104,7 +113,8 @@ namespace PlanetaryAnomalies
                 RectTransform rect = line.rectTransform;
                 RectTransform desc = __instance.descText.rectTransform;
 
-                line.text = body;
+                line.text = Decorate(body);
+                line.color = __instance.descText.color;
                 line.gameObject.SetActive(true);
 
                 float panelHeight = panel.sizeDelta.y;
@@ -148,7 +158,7 @@ namespace PlanetaryAnomalies
 
         /// <summary>
         /// The mod's text element for this tooltip, made on first use by cloning the description
-        /// so the font, size, wrapping width and -- importantly -- outline or shadow match. The
+        /// so the font, size, colour, wrapping width and -- importantly -- outline or shadow match. The
         /// first version stripped every component but the text, which threw away the outline DSP
         /// puts on tooltip text for legibility; only a localiser is removed now, since that would
         /// fight over the text.
@@ -182,14 +192,46 @@ namespace PlanetaryAnomalies
                 }
             }
 
-            Color colour = LineColour;
-            colour.a = source.color.a;
-            line.color = colour;
             line.supportRichText = true;
             line.raycastTarget = false;
 
+            LogStyleOnce(source);
+
             _lines[tip] = line;
             return line;
+        }
+
+        /// <summary>Colours the leading label of each line; the rest stays as the description draws it.</summary>
+        private static string Decorate(string body)
+        {
+            return body.Replace(Label, "<color=" + LabelColour + ">" + Label + "</color>");
+        }
+
+        /// <summary>
+        /// What the game's description text actually is -- colour, size, font, material, and any
+        /// outline or shadow on it -- written once, so the next pass at legibility starts from what
+        /// the game draws rather than another guess at what "glowy" means.
+        /// </summary>
+        private static void LogStyleOnce(Text source)
+        {
+            if (_styleLogged)
+            {
+                return;
+            }
+            _styleLogged = true;
+
+            string effects = "";
+            Shadow[] shadows = source.GetComponents<Shadow>();
+            for (int i = 0; i < shadows.Length; i++)
+            {
+                effects += "; " + shadows[i].GetType().Name + " colour " + shadows[i].effectColor +
+                           " distance " + shadows[i].effectDistance;
+            }
+
+            Plugin.Log.LogInfo(
+                "Tooltip description style (once): colour " + source.color + ", size " + source.fontSize + " " + source.fontStyle +
+                ", font " + (source.font != null ? source.font.name : "?") +
+                ", material " + (source.material != null ? source.material.name : "?") + effects + ".");
         }
 
         /// <summary>
