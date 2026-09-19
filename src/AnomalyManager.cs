@@ -40,17 +40,6 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>
-        /// The configured multiplier, unless the experimental combat-settings derivation is on and
-        /// the galaxy is peaceful. Reports its reasoning, because a number that changes on account
-        /// of a setting elsewhere is exactly the kind of silent decision that has cost an hour here
-        /// before.
-        ///
-        /// Paul's finding, and the condition he attached to it: "I like x10. If no dark fog, then
-        /// ok, could be much less." The multiplier is a return on the cost of using an anomaly,
-        /// and the largest cost is clearing a world and then holding it. Take the Dark Fog away and
-        /// only hauling remains.
-        /// </summary>
-        /// <summary>
         /// Which rules this install rolls under, from the one setting that says so.
         ///
         /// Paul's call, after two rounds of something cleverer: the rules version is a *setting*,
@@ -115,6 +104,18 @@ namespace PlanetaryAnomalies
             }
             return requested;
         }
+
+        /// <summary>
+        /// The configured multiplier, unless the experimental combat-settings derivation is on and
+        /// the galaxy is peaceful. Reports its reasoning, because a number that changes on account
+        /// of a setting elsewhere is exactly the kind of silent decision that has cost an hour here
+        /// before.
+        ///
+        /// Paul's finding, and the condition he attached to it: "I like x10. If no dark fog, then
+        /// ok, could be much less." The multiplier is a return on the cost of using an anomaly,
+        /// and the largest cost is clearing a world and then holding it. Take the Dark Fog away and
+        /// only hauling remains.
+        /// </summary>
         private static int ResolveOutputMultiplier(GameDesc desc, out string reason)
         {
             int configured = ConfiguredMultiplier();
@@ -291,12 +292,16 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>
-        /// Whether a planet's anomaly should be shown to the player at all. Every display surface
-        /// asks this; production never does.
+        /// How much a surface may say about this planet's anomaly: nothing, that it exists, or what
+        /// it is. Every display surface asks this; production never does.
         ///
-        /// An anomaly on a recipe the player has not researched is not information being withheld
-        /// -- the recipe is already unavailable, so the label names something they cannot build and
-        /// may not recognise. Twenty hours before particle broadband exists, "Particle Broadband
+        /// Callers must route every outcome through the same write, including None -- a label that
+        /// returns early when there is nothing to say cannot clear what it said last time. That was
+        /// the shape of the bug that let 0.4 hide an anomaly and never un-hide it.
+        ///
+        /// Why anything is hidden at all: an anomaly on a recipe the player has not researched is
+        /// not information being withheld -- the recipe is already unavailable, so the label names
+        /// something they cannot build and may not recognise. Twenty hours before particle broadband exists, "Particle Broadband
         /// x10" is noise, and noise teaches players to stop reading labels. Hiding it until the
         /// research lands makes the star map fill in as the game opens up, which is the shape the
         /// information actually has.
@@ -305,14 +310,6 @@ namespace PlanetaryAnomalies
         /// ones and deliberate ones, so it can be stated in a line: knowing a planet means knowing
         /// the anomalies you can act on. The machine window needs no special case, since running a
         /// recipe implies having researched it.
-        /// </summary>
-        /// <summary>
-        /// How much a surface may say about this planet's anomaly: nothing, that it exists, or what
-        /// it is. Every display surface asks this; production never does.
-        ///
-        /// Callers must route every outcome through the same write, including None -- a label that
-        /// returns early when there is nothing to say cannot clear what it said last time. That was
-        /// the shape of the bug that let 0.4 hide an anomaly and never un-hide it.
         /// </summary>
         internal static AnomalyVisibility VisibilityFor(int planetId)
         {
@@ -698,20 +695,10 @@ namespace PlanetaryAnomalies
 
         /// <summary>
         /// Whether a planet cannot host the machines an anomaly would apply to.
-
-
         ///
         /// Only gas giants today. If the planet cannot be looked up we assume it is buildable:
         /// wrongly skipping a real planet is worse than the marker we are trying to avoid.
         /// </summary>
-        /// <summary>
-        /// Whether the starting world is kept ordinary. True unless the player has said otherwise.
-        /// </summary>
-        private static bool HomeIsProtected
-        {
-            get { return Plugin.HomePlanetNeverAnomalous == null || Plugin.HomePlanetNeverAnomalous.Value; }
-        }
-
         private static bool IsUnbuildable(int planetId)
         {
             GameData data = GameMain.data;
@@ -785,6 +772,14 @@ namespace PlanetaryAnomalies
         /// <summary>
         /// Works out a planet's anomaly from the seed. Pure: same inputs, same answer, every load.
         /// </summary>
+
+        /// <summary>
+        /// Whether the starting world is kept ordinary. True unless the player has said otherwise.
+        /// </summary>
+        private static bool HomeIsProtected
+        {
+            get { return Plugin.HomePlanetNeverAnomalous == null || Plugin.HomePlanetNeverAnomalous.Value; }
+        }
 
         private static PlanetAnomaly Derive(int planetId)
         {
@@ -1370,7 +1365,18 @@ namespace PlanetaryAnomalies
 
         private static string TooltipLineForRecipe(RecipeProto recipe)
         {
-            if (recipe == null || !_galaxyKnown)
+            // EnsureGalaxy rather than the flag it sets: on a fresh game nothing else may have asked
+            // yet -- no factory ticking, star map never opened -- and a tooltip that stayed blank
+            // until something unrelated woke the mod would be a bug nobody could reproduce.
+            if (recipe == null || !EnsureGalaxy())
+            {
+                return null;
+            }
+
+            // Asked before the sweep because it is one set lookup, and under the default Hide it
+            // spares the whole galaxy for every recipe not researched yet.
+            AnomalyVisibility visibility = VisibilityOfRecipe(recipe.ID);
+            if (visibility == AnomalyVisibility.None)
             {
                 return null;
             }
@@ -1421,17 +1427,12 @@ namespace PlanetaryAnomalies
                 return null;
             }
 
-            AnomalyVisibility visibility = VisibilityOfRecipe(recipe.ID);
-            if (visibility == AnomalyVisibility.None)
-            {
-                return null;
-            }
-
             if (visibility == AnomalyVisibility.Marker)
             {
-                // The place is known; the recipe is not yet. Say that much and no more.
+                // The place is known; the recipe is not yet. Say that much and no more. The number
+                // is the one in force, never the word "ten": the multiplier is the player's dial.
                 return "Anomaly: " + (total == 1 ? "a world you have scanned makes this" : total + " worlds you have scanned make this") +
-                       " ten to one, on a recipe you have not researched yet.";
+                       " ×" + OutputMultiplier + ", on a recipe you have not researched yet.";
             }
 
             if (total > named)
@@ -1443,6 +1444,7 @@ namespace PlanetaryAnomalies
             return "Anomaly: " + (string.IsNullOrEmpty(recipeName) ? "" : recipeName + " ") +
                    "×" + OutputMultiplier + " on " + names;
         }
+
         /// <summary>
         /// A recipe named the way a planet label names it -- "Antimatter Capsule ×10" -- for the
         /// cases where the recipe is known but no particular planet is in hand.

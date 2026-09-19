@@ -1167,6 +1167,26 @@ none of it was about deciding what to say:
   recipe in three is absent from any galaxy, so silence is usually correct. `TestAnnouncement`
   exists because of that, and so does the log line for every completed technology.
 
+**What the last read-through found**, the day it was packaged. Paul asked for one more look before
+finalising, and none of this had shown in play yet, which is the argument for looking:
+
+- Handled technologies were remembered for the *session*, not the game. Finish a technology, reload
+  the save from before it, finish it again: announced the first time, silence the second. Reloading
+  is ordinary in a game where a distant base can be lost while you are away. Research state is now
+  tied to the identity of the game's `GameHistoryData`, which DSP rebuilds on every load.
+- The galaxy behind the main menu has labs. Whatever they completed was being recorded, to be
+  drained into the first real game loaded. Refused at the hook now, and anything recorded against a
+  history that is not the loaded one is dropped -- with a log line, because a rule that drops
+  announcements must not be able to do it silently.
+- The tooltip patch kept an entry per tooltip on the belief that "the game keeps very few". Only the
+  replicator does; buttons, storage grids and pickers destroy theirs when the mouse leaves. A slow
+  leak, swept now.
+- The Marker tooltip said "ten to one" in words, to players running ×3.
+- A throw from any `PatchAll` ended `Awake`, so one surface broken by a game update would have
+  silently taken every patch after it. Each surface now applies on its own and the startup line says
+  which are working; production failing turns the whole mod off rather than leave labels lying.
+- verify.ps1 checked `NotifyTechUnlock`'s types but not the parameter name the postfix binds by.
+
 **The open question at the bottom of this section is closed.** ×10 stays the default and the README
 stops defending it: the multiplier is the player's dial. See *The multiplier is not a number, it is
 a price* -- the two players at ×3 and the author at ×10 were answering different questions, and the

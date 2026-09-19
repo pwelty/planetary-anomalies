@@ -372,6 +372,13 @@ if (-not $notify) {
     $failures.Add("Harmony target 'GameHistoryData.NotifyTechUnlock(int, int, bool)' is gone; research announcements would silently stop.")
 } else {
     Write-Host "OK  Harmony target: GameHistoryData.NotifyTechUnlock(int, int, bool)"
+
+    # The postfix takes the technology id BY NAME. A rename compiles, then fails to patch at load.
+    if ($notify.Parameters[0].Name -ne '_techId') {
+        $failures.Add("GameHistoryData.NotifyTechUnlock's first parameter is now '$($notify.Parameters[0].Name)', not '_techId'; the postfix binds it by name and would fail to patch, turning research announcements off.")
+    } else {
+        Write-Host "OK  NotifyTechUnlock's technology id is still named _techId (bound by name)"
+    }
 }
 
 $techProto = $gameAsm.MainModule.GetType('TechProto')

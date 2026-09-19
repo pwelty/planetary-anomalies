@@ -152,7 +152,7 @@ On startup you should see:
 ```
 [Info   :Planetary Anomalies] Planetary Anomalies v0.5.0 loaded
 [Info   :Planetary Anomalies] Anomalies derived from the galaxy seed; output x10. Density drawn per galaxy, 25-75%.
-[Info   :Planetary Anomalies] Patched PlanetFactory.BeforeGameTick() for production; UIPlanetDetail, UIAssemblerWindow, the star map and UIItemTip to disclose anomalies in the planet panel, on the machine, on star map planet and star labels, and in item tooltips; and GameHistoryData.NotifyTechUnlock to announce them when research completes. Production is idle until a planet has a factory (i.e. until something is built).
+[Info   :Planetary Anomalies] Patched PlanetFactory.BeforeGameTick() for production. Anomalies are disclosed in: the planet panel, the machine window, star map planet labels, star map star labels, item tooltips, research announcements. Production is idle until a planet has a factory (i.e. until something is built).
 ```
 
 Once a save is loaded, the galaxy is characterised and each planet is decided as its factory

@@ -56,8 +56,24 @@ namespace PlanetaryAnomalies
         /// <summary>The word every line opens with; the only part drawn in gold.</summary>
         private const string Label = "Anomaly:";
 
-        /// <summary>One line per tooltip instance; the game keeps very few.</summary>
+        /// <summary>
+        /// One line per tooltip instance. "The game keeps very few" was the first version of this
+        /// comment and it was wrong: only the replicator keeps its tooltip and hides it. Buttons,
+        /// storage grids and the pickers create one on hover and destroy it when the mouse leaves,
+        /// so over a long session this would have collected a dead entry per hover. The line itself
+        /// is a child of the tooltip and dies with it; the entries are swept in <see cref="Prune"/>.
+        /// </summary>
         private static readonly Dictionary<UIItemTip, Text> _lines = new Dictionary<UIItemTip, Text>();
+        private static readonly List<UIItemTip> _pruneScratch = new List<UIItemTip>();
+
+        /// <summary>Sweep for destroyed tooltips once this many are remembered.</summary>
+        private const int PruneAbove = 8;
+
+        internal static void Reset()
+        {
+            _lines.Clear();
+            _pruneScratch.Clear();
+        }
 
         /// <summary>
         /// Harmony binds parameters by name: itemId and isRecipe are two of SetTip's eleven, and
@@ -197,8 +213,37 @@ namespace PlanetaryAnomalies
 
             LogStyleOnce(source);
 
+            Prune();
             _lines[tip] = line;
             return line;
+        }
+
+        /// <summary>
+        /// Forgets tooltips the game has destroyed. Unity's == is what reports a destroyed object
+        /// as null; the dictionary still finds the entry, because a destroyed wrapper keeps the
+        /// instance id its hash and equality are built on.
+        /// </summary>
+        private static void Prune()
+        {
+            if (_lines.Count < PruneAbove)
+            {
+                return;
+            }
+
+            _pruneScratch.Clear();
+            foreach (KeyValuePair<UIItemTip, Text> entry in _lines)
+            {
+                if (entry.Key == null)
+                {
+                    _pruneScratch.Add(entry.Key);
+                }
+            }
+
+            for (int i = 0; i < _pruneScratch.Count; i++)
+            {
+                _lines.Remove(_pruneScratch[i]);
+            }
+            _pruneScratch.Clear();
         }
 
         /// <summary>Colours the leading label of each line; the rest stays as the description draws it.</summary>

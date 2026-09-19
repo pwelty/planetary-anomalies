@@ -1,3 +1,4 @@
+using System;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -68,22 +69,72 @@ namespace PlanetaryAnomalies
                             : ""));
 
             _harmony = new Harmony(PluginGuid);
-            _harmony.PatchAll(typeof(PlanetFactoryBeforeGameTickPatch));
-            _harmony.PatchAll(typeof(UIPlanetDetailPatch));
-            _harmony.PatchAll(typeof(UIAssemblerWindowPatch));
-            _harmony.PatchAll(typeof(UIStarmapPlanetPatch));
-            _harmony.PatchAll(typeof(UIStarmapStarPatch));
-            _harmony.PatchAll(typeof(TechUnlockPatch));
-            _harmony.PatchAll(typeof(ItemTipPatch));
 
+            // Production first, and alone. If the game has changed under it the mod does nothing to
+            // output, and every label would then advertise an anomaly that does not exist -- worse
+            // than no mod. So nothing else is patched without it.
+            if (!TryPatch(typeof(PlanetFactoryBeforeGameTickPatch), "production (PlanetFactory.BeforeGameTick)"))
+            {
+                Log.LogError(PluginName + " is off: production could not be patched, so nothing is " +
+                             "labelled either. This usually means the game has updated; look for a " +
+                             "newer version of the mod.");
+                return;
+            }
+
+            // Each display surface on its own. They hang off UI methods bound by parameter name,
+            // which is the kind of thing a game update moves, and 0.5 added two more of them. One
+            // that fails to apply must not take the others with it -- before this, a throw from any
+            // PatchAll ended Awake, and every patch after it silently never happened.
+            Type[] surfaces =
+            {
+                typeof(UIPlanetDetailPatch), typeof(UIAssemblerWindowPatch), typeof(UIStarmapPlanetPatch),
+                typeof(UIStarmapStarPatch), typeof(ItemTipPatch), typeof(TechUnlockPatch)
+            };
+            string[] surfaceNames =
+            {
+                "the planet panel", "the machine window", "star map planet labels",
+                "star map star labels", "item tooltips", "research announcements"
+            };
+
+            string working = "";
+            string broken = "";
+            for (int i = 0; i < surfaces.Length; i++)
+            {
+                if (TryPatch(surfaces[i], surfaceNames[i]))
+                {
+                    working += (working.Length > 0 ? ", " : "") + surfaceNames[i];
+                }
+                else
+                {
+                    broken += (broken.Length > 0 ? ", " : "") + surfaceNames[i];
+                }
+            }
 
             // The production hook only fires once a planet has a factory to tick, which does not
             // happen until something is built there -- not merely when a save is loaded.
-            Log.LogInfo("Patched PlanetFactory.BeforeGameTick() for production; UIPlanetDetail, " +
-                        "UIAssemblerWindow, the star map and UIItemTip to disclose anomalies in the planet " +
-                        "panel, on the machine, on star map planet and star labels, and in item tooltips; " +
-                        "and GameHistoryData.NotifyTechUnlock to announce them when research completes. " +
-                        "Production is idle until a planet has a factory (i.e. until something is built).");
+            Log.LogInfo("Patched PlanetFactory.BeforeGameTick() for production. Anomalies are disclosed in: " +
+                        (working.Length > 0 ? working : "nothing") + "." +
+                        (broken.Length > 0 ? " NOT working: " + broken + " -- see the errors above." : "") +
+                        " Production is idle until a planet has a factory (i.e. until something is built).");
+        }
+
+        /// <summary>
+        /// Applies one patch class and says whether it took. Harmony throws when a target method or
+        /// a by-name parameter is gone, which is what a game update looks like from in here.
+        /// </summary>
+        private bool TryPatch(Type patchClass, string what)
+        {
+            try
+            {
+                _harmony.PatchAll(patchClass);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.LogError("Could not patch " + what + ", so that part of the mod is off. This usually " +
+                             "means the game has updated. " + e);
+                return false;
+            }
         }
 
         private void BindConfig()
@@ -167,8 +218,8 @@ namespace PlanetaryAnomalies
                 "UnresearchedAnomalies",
                 UnresearchedDisplay.Hide,
                 "What an anomaly says about itself before you have researched the recipe it\n" +
-                "affects. Applies everywhere: the planet panel, planet and star labels, and the\n" +
-                "system counts.\n" +
+                "affects. Applies everywhere: the planet panel, planet and star labels, the system\n" +
+                "counts, and the line in item tooltips.\n" +
                 "Hide:   nothing at all. The planet reads as ordinary until the research lands.\n" +
                 "Marker: the symbol without the name -- you know something is there and worth\n" +
                 "  coming back for, but not yet what. Existence is cheap information; the name is\n" +
@@ -180,8 +231,8 @@ namespace PlanetaryAnomalies
                 "Display",
                 "AnnounceOnResearch",
                 true,
-                "When you finish a technology, says whether a world you have already scanned makes\n" +
-                "one of its recipes ten times over. Shown in gold just under the game's own\n" +
+                "When you finish a technology, says whether a world you have already scanned has an\n" +
+                "anomaly on one of its recipes. Shown in gold just under the game's own\n" +
                 "\"Research complete\" notice for about six seconds -- several from one technology\n" +
                 "appear in turn -- and always written to the log.\n" +
                 "This is the other half of hiding unresearched anomalies: the mod stays quiet while\n" +
@@ -263,6 +314,7 @@ namespace PlanetaryAnomalies
             AnomalyManager.Reset();
             PlanetFactoryBeforeGameTickPatch.Reset();
             TechUnlockPatch.Reset();
+            ItemTipPatch.Reset();
         }
     }
 }

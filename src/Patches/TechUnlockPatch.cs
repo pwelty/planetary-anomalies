@@ -54,6 +54,9 @@ namespace PlanetaryAnomalies
         {
             internal int TechId;
             internal bool OnMainThread;
+
+            /// <summary>The game this research belongs to. See <see cref="NoticeNewGame"/>.</summary>
+            internal GameHistoryData History;
         }
 
         private static readonly object _handoffLock = new object();
@@ -71,10 +74,13 @@ namespace PlanetaryAnomalies
         // ---------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Technologies already handled this session. NotifyTechUnlock fires per level, and
+        /// Technologies already handled in the loaded game. NotifyTechUnlock fires per level, and
         /// multi-level technologies would otherwise repeat themselves for as long as you research.
         /// </summary>
         private static readonly HashSet<int> _handled = new HashSet<int>();
+
+        /// <summary>The research history of the game all of the state below belongs to.</summary>
+        private static GameHistoryData _history;
 
         private static readonly Queue<string> _pending = new Queue<string>();
 
@@ -98,11 +104,42 @@ namespace PlanetaryAnomalies
                 _completed.Clear();
             }
 
+            _history = null;
+            ForgetGame();
+        }
+
+        private static void ForgetGame()
+        {
             _handled.Clear();
             _pending.Clear();
             _overflow = 0;
             _nextShowTime = 0f;
             _testQueued = false;
+        }
+
+        /// <summary>
+        /// Everything remembered about research belongs to one loaded game, and a session can hold
+        /// several: load a save, play, reload an earlier one. Found on the last read-through before
+        /// 0.5 shipped -- the set of handled technologies lasted the whole session, so a technology
+        /// finished, then finished again after reloading the save from before it, was announced the
+        /// first time and met with silence the second. Reloading is ordinary in a game where a
+        /// distant base can be lost while you are away.
+        ///
+        /// The game builds a new GameHistoryData for every load, so its identity is the signal: no
+        /// hook on loading, no guess about which screen is showing. Research recorded against any
+        /// other history -- the previous game's last frames, never drained because its UI had
+        /// closed -- is dropped rather than announced in a galaxy it did not happen in.
+        /// </summary>
+        private static void NoticeNewGame()
+        {
+            GameHistoryData current = GameMain.history;
+            if (ReferenceEquals(current, _history))
+            {
+                return;
+            }
+
+            _history = current;
+            ForgetGame();
         }
 
         /// <summary>
@@ -118,12 +155,19 @@ namespace PlanetaryAnomalies
         /// </summary>
         [HarmonyPostfix]
         [HarmonyPatch(typeof(GameHistoryData), "NotifyTechUnlock")]
-        internal static void AfterTechUnlock(int _techId)
+        internal static void AfterTechUnlock(GameHistoryData __instance, int _techId)
         {
             try
             {
+                // The galaxy behind the main menu has labs, and they research. Not the player's.
+                if (DSPGame.IsMenuDemo)
+                {
+                    return;
+                }
+
                 Completed entry = new Completed();
                 entry.TechId = _techId;
+                entry.History = __instance;
                 entry.OnMainThread = Thread.CurrentThread.ManagedThreadId == _mainThreadId;
 
                 lock (_handoffLock)
@@ -159,6 +203,7 @@ namespace PlanetaryAnomalies
                 }
 
                 RestoreReusedTips();
+                NoticeNewGame();
                 DrainCompleted();
                 QueueTestIfAsked();
 
@@ -218,6 +263,17 @@ namespace PlanetaryAnomalies
 
             for (int i = 0; i < batch.Length; i++)
             {
+                // Research from a game that is no longer the loaded one. See NoticeNewGame. Said
+                // out loud, because a rule that drops announcements must never be able to do it
+                // silently -- if this line ever appears for research you just watched finish, the
+                // identity check is wrong, not the research.
+                if (!ReferenceEquals(batch[i].History, _history))
+                {
+                    Plugin.Log.LogInfo("Ignored a completed technology (id " + batch[i].TechId +
+                                       ") recorded against a game that is no longer the loaded one.");
+                    continue;
+                }
+
                 Process(batch[i]);
             }
         }

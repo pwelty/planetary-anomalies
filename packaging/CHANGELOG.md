@@ -49,6 +49,9 @@
   back for, while withholding the name until the recipe means something to you. `Hide` is the 0.4
   behaviour and remains the default; `Show` names everything, as in 0.3 and earlier. A 0.4 config
   with `HideUnresearchedAnomalies = false` is migrated to `Show`, and the log says so.
+- If a game update breaks one part of the mod -- a tooltip, a label -- the rest keeps working and
+  the log names what is off. If production itself cannot be patched, the mod switches off entirely
+  rather than label anomalies that do nothing.
 - The mod now leaves the galaxy behind the main menu alone. DSP runs that demo like a real game,
   and earlier versions quietly treated it as one. Harmless, but a mod should not be doing
   anything in a menu.
