@@ -1,17 +1,20 @@
 # Changelog
 
-## 0.5.0 (in development)
+## 0.5.0
 
 - Hover an item -- in the replicator, your inventory, the build menu, anywhere -- and its tooltip
   now names the worlds you know of that make it ten times over: *Anomaly: Copper Ingot ×10 on
   BatenKaitos I*. One line per recipe where an item has several. Same rules as the star map:
   worlds you have scanned, recipes you have researched, and unresearched ones as
   `UnresearchedAnomalies` allows. It is what the star map already knows, sorted by the thing you
-  are holding instead of by where it is.
+  are holding instead of by where it is. In the replicator's recipe grid, where you hover a
+  recipe rather than an item, the line is for that recipe alone.
 - When you finish a technology, the mod says whether a world you have already scanned makes one of
   its recipes ten times over. Research Antimatter Capsule and it tells you Iclarkrav I has been
-  making them ×10 the whole time. Shown in gold just under the game's own "Research complete" notice for about six seconds, and written to the log.
-  `AnnounceOnResearch = false` turns it off, and `TestAnnouncement = true` shows one straight away so you can check they work on your setup.
+  making them ×10 the whole time. Shown in gold just under the game's own "Research complete"
+  notice for about six seconds, and written to the log. `AnnounceOnResearch = false` turns it
+  off, and `TestAnnouncement = true` shows one straight away so you can check they work on your
+  setup.
 
   This is the other half of hiding unresearched anomalies. On its own, hiding is a subtraction --
   information you had in 0.3 and lost in 0.4. With this, the mod stays quiet while a recipe means
@@ -44,7 +47,11 @@
 - Anomalies on recipes you have not researched can now show a marker without naming what they are.
   `UnresearchedAnomalies = Marker` marks the planet so you know something is there and worth coming
   back for, while withholding the name until the recipe means something to you. `Hide` is the 0.4
-  behaviour and remains the default; `Show` names everything, as in 0.3 and earlier.
+  behaviour and remains the default; `Show` names everything, as in 0.3 and earlier. A 0.4 config
+  with `HideUnresearchedAnomalies = false` is migrated to `Show`, and the log says so.
+- The mod now leaves the galaxy behind the main menu alone. DSP runs that demo like a real game,
+  and earlier versions quietly treated it as one. Harmless, but a mod should not be doing
+  anything in a menu.
 
 ## 0.4.0
 

@@ -3,10 +3,11 @@
 This is the canonical design roadmap for Planetary Anomalies. It records directions, questions,
 and sequencing; it is not a promise that every idea below will ship.
 
-The working release is **v0.1.0**: most non-home planets deterministically receive one ordinary,
-single-output recipe whose output is multiplied by ten on that planet. Anomalies derive from the
-galaxy seed, appear when the planet is known, and change real machine output without modifying
-shared recipe prototypes or writing anomaly data to saves.
+The working release is **v0.5.0**, the last before 1.0: most non-home planets deterministically
+receive one ordinary, single-output recipe whose output is multiplied by ten on that planet.
+Anomalies derive from the galaxy seed, appear when the planet is known and the recipe researched,
+and change real machine output without modifying shared recipe prototypes or writing anomaly data
+to saves.
 
 ## The design thesis
 
@@ -175,16 +176,22 @@ Distribution notes from the same survey, useful for the duplicates question:
 - Any specific recipe has roughly a 37% chance of being absent from a galaxy this size. Absence is
   ordinary, not a bug -- worth remembering when someone reports "my galaxy has no X".
 
-### Downloads, as of 2026-09-10
+### Downloads, as of 2026-09-19
 
 | Version | Published | Downloads | Notes |
 | --- | --- | --- | --- |
-| 0.1.0 | 27 Aug | 63 | |
-| 0.2.0 | 29 Aug | 12 | superseded by 0.3.0 within 23 minutes |
-| 0.3.0 | 29 Aug | 132 | eleven days as the current version |
-| 0.4.0 | 9 Sep | 94 | 48 in its first day, 67 by the second, 94 by 14 Sep |
+| 0.1.0 | 27 Aug | 69 | |
+| 0.2.0 | 29 Aug | 21 | superseded by 0.3.0 within 23 minutes |
+| 0.3.0 | 29 Aug | 141 | eleven days as the current version |
+| 0.4.0 | 9 Sep | 121 | 48 in its first day, 67 by the second, 94 by 14 Sep, 121 by 19 Sep |
 
-255 in total. Two readings worth keeping. First, 48 in a day against 0.3.0's 132 in eleven suggests
+352 in total on 19 Sep, the day 0.5.0 was packaged. 0.4.0 settled at about five a day once the
+first-day burst had passed -- 27 in the five days to 19 Sep -- which is the underlying rate of new
+players finding it, and the number 0.5.0's first week should be read against. The older versions
+still tick up by a handful each; nobody chooses 0.2.0 on purpose, so that is probably mirrors and
+profiles pinned to a version rather than people.
+
+The rest of this section was written on 10 Sep, when the total was 255. Two readings worth keeping. First, 48 in a day against 0.3.0's 132 in eleven suggests
 a returning audience now, not only people finding it -- updates get taken, which is the condition
 under which a changelog is read at all. Second, those 48 are the first players to run hiding with
 `Hide` as the default. Any report along the lines of "my anomalies disappeared" from here on is
@@ -990,7 +997,7 @@ Two answers, and they address different players:
   one needs DSP's galaxy generation outside the game, so unlike the notebook it cannot avoid
   Seed Finder's WASM engine or a contribution upstream. The spoiler concern mostly dissolves here,
   because choosing a galaxy is not the same as being told about the one you are playing.
-### Candidate: the anomaly line in the item tooltip
+### Shipped in 0.5: the anomaly line in the item tooltip
 
 Paul: "would it be possible to add a line to the popup text box you get when you hover over an
 item to show where you know in the galaxy there's an anomaly?" -- the replicator, the inventory,
@@ -1017,6 +1024,27 @@ same disclosure rules as everywhere else: scanned planets only, unresearched rec
 sorted by item instead of by place.
 
 Cheap to run: a galaxy sweep per hover is a few hundred dictionary lookups.
+
+**What building it taught.** It was not a one-shot, as predicted, but the pixels were the easy
+part. Three things cost a run each:
+
+- *The replicator grid hovers recipes, not items.* It passes the recipe id **negated** as `itemId`,
+  and `SetTip`'s own prologue negates it back. The first reading took `isRecipe` to be the signal
+  (it is not), the second decided `itemId` was always an item (it is not, when negative), and both
+  left the grid silently empty while the recipe flow chart under it worked. A once-only log line
+  finally printed `item -53` and settled it. A negative id now names the one recipe under the
+  cursor; a positive id names an item and every recipe that makes it. verify.ps1 asserts that
+  `SetTip` still negates its argument, because this failure is invisible when it happens.
+- *A whole line of gold is too much.* Full star-map gold was "really bright"; muted, it was still
+  "glowy" and hard to read at times. The once-only style log explained why: the description text is
+  a mid grey (0.588), Saira SemiBold 14, on a material called `widget-text-alpha-5x`, with no outline
+  or shadow at all -- so the glow was the material amplifying a bright colour, not an effect to be
+  cloned or removed. The line now keeps the description's own colour, re-read on every hover, and
+  only the word *Anomaly:* is gold.
+- *Guessing at a UI you cannot see is expensive.* Each wrong theory cost Paul a quit, an install and
+  a relaunch. The two once-only log lines -- what id arrived, what the text actually is -- ended
+  both arguments in one run each, and they stay in the release: they are exactly what a bug report
+  from a different resolution or UI scale will need.
 
 ### Candidate for 1.0: the visit
 
@@ -1107,9 +1135,45 @@ reason.
 Not the default for a reason worth keeping: a number that changes because of a setting elsewhere
 is confusing even when it is right, and this one has had no play at all. It earns a default by
 being used, or it goes.
-## What 0.5 should be
+## What 0.5 was
 
-Mostly decided by what 0.4 left behind rather than by what is next on the wishlist.
+Packaged 19 Sep 2026, and the last release before 1.0. The plan below was written before any of it
+was built and is kept as written, because how it went differs from how it was meant to go.
+
+**What shipped.** Both halves of disclosure -- the research announcement and `Marker` mode -- and
+the rules version, which ended up as a setting rather than a record. Then four things that were
+not in the plan and came out of Paul playing a fresh run: the anomaly line in the item tooltip;
+`HomePlanetNeverAnomalous`, the old rule made visible and switchable; `AnomalyChancePercent = Seed`
+in place of a bare `-1`; and the experimental `MultiplierFromCombatSettings`. The mod also now
+refuses the main menu's demo galaxy, which nobody had noticed it running in. `install.ps1` got its
+guard against a Gale-managed copy. None of it moves a planet: the golden file for rules version 1
+is untouched, which was the one promise 0.5 had to keep.
+
+**What the announcement taught**, since it took more runs than everything else put together and
+none of it was about deciding what to say:
+
+- It fired and nobody saw it. `UIRealtimeTip.Popup` returns early while the game UI is inactive,
+  and technologies complete during loading and behind menus. Announcements now queue and are
+  released one at a time only when the game is running, unpaused, loaded, and the UI can draw.
+- Spacing them per technology did nothing, because every technology started its own clock. One
+  global queue, capped at five with a summary line for the overflow.
+- The game's tips appear at the cursor and burn their lifetime at two thirds a second. A second and
+  a half is not long enough to read a planet name. Six seconds, placed under the game's own
+  "Research complete" notice, larger, in gold.
+- `NotifyTechUnlock` is reached from the lab research path under a lock. In play it has only ever
+  been observed on the main thread; the handoff to the UI update is kept anyway, because being
+  wrong about that once would be a crash in somebody else's game.
+- "Did it fire?" could not be answered from play: most technologies unlock no recipe, and about one
+  recipe in three is absent from any galaxy, so silence is usually correct. `TestAnnouncement`
+  exists because of that, and so does the log line for every completed technology.
+
+**The open question at the bottom of this section is closed.** ×10 stays the default and the README
+stops defending it: the multiplier is the player's dial. See *The multiplier is not a number, it is
+a price* -- the two players at ×3 and the author at ×10 were answering different questions, and the
+experimental combat-derived multiplier is the hedge for galaxies where the price is not being paid.
+
+What follows is the plan as it stood. Mostly decided by what 0.4 left behind rather than by what
+is next on the wishlist.
 
 **Finish disclosure. Both halves.** 0.4 hides anomalies whose recipe is not researched, and the
 first galaxy to run it hid 31 -- overwhelmingly military, at the exact moment the player had
@@ -1159,8 +1223,10 @@ since 0.1, has therefore always meant "the game has scanned it", which is broade
 been there". Consistent with what the README says -- "scan or visit" -- but worth knowing when a
 far planet's label appears before anyone has flown anywhere.
 
-**Version pinning, because 1.0 depends on it.** Recording which generator version a galaxy was
-created under is the one thing that genuinely needs saving. It is also the thing that makes *The
+**Version pinning, because 1.0 depends on it.** (The original argument, from before it was built;
+it shipped as a setting rather than a record -- see above -- but the reasoning for *why first* still
+holds.) Recording which generator version a galaxy was created under is the one thing that
+genuinely needs saving. It is also the thing that makes *The
 one re-roll* a choice rather than an imposition: with it, an existing save can keep its anomalies
 through a deliberate generation change, and only new galaxies take the new rules. Without it, 1.0
 must scramble every galaxy that exists. It has to land first, and 0.5 is where it fits.
@@ -1168,7 +1234,7 @@ must scramble every galaxy that exists. It has to land first, and 0.5 is where i
 **Small, and it pays for itself:** `install.ps1` should refuse when a Gale-managed copy of the same
 `BepInPlugin` GUID is present, rather than producing a silent conflict where BepInEx loads one and
 refuses the other without saying which. That becomes a live hazard the moment 0.4.0 is on
-Thunderstore and installable into the profile being developed against.
+Thunderstore and installable into the profile being developed against. Done in 0.5.
 
 **Not 0.5, and why:**
 
@@ -1216,7 +1282,15 @@ This is a sequencing hypothesis, not a commitment:
   pairing, if it remains legible.
 - **v0.4 — Discovery experiment:** progressive disclosure. Shipped, in the form of hiding anomalies
   until their recipe is researched; the beacon/probe half remains unbuilt and unneeded so far.
-- **v0.5+ — Stateful experiment:** one awakening or commitment mechanic with explicit save semantics.
+- **v0.5 — Finish disclosure:** shipped. Marker mode, the research announcement, the item tooltip,
+  and the rules-version setting that lets 1.0 change generation without moving anyone's galaxy. The
+  last release before 1.0. See *What 0.5 was*.
+- **v1.0 — The one re-roll:** rules version 2, everything that moves planets, asked for once: no
+  duplicate recipes within a system, varied multipliers, research cubes, recipes with a by-product,
+  and a weighted home draw for the early game. Alongside it, outside the game, the seed searcher.
+  Existing installs keep rules version 1 until they ask for the new ones.
+- **Later — Stateful experiment:** one awakening or commitment mechanic with explicit save
+  semantics. The storm is the current candidate.
 
 Version numbers may change. The dependency order matters more than the labels.
 

@@ -34,12 +34,14 @@ stays put.
 **Hover an item and its tooltip tells you where it is cheap.** In the replicator, your inventory,
 the build menu -- anywhere the game shows an item tooltip -- there is now a line naming the worlds
 you know of that make it ten times over: *Anomaly: Copper Ingot ×10 on BatenKaitos I*. Where an
-item has more than one recipe, one line each.
+item has more than one recipe, one line each; in the replicator's recipe grid, where you hover a
+recipe rather than an item, the line for that one.
 
 *Why:* every other surface tells you about a place. This is the first that answers the question
 you are actually asking, at the moment you ask it -- you are holding the thing, deciding where to
 make it. It follows the same rules as the star map, so it never tells you anything you could not
 already find by looking; it just sorts it by item instead of by system.
+
 **Finish a technology and the galaxy tells you where it is already cheap.** Research Antimatter
 Capsule, and the mod mentions that Iclarkrav I -- a world you scanned twenty hours ago and forgot --
 makes them ten at a time.
@@ -328,6 +330,11 @@ anomalous, drawn from what you can actually build early, would change that. `Hom
 **Recipes with a by-product.** Antimatter and plasma refining are excluded only because hydrogen
 falls out alongside. The single-output rule is standing in for "one clear product", and those two
 are where it comes apart.
+
+**A seed searcher.** A web page, outside the game: put in a seed and see its anomalies before you
+commit forty hours to it, or search for seeds where something you can build early is within reach
+of home. It takes a long time in game to learn what a galaxy gave you, and the first hours are
+where that hurts most.
 
 ## Further out
 

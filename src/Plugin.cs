@@ -79,10 +79,11 @@ namespace PlanetaryAnomalies
 
             // The production hook only fires once a planet has a factory to tick, which does not
             // happen until something is built there -- not merely when a save is loaded.
-            Log.LogInfo("Patched PlanetFactory.BeforeGameTick() for production, and " +
-                        "UIPlanetDetail, UIAssemblerWindow and the star map to disclose " +
-                        "anomalies in the planet panel, on the machine, and on star map planet and star labels. " +
-                        "Idle until a planet has a factory (i.e. until something is built).");
+            Log.LogInfo("Patched PlanetFactory.BeforeGameTick() for production; UIPlanetDetail, " +
+                        "UIAssemblerWindow, the star map and UIItemTip to disclose anomalies in the planet " +
+                        "panel, on the machine, on star map planet and star labels, and in item tooltips; " +
+                        "and GameHistoryData.NotifyTechUnlock to announce them when research completes. " +
+                        "Production is idle until a planet has a factory (i.e. until something is built).");
         }
 
         private void BindConfig()
