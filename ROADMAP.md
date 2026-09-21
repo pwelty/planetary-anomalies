@@ -1158,8 +1158,25 @@ none of it was about deciding what to say:
 - Spacing them per technology did nothing, because every technology started its own clock. One
   global queue, capped at five with a summary line for the overflow.
 - The game's tips appear at the cursor and burn their lifetime at two thirds a second. A second and
-  a half is not long enough to read a planet name. Six seconds, placed under the game's own
-  "Research complete" notice, larger, in gold.
+  a half is not long enough to read a planet name. So: six seconds, under the game's own "Research
+  complete" notice, larger, in gold -- and **that was wrong twice over, and stayed wrong for a
+  week** (below).
+- *Longer lifetime is invisible.* The fix was `lifeTime = 4.0` to last six seconds. But
+  `UIRealtimeTip.Update` sets a tip's width to `sqrt(clamp01(0.2 + 7 x (1 - lifeTime)))` -- a
+  pop-in that expects lifeTime to start at 1 -- so at 4.0 the width is zero for the first four and a
+  half seconds. The player got the last second and a half, at the cursor: "working, but still really
+  hard to see". That was the tail of a six-second tip, mistaken for a display problem.
+- *The drift was 40 times too big.* `InvokeRealtimeTip` multiplies its drift argument by 40. It was
+  passed 6, believing it was pixels per second, so the tip flew up the screen at 240 a second while
+  its width was still zero. From then on nothing at all could be seen, on two consecutive test runs,
+  and the log said "shown on screen" both times. That line has only ever meant "the game created a
+  tip and it is active". Two runs were put down to timing -- the second after the test was delayed
+  eight seconds so Paul would be looking -- before the IL of `Update` was read, which took ten
+  minutes and should have come first.
+- Now: `lifeTime` is *pinned* at 0.8 (full width, fully opaque) while the announcement is read, then
+  released to burn down and fade as the game intends; drift is zero; and the position it lands at is
+  logged in screen pixels, once, because "on screen" is a rectangle and not a boolean. verify.ps1
+  asserts the width formula, which is what the 0.8 was derived from.
 - `NotifyTechUnlock` is reached from the lab research path under a lock. In play it has only ever
   been observed on the main thread; the handoff to the UI update is kept anyway, because being
   wrong about that once would be a crash in somebody else's game.

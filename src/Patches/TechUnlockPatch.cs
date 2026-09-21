@@ -35,8 +35,9 @@ namespace PlanetaryAnomalies
     /// from UIGeneralTips._OnUpdate, which UIGame drives every frame the tip layer is open. While the
     /// star map is up the tip layer is closed, and announcements simply wait until you leave it.
     ///
-    /// The game's tip lasts 1.5 seconds, unreadable for a sentence, so each announcement is
-    /// lengthened after the game creates it.
+    /// The game's tip lasts 1.5 seconds, unreadable for a sentence, so each announcement is held on
+    /// screen after the game creates it. Held, not given a longer lifetime: see HoldLifetime for why
+    /// the obvious way makes it invisible.
     ///
     /// Only planets already scanned are named. Announcing anomalies on worlds the player has never
     /// visited would be the answer key with extra steps.
@@ -119,6 +120,7 @@ namespace PlanetaryAnomalies
             }
 
             _history = null;
+            _geometryLogged = false;
             ForgetGame();
         }
 
@@ -218,6 +220,7 @@ namespace PlanetaryAnomalies
                 }
 
                 RestoreReusedTips();
+                HoldTips();
                 NoticeNewGame();
                 DrainCompleted();
                 QueueTestIfAsked();
@@ -448,17 +451,44 @@ namespace PlanetaryAnomalies
         /// </summary>
         private const float ReadSeconds = 6f;
 
+        /// <summary>
+        /// The lifeTime an announcement is held at while it is being read.
+        ///
+        /// The obvious way to make a tip last longer is a bigger lifeTime, and that was the first
+        /// version here: 4.0, for six seconds. It made the tip invisible for its first four and a
+        /// half. UIRealtimeTip.Update sets a tip's width to sqrt(clamp01(0.2 + 7 x (1 - lifeTime))),
+        /// a pop-in that expects lifeTime to start at 1, so anything above about 1.03 is a width of
+        /// zero. Paul saw only the last second and a half and called it "really hard to see" -- and
+        /// once the drift below was also wrong, saw nothing at all, twice, while the log said
+        /// "shown on screen" both times.
+        ///
+        /// So lifeTime is pinned to a value that is already full width (0.886 or less) and fully
+        /// opaque (above 1/9) for as long as the announcement is being read, then released to burn
+        /// down and fade the way the game intends.
+        /// </summary>
+        private const float HoldLifetime = 0.8f;
+
+        /// <summary>Below this lifeTime the text starts to fade: alpha is sqrt(lifeTime) x 3, clamped.</summary>
+        private const float FullAlphaFloor = 1f / 9f;
+
+        /// <summary>The rate UIRealtimeTip.Update burns lifeTime at. verify.ps1 asserts it still is.</summary>
+        private const float LifeDecayPerSecond = 0.6666666f;
+
+        /// <summary>
+        /// How long lifeTime is pinned, so that the pinned time plus the natural burn-down from
+        /// <see cref="HoldLifetime"/> to where the fade begins adds up to <see cref="ReadSeconds"/>.
+        /// </summary>
+        private const float HoldSeconds = ReadSeconds - (HoldLifetime - FullAlphaFloor) / LifeDecayPerSecond;
+
         /// <summary>Pause between queued announcements, so one clearly ends before the next begins.</summary>
         private const float GapSeconds = 0.5f;
 
         /// <summary>
-        /// Upward drift in pixels per second. The game's 40 suits a tip that lives 1.5 seconds; over
-        /// six it would carry the text 240 pixels up the screen while you were reading it.
+        /// The drift argument of InvokeRealtimeTip, which the game multiplies by 40 to get pixels per
+        /// second. Zero: an announcement being read should stay where it was put. This was 6, on the
+        /// belief that it was already pixels per second, so tips flew up the screen at 240 a second.
         /// </summary>
-        private const float DriftPixelsPerSecond = 6f;
-
-        /// <summary>The rate UIRealtimeTip.Update burns lifeTime at. verify.ps1 asserts it still is.</summary>
-        private const float LifeDecayPerSecond = 0.6666666f;
+        private const float Drift = 0f;
 
         /// <summary>
         /// Where the announcement sits relative to the game's own "Research complete" notice, in
@@ -496,6 +526,14 @@ namespace PlanetaryAnomalies
             internal UnityEngine.TextAnchor Alignment;
             internal UnityEngine.Vector2 Pivot;
             internal string Message;
+
+            /// <summary>Where the announcement was asked to appear, for the geometry log.</summary>
+            internal UnityEngine.Vector2 Requested;
+
+            /// <summary>realtimeSinceStartup when it was raised, and when to stop pinning its lifeTime.</summary>
+            internal float ShownAt;
+            internal float HoldUntil;
+            internal bool GeometryLogged;
         }
 
         private static readonly Dictionary<UIRealtimeTip, TipStyle> _styled = new Dictionary<UIRealtimeTip, TipStyle>();
@@ -519,9 +557,10 @@ namespace PlanetaryAnomalies
                     return;
                 }
 
-                tips.InvokeRealtimeTip(message, AnnouncementPosition(tips), DriftPixelsPerSecond, 0f);
+                UnityEngine.Vector2 position = AnnouncementPosition(tips);
+                tips.InvokeRealtimeTip(message, position, Drift, 0f);
 
-                if (Linger(tips, message))
+                if (Linger(tips, message, position))
                 {
                     Plugin.Log.LogInfo("Shown on screen: " + message);
                 }
@@ -580,7 +619,7 @@ namespace PlanetaryAnomalies
         /// lifeTime and the tip list are not public and are reached by name, which the compiler
         /// cannot check, so verify.ps1 asserts both.
         /// </summary>
-        private static bool Linger(UIGeneralTips tips, string message)
+        private static bool Linger(UIGeneralTips tips, string message, UnityEngine.Vector2 requested)
         {
             if (_realtimeTipsField == null)
             {
@@ -611,15 +650,15 @@ namespace PlanetaryAnomalies
                     continue;
                 }
 
-                _lifeTimeField.SetValue(tip, ReadSeconds * LifeDecayPerSecond);
-                Style(tip, tips.realtimeTipPrefab, message);
+                _lifeTimeField.SetValue(tip, HoldLifetime);
+                Style(tip, tips.realtimeTipPrefab, message, requested);
                 return true;
             }
 
             return false;
         }
 
-        private static void Style(UIRealtimeTip tip, UIRealtimeTip prefab, string message)
+        private static void Style(UIRealtimeTip tip, UIRealtimeTip prefab, string message, UnityEngine.Vector2 requested)
         {
             TipStyle original;
             if (!_styled.TryGetValue(tip, out original))
@@ -632,6 +671,12 @@ namespace PlanetaryAnomalies
                 _styled[tip] = original;
             }
             original.Message = message;
+
+            float now = UnityEngine.Time.realtimeSinceStartup;
+            original.Requested = requested;
+            original.ShownAt = now;
+            original.HoldUntil = now + HoldSeconds;
+            original.GeometryLogged = false;
 
             // Sized from the prefab, never from the tip's current value: a reused tip may already
             // carry a previous boost, and boosts must not stack.
@@ -649,6 +694,104 @@ namespace PlanetaryAnomalies
             if (tip.rectTrans != null)
             {
                 tip.rectTrans.pivot = new UnityEngine.Vector2(0.5f, 0.5f);
+            }
+        }
+
+        private static bool _geometryLogged;
+
+        /// <summary>
+        /// Every frame, for each of this mod's tips still being read: pin lifeTime at
+        /// <see cref="HoldLifetime"/> until the hold is over, and once, half a second in, write down
+        /// where the tip actually is on the screen.
+        ///
+        /// The second half exists because "shown on screen" in this log has only ever meant "the
+        /// game created a tip and it is active". It said so twice while nothing could be seen. What
+        /// the player sees is a rectangle in screen pixels, so that is what gets logged.
+        /// </summary>
+        private static void HoldTips()
+        {
+            if (_styled.Count == 0 || _lifeTimeField == null)
+            {
+                return;
+            }
+
+            float now = UnityEngine.Time.realtimeSinceStartup;
+            foreach (KeyValuePair<UIRealtimeTip, TipStyle> entry in _styled)
+            {
+                UIRealtimeTip tip = entry.Key;
+                TipStyle style = entry.Value;
+                if (tip == null || tip.textComp == null || !tip.gameObject.activeSelf)
+                {
+                    continue;
+                }
+
+                if (now < style.HoldUntil)
+                {
+                    _lifeTimeField.SetValue(tip, HoldLifetime);
+                }
+
+                if (!style.GeometryLogged && !_geometryLogged && now >= style.ShownAt + 0.5f)
+                {
+                    style.GeometryLogged = true;
+                    _geometryLogged = true;
+                    LogGeometry(tip, style);
+                }
+            }
+        }
+
+        /// <summary>Where an announcement really is, in screen pixels. Once per session.</summary>
+        private static void LogGeometry(UIRealtimeTip tip, TipStyle style)
+        {
+            try
+            {
+                UIRoot root = UIRoot.instance;
+                UIGeneralTips tips = (root != null && root.uiGame != null) ? root.uiGame.generalTips : null;
+
+                UnityEngine.RectTransform rect = tip.rectTrans;
+                UnityEngine.Canvas canvas = tip.GetComponentInParent<UnityEngine.Canvas>();
+                UnityEngine.Camera camera = (canvas != null && canvas.renderMode != UnityEngine.RenderMode.ScreenSpaceOverlay)
+                    ? canvas.worldCamera
+                    : null;
+
+                UnityEngine.Vector3[] corners = new UnityEngine.Vector3[4];
+                rect.GetWorldCorners(corners);
+                UnityEngine.Vector2 low = UnityEngine.RectTransformUtility.WorldToScreenPoint(camera, corners[0]);
+                UnityEngine.Vector2 high = UnityEngine.RectTransformUtility.WorldToScreenPoint(camera, corners[2]);
+
+                int width = UnityEngine.Screen.width;
+                int height = UnityEngine.Screen.height;
+                bool onScreen = high.x > 0f && low.x < width && high.y > 0f && low.y < height;
+
+                string notice = "no notice";
+                string panel = "no panel";
+                bool inPanel = false;
+                if (tips != null)
+                {
+                    if (tips.researchCompleteText != null)
+                    {
+                        UnityEngine.Vector2 at = UnityEngine.RectTransformUtility.WorldToScreenPoint(
+                            camera, tips.researchCompleteText.rectTransform.position);
+                        notice = "notice at " + at + (tips.researchCompleteText.gameObject.activeInHierarchy ? " (showing)" : " (not showing)");
+                    }
+
+                    if (tips.tipPanelRect != null)
+                    {
+                        panel = "tip panel " + tips.tipPanelRect.rect.size;
+                        inPanel = rect.parent == tips.tipPanelRect;
+                    }
+                }
+
+                Plugin.Log.LogInfo(
+                    "Announcement geometry (once): asked for " + style.Requested + ", tip is at " + rect.anchoredPosition +
+                    ", scale " + rect.localScale + ", size " + rect.rect.size + ", pivot " + rect.pivot +
+                    ", anchors " + rect.anchorMin + " to " + rect.anchorMax + "; on screen from " + low + " to " + high +
+                    " of " + width + "x" + height + (onScreen ? " -- INSIDE the screen" : " -- OUTSIDE the screen") +
+                    "; " + notice + "; " + panel + "; parent is the tip panel: " + inPanel +
+                    "; text alpha " + tip.textComp.color.a + ", size " + tip.textComp.fontSize + ".");
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogWarning("Could not measure the announcement on screen: " + e.Message);
             }
         }
 

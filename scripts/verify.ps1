@@ -608,6 +608,26 @@ if (-not $decay) {
     Write-Host "OK  UIRealtimeTip.Update still burns lifeTime at 2/3 per second (announcement duration)"
 }
 
+# The announcement pins lifeTime at 0.8, which is only right while Update derives a tip's width from
+# lifeTime as sqrt(clamp01(0.2 + 7 x (1 - lifeTime))): full width at 0.886 or below, zero above ~1.03.
+# Extending a tip by raising lifeTime instead made it invisible for four and a half seconds and went
+# unnoticed for a week, because the log said it was shown. If the game changes this, 0.8 must be
+# re-derived, and it is worth knowing before a player finds out.
+$hasScale = $false
+if ($tipUpdate -and $tipUpdate.HasBody) {
+    $consts = @($tipUpdate.Body.Instructions | Where-Object { $_.OpCode.Name -eq 'ldc.r4' } | ForEach-Object { [double]$_.Operand })
+    $callsScale = @($tipUpdate.Body.Instructions | Where-Object { $_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.Name -eq 'set_localScale' }).Count -gt 0
+    $callsSqrt = @($tipUpdate.Body.Instructions | Where-Object { $_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.Name -eq 'Sqrt' }).Count -gt 0
+    $has7 = @($consts | Where-Object { [Math]::Abs($_ - 7.0) -lt 0.0001 }).Count -gt 0
+    $has02 = @($consts | Where-Object { [Math]::Abs($_ - 0.2) -lt 0.0001 }).Count -gt 0
+    $hasScale = $callsScale -and $callsSqrt -and $has7 -and $has02
+}
+if (-not $hasScale) {
+    $failures.Add("UIRealtimeTip.Update no longer sets its width as sqrt(clamp01(0.2 + 7 x (1 - lifeTime))); the announcement's HoldLifetime of 0.8 was derived from that and must be re-checked.")
+} else {
+    Write-Host "OK  UIRealtimeTip.Update still derives width from lifeTime (announcement holds it at 0.8 for full width)"
+}
+
 $gameMain = $gameAsm.MainModule.GetType('GameMain')
 $historyProp = $gameMain.Properties | Where-Object {
     $_.Name -eq 'history' -and $_.GetMethod -and $_.GetMethod.IsStatic -and $_.GetMethod.IsPublic
