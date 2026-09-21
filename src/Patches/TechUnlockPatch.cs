@@ -97,6 +97,20 @@ namespace PlanetaryAnomalies
         private static float _nextShowTime;
         private static bool _testQueued;
 
+        /// <summary>When the test announcement may be queued; negative until the UI first can draw.</summary>
+        private static float _testReadyAt = -1f;
+
+        /// <summary>
+        /// How long after the game first becomes ready the test announcement waits.
+        ///
+        /// The first version fired on the first frame a tip could be drawn, which is the frame the
+        /// load finishes -- while the player is still watching the fade-in, not the corner of the
+        /// screen. Paul launched to check it and did not see it, and the log showed it "shown on
+        /// screen" at the very end of the load burst. A feature whose documented job is "check that
+        /// announcements work" cannot fire while nobody is looking.
+        /// </summary>
+        private const float TestDelaySeconds = 8f;
+
         internal static void Reset()
         {
             lock (_handoffLock)
@@ -115,6 +129,7 @@ namespace PlanetaryAnomalies
             _overflow = 0;
             _nextShowTime = 0f;
             _testQueued = false;
+            _testReadyAt = -1f;
         }
 
         /// <summary>
@@ -321,7 +336,7 @@ namespace PlanetaryAnomalies
             // Without it, a session where research produced no anomalies looked identical in the
             // log to one where announcements were broken -- and three rounds of guessing followed.
             Plugin.Log.LogInfo(
-                "Research completed: " + techName + " -- " + recipeCount + " recipe(s), " +
+                "Research completed: " + techName + " (tech " + entry.TechId + ") -- " + recipeCount + " recipe(s), " +
                 (enabled ? announced + " announced" : "announcements off") +
                 " (reported on the " + (entry.OnMainThread ? "main" : "a worker") + " thread).");
         }
@@ -370,8 +385,10 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>
-        /// With TestAnnouncement on, queues one announcement once the game is up, so the whole
-        /// display path can be checked in seconds instead of waiting for research to finish.
+        /// With TestAnnouncement on, queues one announcement a few seconds after the game is up, so
+        /// the whole display path can be checked in seconds instead of waiting for research to
+        /// finish. The wait is <see cref="TestDelaySeconds"/>, counted from the first moment a tip
+        /// could be drawn -- see there for why it is not immediate.
         /// </summary>
         private static void QueueTestIfAsked()
         {
@@ -381,6 +398,18 @@ namespace PlanetaryAnomalies
             }
 
             if (!CanShow())
+            {
+                return;
+            }
+
+            float now = UnityEngine.Time.realtimeSinceStartup;
+            if (_testReadyAt < 0f)
+            {
+                _testReadyAt = now + TestDelaySeconds;
+                return;
+            }
+
+            if (now < _testReadyAt)
             {
                 return;
             }

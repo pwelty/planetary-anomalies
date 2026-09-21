@@ -297,7 +297,7 @@ namespace PlanetaryAnomalies
                 "Diagnostics",
                 "TestAnnouncement",
                 false,
-                "Shows one test announcement a moment after a save loads, through exactly the path a\n" +
+                "Shows one test announcement about eight seconds after a save loads, through exactly the path a\n" +
                 "real one takes. A quick way to check announcements work on your setup without\n" +
                 "waiting for research to finish. The log records whether it reached the screen.\n" +
                 "Turn it off again afterwards.");

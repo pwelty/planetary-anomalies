@@ -13,8 +13,8 @@
   its recipes ten times over. Research Antimatter Capsule and it tells you Iclarkrav I has been
   making them ×10 the whole time. Shown in gold just under the game's own "Research complete"
   notice for about six seconds, and written to the log. `AnnounceOnResearch = false` turns it
-  off, and `TestAnnouncement = true` shows one straight away so you can check they work on your
-  setup.
+  off, and `TestAnnouncement = true` shows one about eight seconds after a save loads -- long
+  enough to be looking at the screen -- so you can check they work on your setup.
 
   This is the other half of hiding unresearched anomalies. On its own, hiding is a subtraction --
   information you had in 0.3 and lost in 0.4. With this, the mod stays quiet while a recipe means

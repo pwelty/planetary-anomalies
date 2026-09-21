@@ -274,7 +274,7 @@ Settings live in `BepInEx/config/com.planetaryanomalies.dsp.cfg` after the first
 | `AnnounceOnResearch` | `true` | When a technology completes, names any world you have already scanned that makes one of its recipes ten times over. Shown in gold just under the game's own "Research complete" notice for about six seconds, and always written to the log. Never names a planet you have not visited. |
 | `UnresearchedAnomalies` | `Hide` | What an anomaly says about itself before you have researched its recipe, everywhere it would appear. `Hide` says nothing. `Marker` shows the symbol without the name — somewhere to come back to. `Show` names everything, as in 0.3. Display only: generation is unchanged. |
 | `LogEveryAnomaly` | `false` | Writes every anomaly in the galaxy to the log, including planets you have never scanned. Spoils discovery on purpose; for troubleshooting. |
-| `TestAnnouncement` | `false` | Shows one test announcement a moment after a save loads, through the same path a real one takes -- a quick way to check announcements work on your setup without waiting for research. The log records whether it reached the screen. Turn it off afterwards. |
+| `TestAnnouncement` | `false` | Shows one test announcement about eight seconds after a save loads, through the same path a real one takes -- a quick way to check announcements work on your setup without waiting for research. The log records whether it reached the screen. Turn it off afterwards. |
 
 Changes take effect when a save is next loaded.
 
