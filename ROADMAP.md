@@ -1177,6 +1177,14 @@ none of it was about deciding what to say:
   released to burn down and fade as the game intends; drift is zero; and the position it lands at is
   logged in screen pixels, once, because "on screen" is a rectangle and not a boolean. verify.ps1
   asserts the width formula, which is what the 0.8 was derived from.
+
+**Confirmed in play, 22 Sep.** The geometry log put the tip on screen, full size, full opacity,
+under where the research notice would be. Paul: "ok saw it". Four rounds to get an announcement
+actually seen -- placement, then duration, then the two display bugs above -- against one round
+each for everything else built in 0.5. Worth remembering the shape of that: every earlier round
+read as plausible from the log, because "shown on screen" only ever meant the game had created an
+active tip. The fix was not a better guess; it was reading UIRealtimeTip.Update instead of guessing
+at what it did.
 - `NotifyTechUnlock` is reached from the lab research path under a lock. In play it has only ever
   been observed on the main thread; the handoff to the UI update is kept anyway, because being
   wrong about that once would be a crash in somebody else's game.
