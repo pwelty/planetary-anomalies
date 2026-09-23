@@ -1498,7 +1498,11 @@ Two things this taught.
 - *The baseline was lost to Steam by one minute.* The plan was to log the pool on 0.10.34, let Steam
   update, and diff. Steam updated in the background at 10:51; Paul launched at 10:52. The old pool
   was recovered instead as the new pool minus recipe 162, which three facts support: every 0.10.34
-  log counted 150, 0.10.35 counts 151, and the patch notes name one new recipe. The exact planet
+  log counted 150, 0.10.35 counts 151, and the patch notes name one new recipe. Then checked against
+  real data: the Anomaly Catalogue for seed 30853643, built from the mod's own log on 0.10.34 on 3
+  Sep, lists 148 anomalous planets, and ruleset 1 reproduces every one -- same planets, same recipe,
+  83 of them confirmed by recipe name as well as output, so no "(advanced)" variant was swapped. A
+  wrong or missing id would have moved at least one of those 148 or Paul's 127. None moved. The exact planet
   that moved was then computed with the mod's own generator, compiled outside the game -- 127
   planets checked, one changed -- which is the golden test's machinery earning its keep.
 - *The mod's hooks survived untouched.* All 68 of verify.ps1's checks passed on the new build before
