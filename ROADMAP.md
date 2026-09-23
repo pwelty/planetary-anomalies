@@ -1392,6 +1392,62 @@ family, on the same seam, with the same obligation to say so on the machine.
 **It pairs with the monolith.** A relic on the surface is a natural reason a place is strange. The
 monolith could be the Krell's -- see *Candidate for 1.0: the monolith*.
 
+### Candidate for 1.0: debuffs that bite -- the price on the thing you came for
+
+An idea for the list, recorded 23 Sep; not a decision. Paul, returning to something from much
+earlier. Two fragments were already here: Phase B lists *constraint/nerf* as a candidate effect, with
+the rule that a negative anomaly "is worthwhile only when it creates planning, tradeoffs, or
+character", and Phase C asks whether one planet should carry "one coherent personality containing a
+buff and a constraint".
+
+**The objection that shaped it.** The obvious pairing -- a buff on one recipe, a debuff on another,
+one story for both ("the lava here makes titanium glass easy, and cooks electronics") -- fails, and
+Paul said why: "paired buff and debuffs aren't a big deal because you can just avoid making something
+there." A debuff on an unrelated recipe costs nothing. It does not create a decision (feature test,
+2); it is decoration.
+
+**So a debuff has to hit something you cannot avoid there.** Three forms that do:
+
+1. *On the buff itself.* Paul's example, and the cleanest: **"x10 output but x5 inputs needed."** Per
+   machine it is still ten to one, so the world is still a concentration of production; per unit of
+   input it is only two to one, a real gain rather than a windfall; and it takes five times the
+   material shipped in, so belts, stations and supply become the bottleneck. *Create another
+   logistics problem, not free items*, built into the recipe.
+2. *On infrastructure you need anyway.* Using an anomaly means building a factory there, and every
+   factory needs power, belts, sorters and transport. "The ash sky here halves solar output"; "the
+   field here slows drones". The world is still worth using, and using it means solving power or
+   transport another way.
+3. *On the anomaly's own supply chain.* Titanium glass boosted, local titanium mining slowed: the
+   anomaly has to be fed from elsewhere, and one world becomes a small supply route.
+
+Forms 1 and 2 matter most. The point is that a debuff is not a recipe of its own; it is the *cost of
+using this place*.
+
+**It connects to three other threads.**
+
+- *The multiplier is a price.* Form 1 writes the price into the recipe instead of leaving it to
+  distance and the Dark Fog.
+- *Peaceful galaxies.* `MultiplierFromCombatSettings` lowers the multiplier to x3 when there is no Dark
+  Fog, because the defence cost is gone. Form 1 is a different answer: keep x10 output and bring the
+  cost back as hauling.
+- *Varied multipliers.* Output and input as a pair give range without arbitrary numbers -- x10 out, x1
+  in, the rare jackpot world; x10 out, x5 in, the common and logistics-heavy one.
+
+**Mechanics.** The same seam as everything else here. The machine's private `RecipeExecuteData`
+already scales `productCounts`; scaling `requireCounts` makes `UpdateNeeds` ask for five times as much,
+so inserters and logistics fetch it on their own. Forms 2 and 3 reach beyond assemblers -- power
+generation, drones, miners -- and would each need their own hook.
+
+**The rules to hold it to.**
+
+- *Known before you build.* Disclosed the way anomalies are, at scan, and never changing afterwards.
+  A penalty that appears under an existing factory reads as the game breaking (*Randomize the
+  strategic situation, not machine reliability*).
+- *Stated on the machine.* The window reads the prototype and would show vanilla inputs; a machine
+  asking for five times as much must say so, or it reads as a bug.
+- *A ruleset.* It changes what planets carry, so ruleset 3 at the earliest. Nobody on ruleset 1 or 2
+  ever gets one.
+
 ### The multiplier is not a number, it is a price
 
 Paul, asked whether ×10 was too high: *"it's generally a LOT of work to set stuff up. For me anyway.
