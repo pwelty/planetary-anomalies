@@ -988,6 +988,10 @@ Open questions: guaranteed or merely likelier; whether it should carry a smaller
 the rest; and whether `HomePlanetNeverAnomalous = false` should switch to the weighted draw at 1.0
 rather than keeping the uniform one.
 
+**A different shape of answer, recorded 23 Sep:** an industrial district on the home planet, marked
+by a monolith. It gives the first hour a layout decision rather than a better home -- the tension
+above, resolved the other way. See *Candidate for 1.0: the monolith*.
+
 **Third data point, and the sharpest.** Paul, after a long fresh run at a forced 60%: "I got no
 good nearby anomalies after hours and hours of play. It takes a long time to know what you get."
 
@@ -1104,6 +1108,73 @@ has nothing to say.
 Against it, honestly: it is thirty minutes of free items at home, which *Create another logistics
 problem, not free items* would normally refuse. What answers that is the purpose -- it is a
 demonstration whose entire point is to send you outward, and it takes itself away.
+
+### Candidate for 1.0: the monolith -- an industrial district at home
+
+An idea, recorded 23 Sep, not a decision. Paul, turning over the early game: "I was even wondering
+if we could 'fence' parts of the homeworld for 'industrial district'. That would provide a
+home-based mini-version of the galaxy-based point of the mod." And then: "could we place a beacon?
+and call it a monolith or some such? and it gives random bonuses or something on homeworld?" His
+framing of where it stands: "this is just what I was wondering for now."
+
+**Why it is promising.** Every other early-game answer so far makes home *better* or points *away*
+from it. A district makes home a *decision*. Out in the galaxy, anomalies decide where production
+belongs; a district says the same about your own planet, from minute one, with no travel. It is
+*Location must matter* at the one scale the first hours can reach.
+
+**The design move that makes it work: the district is not on the ore.** A super vein on its own --
+the other half of Paul's thought -- is the free-items version: you would mine that vein anyway, so
+it is a buff with no decision attached. A district a few hundred metres from your starting copper
+means belting ore to it. That is the galaxy-scale trade shrunk to hour one: light-years and
+logistics vessels become a belt line and some space planning, with the tools a player has that
+early. *Create another logistics problem, not free items*, satisfied by construction.
+
+**The monolith is the fence.** The obvious problem with a district is showing where it is --
+drawing a ring on a planet's surface is real rendering work, and finding the edge by placing test
+smelters is the chore *Protect curiosity from chores* forbids. A tall object visible from across
+the planet answers "where" without drawing anything, and "within ~300 m of the monolith" reads at a
+glance. The exact edge still is not drawn; the machine window already says, per machine, whether
+the anomaly applies, which may be enough. The word *anomaly* stays on the effect (PRODUCT.md);
+*monolith* is only the object. Not "beacon": the game already has a `BeaconComponent`.
+
+**"Random bonuses" -- which kind.** Random once, decided by the seed, is what anomalies already are.
+Random while you play -- a bonus rerolling under a factory already built -- is the casino kind that
+*Randomize the strategic situation, not machine reliability* rules out; machines would seem to
+break for no reason. There is a version that gets the variety without the casino: **the storm lives
+on the monolith**. Its own bonus is fixed -- the district, always there. Now and then it
+*resonates* with a distant anomalous world and carries that world's recipe for a while too,
+announced by name; when that ends the base stays and only the extra fades, with the name of the
+world that has it for good. One object, three jobs: a place to build around, an event in time, and
+a pointer outward. See *Candidate for 1.0: the visit*.
+
+**Checked against the game, 23 Sep** -- enough to say it is buildable, not how:
+
+- Every machine's position is reachable: `entityPool[assembler.entityId].pos`. So "inside the
+  district" is one distance check when an anomaly attaches, on the seam production already has.
+- Veins carry positions, miners know which veins they cover, and the game already marks the
+  starting iron and copper clusters: `PlanetData.birthResourcePoint0` and `1`. A district placed
+  relative to those is derivable from the seed, so nothing is saved.
+- `PlanetData.bodyObject` is public, so a purely visual prop can ride on the surface and turn with
+  the planet. The canonical monolith is a black slab, which Unity makes with no art assets. Visual
+  only, recreated each load, means nothing in saves, no new dependency, and nothing left behind on
+  uninstall.
+
+**Open, and the first thing to spike:**
+
+- *Can a visual prop look like it belongs?* It probably has to borrow one of the game's materials;
+  a plain Unity default may render wrong. And the game's placement checks will not see it, so you
+  could build straight through it -- acceptable for a monolith, or not.
+- *How a player first learns it is there.* An announcement on landing, now that announcements are
+  proven to be seen, is the cheap answer.
+- *Which recipes it favours.* Early-buildable, sharing the filter the weighted home draw and the
+  storm both need.
+- *Whether it replaces the weighted home draw or sits beside it.* A better home "quietly removes
+  the reason to leave"; a district gives home a decision instead. Undecided.
+
+**Versioning.** It changes the home planet of every existing galaxy, and a rules-v1 galaxy was
+promised to stay exactly as it is. So rules v2, in the 1.0 bundle. If it is built at all, two
+slices, per *Add one variable at a time*: the static monolith and its district first; the resonance
+only if the first slice earns it in play.
 
 ### The multiplier is not a number, it is a price
 
