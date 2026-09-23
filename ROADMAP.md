@@ -1376,6 +1376,19 @@ would put the mod's items into saves and end "nothing is written to your saves".
 done, the bounded form is a closed loop -- A feeds exactly one recipe for something that already
 exists -- taken on knowingly. Krell worlds get most of the story at none of that cost.
 
+**The natural version, and probably the default.** Paul, a moment later: "could even just be 'the
+excessive lava on this planet makes it possible to create titanium glass from just glass' or
+something." Most worlds do not need a lost civilisation -- the planet's own nature is the story: lava
+worlds melt things, ocean worlds have water to spare, ice worlds run cold. That is cheaper to write,
+more plausible, and it ties straight into planet-type personalities (*Candidates for 1.0: four
+suggestions*, 3): a lava world *explains* its anomaly, so a player can half-guess what one might do
+before scanning it. Krell worlds become the rare, strange end of the same idea rather than the whole
+of it.
+
+Mechanically the example is simpler still: titanium glass normally takes glass, titanium and water,
+so "from just glass" is the same recipe with ingredients removed -- the Phase B *input efficiency*
+family, on the same seam, with the same obligation to say so on the machine.
+
 **It pairs with the monolith.** A relic on the surface is a natural reason a place is strange. The
 monolith could be the Krell's -- see *Candidate for 1.0: the monolith*.
 
