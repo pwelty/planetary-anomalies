@@ -39,7 +39,7 @@ travel: someone you hand a save to will see that galaxy under whatever their own
 
 ## What's new in 0.5.1
 
-**A hotfix for Dyson Sphere Program 0.10.35.** Nothing else changes.
+**A small fix for Dyson Sphere Program 0.10.35.** Nothing else changes.
 
 **Your galaxy survives the game's update.** Dyson Sphere Program 0.10.35 added a recipe, Dark Fog
 Lens, and under 0.5.0 it quietly took a planet or two. 0.5.1 puts them back, and ruleset 1 now fixes
