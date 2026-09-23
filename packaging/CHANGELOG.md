@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0 (in development)
+
+- Nothing yet.
+
 ## 0.5.1
 
 **Handles Dark Fog Lens, the recipe Dyson Sphere Program 0.10.35 just added.** By default it stays
