@@ -1327,6 +1327,58 @@ impossible has not been asked.
 researched" and ignores the setting (`AnomalyManager.cs`, the `SURVEY` line). Log only; nothing on
 screen is affected. Fix with the rest of 1.0, not as a release of its own.
 
+### Candidate for 1.0: Krell worlds -- an existing item from surprising inputs
+
+An idea for the list, recorded 23 Sep; not a decision. Paul, after a detour through new recipes and
+new items: "on the 'krell world', you can get something like blue cubes from steel. or whatever. and
+that's because they are a super advanced science culture." The reference is *Forbidden Planet*: the
+Krell machinery is why that world can make what no other can, and the story is the explanation.
+
+**What it is.** On one world, a familiar item comes from inputs that have no business making it --
+and the planet's story says why. Not a new item, and not a better number: a shortcut through the
+production tree that exists only there. The reward is the chain you get to skip; the price is
+still the mod's price -- ship steel in, ship the result out, hold the world.
+
+**Why it is on-script.** It was nearly filed under "belongs in another mod", on cost. Paul's
+correction: *Make places tell industrial stories* asks for anomalies that feel like "properties or
+histories of worlds", and a planet whose history explains an impossible recipe is that principle at
+full strength. It passes the feature test on place, decision and story (1, 2, 6), and on
+understanding (4) exactly as far as the machine window tells the truth.
+
+**How it could be built.** It is the Phase B *substitution* idea (and the Against the Storm framing
+behind it) taken further: substitution swaps one ingredient, a Krell world replaces the whole input
+list. The seam is the same one. Affected machines already get a private `RecipeExecuteData`, and
+`AssemblerComponent.UpdateNeeds` derives what inserters and logistics fetch from its `requires` --
+so a machine running the ordinary recipe on that world would ask for steel on its own. No new item,
+no new proto, nothing written to saves.
+
+**The costs to hold.**
+
+- *The machine window must say so.* It reads the prototype, so it lists the vanilla ingredients
+  while the machine wants steel. That has to be stated plainly on the machine, with its line of
+  story -- "the Krell refineries here make these from steel" -- or it reads as a broken machine.
+  Output multiplication forgives a UI that says less than the truth; input replacement does not.
+- *Blue cubes specifically are lab recipes.* Matrices are made in labs, which is not the assembler
+  machinery the mod hooks, and not yet inspected; they are also the research-cube question already
+  waiting for ruleset 3. A first version would use assembler-made items and keep cubes as the
+  showpiece for later.
+- *Plausible, not random.* The first version of this idea was "random new recipes". Random pairings
+  read as noise; the story is what makes a strange recipe legible, so each Krell recipe wants one.
+- *Rare.* Uneven value is the point, and a shortcut this large should be a find, not a feature of
+  every system.
+- *Versioning.* A new kind of anomaly changes what planets carry, so it belongs to a ruleset: 3 at
+  the earliest.
+
+**Where the other half went.** The same conversation raised genuinely new items -- x + y = A, where A
+exists nowhere else. It fits the story principle too, but it is not one bounded slice: A needs an
+id, an icon, a name and a purpose, every use grows the tree, and A sitting in chests and on belts
+would put the mod's items into saves and end "nothing is written to your saves". If it is ever
+done, the bounded form is a closed loop -- A feeds exactly one recipe for something that already
+exists -- taken on knowingly. Krell worlds get most of the story at none of that cost.
+
+**It pairs with the monolith.** A relic on the surface is a natural reason a place is strange. The
+monolith could be the Krell's -- see *Candidate for 1.0: the monolith*.
+
 ### The multiplier is not a number, it is a price
 
 Paul, asked whether ×10 was too high: *"it's generally a LOT of work to set stuff up. For me anyway.
