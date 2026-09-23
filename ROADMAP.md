@@ -176,16 +176,28 @@ Distribution notes from the same survey, useful for the duplicates question:
 - Any specific recipe has roughly a 37% chance of being absent from a galaxy this size. Absence is
   ordinary, not a bug -- worth remembering when someone reports "my galaxy has no X".
 
-### Downloads, as of 2026-09-19
+### Downloads, as of 2026-09-23
 
 | Version | Published | Downloads | Notes |
 | --- | --- | --- | --- |
-| 0.1.0 | 27 Aug | 69 | |
-| 0.2.0 | 29 Aug | 21 | superseded by 0.3.0 within 23 minutes |
-| 0.3.0 | 29 Aug | 141 | eleven days as the current version |
-| 0.4.0 | 9 Sep | 121 | 48 in its first day, 67 by the second, 94 by 14 Sep, 121 by 19 Sep |
+| 0.1.0 | 27 Aug | 70 | |
+| 0.2.0 | 29 Aug | 27 | superseded by 0.3.0 within 23 minutes |
+| 0.3.0 | 29 Aug | 143 | eleven days as the current version |
+| 0.4.0 | 9 Sep | 138 | 48 in its first day, 67 by the second, 94 by 14 Sep, 121 by 19 Sep, 138 by 23 Sep |
+| 0.5.0 | 22 Sep | 36 | about a day in |
 
-352 in total on 19 Sep, the day 0.5.0 was packaged. 0.4.0 settled at about five a day once the
+414 in total on 23 Sep, a day after 0.5.0 went up. Its first day was 36 against 0.4.0's 48. Read
+with care, because of what a first day measures: those are players whose mod manager showed them an
+update, and nobody downloading on that prompt has read the changelog yet. So the burst is the size
+and habits of the returning audience, not a verdict on the release -- 0.5.0 has the most
+player-visible changes of any version so far and it could not have shown up here. The number worth
+waiting for is the rate a week out, against 0.4.0's four or five a day. 0.4.0 itself added 17 in
+the four days to 23 Sep, almost all of it before 0.5.0 existed, so that rate held.
+
+0.2.0 went from 21 to 27 in the same four days. Nobody picks it on purpose, which makes the older
+rows a floor of mirrors, bots and pinned profiles rather than players.
+
+The next paragraph was written on 19 Sep, when the total was 352, the day 0.5.0 was packaged. 0.4.0 settled at about five a day once the
 first-day burst had passed -- 27 in the five days to 19 Sep -- which is the underlying rate of new
 players finding it, and the number 0.5.0's first week should be read against. The older versions
 still tick up by a handful each; nobody chooses 0.2.0 on purpose, so that is probably mirrors and
