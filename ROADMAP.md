@@ -1199,6 +1199,60 @@ promised to stay exactly as it is. So rules v2, in the 1.0 bundle. If it is buil
 slices, per *Add one variable at a time*: the static monolith and its district first; the resonance
 only if the first slice earns it in play.
 
+### Candidates for 1.0: four suggestions, 23 Sep
+
+Suggested when Paul asked for 1.0 ideas, and added to the list at his word. Ideas, not decisions.
+
+**1. 1.0 is the last cheap chance to change generation -- so scope it by that.** Anything that
+moves planets and misses 1.0 waits for rules v3, which asks every player to opt in again. So the
+real 1.0 question is *which generation changes will we ever want?*, and the list should hold all of
+them. The corollary matters as much: what does not move planets -- the storm, the notebook, the
+seed searcher -- does not have to ship in 1.0 at all, and can follow in 1.x. That keeps 1.0 to the
+one thing only a major version can do. The bundle already changes several variables at once, which
+*Add one variable at a time* would normally refuse; that is the accepted price of re-rolling once,
+and a reason to play the generation changes on a few fresh seeds, with `LogEveryAnomaly` on, before
+release.
+
+**2. Price the multiplier by distance and danger, not chance.** Varied multipliers are already on
+the list -- "most modest, a few absurd" -- but not what varies them. Chance would make the number
+a lottery. Instead, vary it by the cost the player actually pays: distance from home, and the Dark
+Fog presence the system starts with. The richest worlds become the contested ones. That turns the
+defence cost -- the largest cost found in play (*The defence cost, found in play*) -- into part of
+the design rather than an accident of it, and it is *The multiplier is not a number, it is a price*
+made into a rule. The experimental `MultiplierFromCombatSettings` becomes a special case of the same
+rule: no Dark Fog, no danger term.
+
+- *Stable inputs only.* `StarData.initialHiveCount` is written by `StarGen.CreateStar` and
+  `CreateBirthStar`, so it is fixed by the seed at generation (`maxHiveCount` and
+  `hivePatternLevel` sit beside it). Hives grow during play; that growth must never move the
+  number, or *Randomize the strategic situation, not machine reliability* is broken the first time
+  a hive expands.
+- *The tension to hold.* Near and safe means modest, and near is where the early game lives -- the
+  stretch where the mod is already thinnest. A ×3 world next door is still something, and the
+  distance-weighted recipe draw makes it something usable; but the curve has to be judged in a fresh
+  run, not on paper.
+- *Open:* the curve itself, whether distance and danger multiply or add, and whether the planet
+  label shows why a number is what it is.
+
+**3. Planet-type industrial personalities, pulled forward from Phase C.** Lava worlds leaning toward
+smelting, and so on for each type. It is a generation change, so it is now or rules v3. The payoff
+is a galaxy you can *guess at* before you scan: "a lava world three jumps out -- worth a look for
+smelting". That answers "it takes a long time to know what you get" inside the game and without
+spoilers, which the seed searcher cannot. The game exposes what it needs: `PlanetData.type`
+(`EPlanetType`) and `theme`. *Make places tell industrial stories* sets the limit -- weight the draw,
+never determine it; coherence gives meaning, exceptions keep curiosity alive, and a lookup table
+players memorise is the failure mode. *Open:* which families lean to which types, how strong the
+lean is, and whether the README states the pattern or leaves it to be noticed.
+
+**4. Tell upgraded players that new rules exist.** The protection built in 0.5 has a side effect:
+an install upgraded to 1.0 stays on rules v1 until someone edits `AnomalyRules`, so 1.0's rules
+would reach only brand-new installs and players who read changelogs. One announcement on a load
+under 1.0 with an older rules version fixes that: *This galaxy keeps the rules it had. New rules
+exist -- set AnomalyRules = Latest to use them.* Small, and the announcement path is now proven to
+be seen. *Open:* how often -- every load nags; once per install needs a remembered flag, which would
+be a second line the mod writes to its own config (it already rewrites a stale `AnomalyRules`), still
+nothing in saves. And a short *Upgrading to 1.0* section in the README.
+
 ### The multiplier is not a number, it is a price
 
 Paul, asked whether ×10 was too high: *"it's generally a LOT of work to set stuff up. For me anyway.
@@ -1421,6 +1475,11 @@ is a real boundary rather than a version number.
 
 Everything before 1.0 should therefore hold the generator still, which is what the golden test
 already enforces.
+
+The same logic runs forward: whatever moves planets and misses 1.0 waits for rules v3. So 1.0
+should carry every generation change foreseeable now, and nothing that does not need it. See
+*Candidates for 1.0: four suggestions*, which adds two more to the bundle -- multipliers priced by
+distance and danger, and planet-type personalities.
 
 ## Candidate release sequence
 
