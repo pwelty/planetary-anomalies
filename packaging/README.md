@@ -8,27 +8,42 @@ The point is to make exploration industrially interesting. A planet stops being 
 
 ## Before 1.0: your galaxy will keep its rules
 
-This is the last release before 1.0, and 1.0 will change how anomalies are drawn -- some
-combination of unique recipes, varied multipliers, and research cubes. Every 0.x release has used
-the same rules, which is why your anomalies have never moved. Under new rules they would.
+1.0 will change how anomalies are drawn -- some combination of unique recipes, varied
+multipliers, and research cubes. Every 0.x release has used the same rules, which is why your
+anomalies have never moved. Under new rules they would.
 
-So this release adds the one thing that lets an update change the rules without changing your
-galaxy: a setting that names the rules version, `AnomalyRules = 1`. It is written into your config
-once, and the mod never changes it. When 1.0 arrives with rules version 2, your config still says
-`1`, and every galaxy on this install keeps rolling exactly as it does today. Your Kaus III stays
-your Kaus III. A fresh install of 1.0 gets `2` as its default and the new rules from the start.
+So 0.5 added the one thing that lets an update change the rules without changing your galaxy: a
+setting that names the **ruleset**, `AnomalyRules = 1`. It is written into your config once, and
+the mod never changes it. When 1.0 arrives with ruleset 3, your config still says `1`, and every
+galaxy on this install keeps rolling exactly as it does today. Your Kaus III stays your Kaus III.
 
-You do not have to do anything. When you *want* the new rules, set `AnomalyRules = Latest` -- or
-the new number -- and they apply to every galaxy on this install, old and new alike. That is the
-one thing to know: the setting is per install, not per galaxy. If you keep it at `1` and start a
-brand-new game after 1.0, that game rolls the old rules too, until you change it. The log says
-which rules are in force on every load.
+**Ruleset 1** is the pre-1.0 ruleset: every 0.x release uses it, and it is the default. Since 0.5.1
+it fixes the recipe list as well as the rules -- it draws from the same 150 recipes it always has,
+so a game update that adds recipes cannot move one of its planets. Dyson Sphere Program 0.10.35 was
+the first to try: it added Dark Fog Lens, which under 0.5.0 took about one anomalous planet in 150.
+0.5.1 put them back.
 
-Two honest notes. The setting lives in your config on your machine, not in the save, so it does
-not travel: someone you hand a save to will see that galaxy under whatever their own config says.
-And it covers the *rules*, not the recipe list -- if 1.0 adds recipes to the pool, a few planets
-shift the way a handful did when refining and particle recipes joined in 0.2. Everything else
-stays put.
+**Ruleset 2**, new in 0.5.1, is for when you want those recipes. `AnomalyRules = 2` is ruleset 1
+drawing from every recipe the game has -- Dark Fog Lens now, and whatever arrives next. Switching
+moves only the planets the new recipes take; everything else stays where it is. The catch is why
+it is opt-in: the next game update that adds a recipe can move a planet or two again.
+
+You do not have to do anything. When you want something newer, set `AnomalyRules = 2`, or `Latest`
+for the newest this version knows -- which will be ruleset 3 once 1.0 is out. That is the one thing
+to know: the setting is per install, not per galaxy. It applies to every galaxy on this install, old
+and new alike, and a brand-new game after 1.0 on an install that still says `1` rolls ruleset 1 too.
+The log says which ruleset is in force on every load.
+
+One honest note. The setting lives in your config on your machine, not in the save, so it does not
+travel: someone you hand a save to will see that galaxy under whatever their own config says.
+
+## What's new in 0.5.1
+
+**Your galaxy survives the game's update.** Dyson Sphere Program 0.10.35 added a recipe, Dark Fog
+Lens, and under 0.5.0 it quietly took a planet or two. 0.5.1 puts them back, and ruleset 1 now fixes
+its recipe list so no game update can do that again. **Want the lens anyway?** `AnomalyRules = 2`.
+Both are explained under *Before 1.0* above.
+
 ## What's new in 0.5
 
 **Hover an item and its tooltip tells you where it is cheap.** In the replicator, your inventory,
@@ -269,7 +284,7 @@ Settings live in `BepInEx/config/com.planetaryanomalies.dsp.cfg` after the first
 | `AnomalyChancePercent` | `Seed` | How many non-home planets are anomalous. `Seed` derives it from the galaxy seed, between 25% and 75%, so galaxies differ from one another. A number from 0 to 100 forces that density instead -- useful when a galaxy rolls sparser than you want to play, and free on a galaxy nobody has built on. Changing it re-rolls which planets are anomalous, not which recipe each one carries. |
 | `OutputMultiplier` | `10` | How much more an anomalous recipe produces. |
 | `StarmapLabel` | `Detail` | What star map labels show. `Detail` names the affected items, `Marker` shows counts and a symbol, `Off` hides them. Unscanned planets show nothing either way. |
-| `AnomalyRules` | `1` | The version of the anomaly rules this install uses: a number, or `Latest`. Written once and never changed by the mod, so an upgraded install keeps rolling its galaxies as before when 1.0 introduces version 2. Set `Latest` or the new number to take the new rules, for every galaxy on this install. See *Before 1.0* above. |
+| `AnomalyRules` | `1` | Which ruleset this install uses: `1`, `2`, or `Latest`. 1 is the pre-1.0 ruleset, with a fixed list of 150 recipes so game updates cannot move its planets. 2 also draws the recipes the game has gained since, such as Dark Fog Lens, moving only the planets they take. Written once and never changed by the mod, so an upgraded install keeps what it has; 1.0's new rules will be ruleset 3. Applies to every galaxy on this install. See *Before 1.0* above. |
 | `ExcludedRecipes` | empty | Recipes that should never receive an anomaly, comma separated — by item name as it appears in game, or numeric id. The mod holds no opinion about which anomalies are worth having, because that depends entirely on how you play; this is where you state yours. Entries matching nothing are reported in the log rather than ignored. |
 | `AnnounceOnResearch` | `true` | When a technology completes, names any world you have already scanned that makes one of its recipes ten times over. Shown in gold just under the game's own "Research complete" notice for about six seconds, and always written to the log. Never names a planet you have not visited. |
 | `UnresearchedAnomalies` | `Hide` | What an anomaly says about itself before you have researched its recipe, everywhere it would appear. `Hide` says nothing. `Marker` shows the symbol without the name — somewhere to come back to. `Show` names everything, as in 0.3. Display only: generation is unchanged. |
@@ -305,7 +320,8 @@ Off by default, and may change or go away.
 ## What is (tentatively) coming in 1.0
 
 Tentative, and in no promised order. Most of these change how anomalies are drawn, which is why
-they are waiting for each other: they ship together as a single change to the rules, and your
+they are waiting for each other: they ship together as a single change to the rules -- ruleset 3 --
+and your
 existing galaxies keep the old rules unless you opt in. See *Before 1.0* above. The last two change
 nothing about your galaxy -- they are ways of seeing it.
 

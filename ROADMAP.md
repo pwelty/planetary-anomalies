@@ -1202,7 +1202,7 @@ galaxy trade again at hour one.
   tick on worker threads in this version; the mod's caches are not thread-safe.
 
 **Versioning.** It changes the home planet of every existing galaxy, and a rules-v1 galaxy was
-promised to stay exactly as it is. So rules v2, in the 1.0 bundle. If it is built at all, two
+promised to stay exactly as it is. So ruleset 3, in the 1.0 bundle. If it is built at all, two
 slices, per *Add one variable at a time*: the static monolith and its district first; the resonance
 only if the first slice earns it in play.
 
@@ -1211,7 +1211,7 @@ only if the first slice earns it in play.
 Suggested when Paul asked for 1.0 ideas, and added to the list at his word. Ideas, not decisions.
 
 **1. 1.0 is the last cheap chance to change generation -- so scope it by that.** Anything that
-moves planets and misses 1.0 waits for rules v3, which asks every player to opt in again. So the
+moves planets and misses 1.0 waits for ruleset 4, which asks every player to opt in again. So the
 real 1.0 question is *which generation changes will we ever want?*, and the list should hold all of
 them. The corollary matters as much: what does not move planets -- the storm, the notebook, the
 seed searcher -- is not forced into 1.0 by the re-roll. Some of it is wanted there anyway: Paul put
@@ -1244,7 +1244,7 @@ rule: no Dark Fog, no danger term.
   label shows why a number is what it is.
 
 **3. Planet-type industrial personalities, pulled forward from Phase C.** Lava worlds leaning toward
-smelting, and so on for each type. It is a generation change, so it is now or rules v3. The payoff
+smelting, and so on for each type. It is a generation change, so it is now or ruleset 4. The payoff
 is a galaxy you can *guess at* before you scan: "a lava world three jumps out -- worth a look for
 smelting". That answers "it takes a long time to know what you get" inside the game and without
 spoilers, which the seed searcher cannot. The game exposes what it needs: `PlanetData.type`
@@ -1254,7 +1254,7 @@ players memorise is the failure mode. *Open:* which families lean to which types
 lean is, and whether the README states the pattern or leaves it to be noticed.
 
 **4. Tell upgraded players that new rules exist.** The protection built in 0.5 has a side effect:
-an install upgraded to 1.0 stays on rules v1 until someone edits `AnomalyRules`, so 1.0's rules
+an install upgraded to 1.0 stays on ruleset 1 until someone edits `AnomalyRules`, so 1.0's rules
 would reach only brand-new installs and players who read changelogs. One announcement on a load
 under 1.0 with an older rules version fixes that: *This galaxy keeps the rules it had. New rules
 exist -- set AnomalyRules = Latest to use them.* Small, and the announcement path is now proven to
@@ -1467,6 +1467,50 @@ default, not a generation change -- `OutputMultiplier` affects neither which pla
 nor which recipe each carries -- so lowering it is cheap and reversible. But it changes the feel of
 every galaxy for everyone who has not touched the config, and "a windfall should feel like one" is
 a stated principle. Worth deciding deliberately rather than drifting.
+## 0.5.1: the first game update
+
+Dyson Sphere Program 0.10.35 came out on 23 Sep, the day after 0.5.0, and was the first game update
+since the mod shipped. It added Dark Fog Lens (recipe 162), an ordinary assembler recipe with one
+output -- so eligible, and the pool went from 150 to 151. Rendezvous selection did what it was built
+to do: the new recipe took only the planets where it weighed most. In Paul's galaxy that was one of
+127 anomalous planets, Zavijava IV, a Crystal Shell Set world until that morning. Density and
+presence did not move at all. And nothing he had built was affected: no machines were on it.
+
+"One in 127" is small, and it is still a broken promise. `AnomalyRules = 1` had been documented a
+day earlier as *your galaxies stay exactly as they are through 1.0 and beyond*, and the recipe list
+was the one input the setting did not cover. The README even said so, in the honest-notes
+paragraph, as a thing that would only happen *at 1.0*. It happened the next morning.
+
+**The fix: a ruleset owns its recipe list.** Ruleset 1 now draws only from a fixed list of 150 ids
+(`AnomalyMath.RulesetOnePool`), and the golden test prints it, so it cannot drift. Recipes the game
+or another mod adds later are left out of ruleset 1 and named in the log.
+
+**And an opt-in for the other half.** Paul, straight away: "we need to allow players, even on 0.5.1,
+to opt in to rules 2 if they want that lens to show up and whatever else might arrive." So ruleset 2
+exists now: the same arithmetic -- generator version 1, so density and presence never move --
+drawing from every recipe the game has. It is exactly what 0.5.0 did. The default stays 1, because
+ruleset 2 can move a planet or two on every game update that adds a recipe, and a new player has not
+asked for that. The consequence for numbering: **1.0's rules are ruleset 3.** Sections of this file
+written before 23 Sep say "rules v2" for 1.0's rules; read them as ruleset 3.
+
+Two things this taught.
+
+- *The baseline was lost to Steam by one minute.* The plan was to log the pool on 0.10.34, let Steam
+  update, and diff. Steam updated in the background at 10:51; Paul launched at 10:52. The old pool
+  was recovered instead as the new pool minus recipe 162, which three facts support: every 0.10.34
+  log counted 150, 0.10.35 counts 151, and the patch notes name one new recipe. The exact planet
+  that moved was then computed with the mod's own generator, compiled outside the game -- 127
+  planets checked, one changed -- which is the golden test's machinery earning its keep.
+- *The mod's hooks survived untouched.* All 68 of verify.ps1's checks passed on the new build before
+  anyone had loaded a save. The one broken mod that day was another one (DeliverySlotsTweaks, whose
+  target `BuildTool_Reform.ReformAction` went away with the terrain rework), and its red error box
+  looked, on screen, exactly like one of ours would have. The log settled that in a minute.
+
+**Open, for 1.0:** does ruleset 3 fix its recipe list too? The same argument says yes -- freeze it at
+1.0's game version, and let a ruleset 4 or an opt-in like ruleset 2 carry newer recipes. The cost is
+that new game recipes then never become anomalies for anyone on the default until they opt in. Worth
+deciding with the rest of the 1.0 bundle, not now.
+
 ## The one re-roll
 
 Three things now want a generation change: galaxy-wide unique recipes, variable multipliers, and
@@ -1485,7 +1529,7 @@ is a real boundary rather than a version number.
 Everything before 1.0 should therefore hold the generator still, which is what the golden test
 already enforces.
 
-The same logic runs forward: whatever moves planets and misses 1.0 waits for rules v3. So 1.0
+The same logic runs forward: whatever moves planets and misses 1.0 waits for ruleset 4. So 1.0
 should carry every generation change foreseeable now, and nothing that does not need it. See
 *Candidates for 1.0: four suggestions*, which adds two more to the bundle -- multipliers priced by
 distance and danger, and planet-type personalities.
@@ -1504,11 +1548,14 @@ This is a sequencing hypothesis, not a commitment:
 - **v0.5 — Finish disclosure:** shipped. Marker mode, the research announcement, the item tooltip,
   and the rules-version setting that lets 1.0 change generation without moving anyone's galaxy. The
   last release before 1.0. See *What 0.5 was*.
-- **v1.0 — The one re-roll:** rules version 2, everything that moves planets, asked for once: no
+- **v0.5.1 — The first game update:** Dyson Sphere Program 0.10.35 added Dark Fog Lens, and it
+  took a planet. Ruleset 1 now fixes its recipe list; ruleset 2, opt-in, draws the new recipes. See
+  *0.5.1: the first game update*.
+- **v1.0 — The one re-roll:** ruleset 3, everything that moves planets, asked for once: no
   duplicate recipes within a system, varied multipliers, research cubes, recipes with a by-product,
   and a weighted home draw for the early game. Alongside it: the seed searcher outside the game,
   and the galaxy notebook page generated from inside it.
-  Existing installs keep rules version 1 until they ask for the new ones.
+  Existing installs keep ruleset 1 until they ask for the new ones.
 - **Later — Stateful experiment:** one awakening or commitment mechanic with explicit save
   semantics. The storm is the current candidate.
 

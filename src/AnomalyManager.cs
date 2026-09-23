@@ -40,19 +40,26 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>
-        /// Which rules this install rolls under, from the one setting that says so.
+        /// Which ruleset this install rolls under, from the one setting that says so.
         ///
-        /// Paul's call, after two rounds of something cleverer: the rules version is a *setting*,
-        /// not a per-galaxy record. AnomalyRules = 1 means every galaxy on this install rolls
-        /// version 1; AnomalyRules = Latest means whatever is current. What makes that protect
-        /// existing players costs nothing: BepInEx writes a default only when the key is absent, so
-        /// an install upgraded from 0.5 keeps the 1 it already has, and a fresh 1.0 install gets
-        /// 1.0's default. No pin file, no new-versus-loaded detection, nothing written anywhere but
-        /// the config -- and "nothing is written to your saves" is true again with no footnote.
+        /// Paul's call, after two rounds of something cleverer: the ruleset is a *setting*, not a
+        /// per-galaxy record. AnomalyRules = 1 means every galaxy on this install rolls ruleset 1;
+        /// Latest means the newest this build knows. What makes that protect existing players
+        /// costs nothing: BepInEx writes a default only when the key is absent, so an upgraded
+        /// install keeps the number it already has. No pin file, no new-versus-loaded detection,
+        /// nothing written anywhere but the config -- and "nothing is written to your saves" is
+        /// true with no footnote.
         ///
         /// The cost, accepted: it is per install, not per galaxy. On an upgraded install a
-        /// brand-new game also rolls the old version until the number is changed. The reason string
+        /// brand-new game also rolls the old ruleset until the number is changed. The reason string
         /// says so in the log every load, so nobody has to discover it.
+        ///
+        /// Since 0.5.1 there are two, and the default is not the newest. Ruleset 1 draws from a
+        /// fixed list of 150 recipes; ruleset 2 is the same arithmetic drawing from every recipe the
+        /// game has. Dyson Sphere Program 0.10.35 added Dark Fog Lens, and Paul: "we need to allow
+        /// players, even on 0.5.1, to opt in to rules 2 if they want that lens to show up and
+        /// whatever else might arrive." So 2 exists for the players who want it, and a fresh
+        /// install still gets 1 -- see <see cref="DefaultRuleset"/>.
         /// </summary>
         private static int ResolveRuleVersion(out string reason)
         {
@@ -61,48 +68,49 @@ namespace PlanetaryAnomalies
 
             if (string.Equals(setting, "latest", StringComparison.OrdinalIgnoreCase))
             {
-                reason = "AnomalyRules = Latest";
-                return CurrentAnomalySystemVersion;
+                reason = "AnomalyRules = Latest, the newest this build knows" + PoolNote(LatestRuleset);
+                return LatestRuleset;
             }
 
             // A development build of 0.5 briefly wrote the word "Pinned" here. It meant "keep what
-            // you have", which is the oldest rules; rewrite it so the file says what it means.
+            // you have", which is the oldest ruleset; rewrite it so the file says what it means.
             if (string.Equals(setting, "pinned", StringComparison.OrdinalIgnoreCase))
             {
-                Plugin.AnomalyRules.Value = OriginalAnomalySystemVersion.ToString();
-                reason = "AnomalyRules = Pinned, from an early 0.5 build; rewritten as " + OriginalAnomalySystemVersion;
-                return OriginalAnomalySystemVersion;
+                Plugin.AnomalyRules.Value = OriginalRuleset.ToString();
+                reason = "AnomalyRules = Pinned, from an early 0.5 build; rewritten as " + OriginalRuleset;
+                return OriginalRuleset;
             }
 
             // "v1" is accepted as well as "1"; it is how people write it.
             string digits = setting.StartsWith("v", StringComparison.OrdinalIgnoreCase) ? setting.Substring(1) : setting;
 
-            // Anything not understood falls back to the OLDEST rules, not the current ones. The
-            // value most likely to be blank, mistyped or stale belongs to a player who has been
-            // here a while, and re-rolling their galaxy is the one harm this setting exists to
-            // prevent. A new player with a typo gets old rules and a warning, which is cheap.
+            // Anything not understood falls back to the OLDEST ruleset, not the newest. The value
+            // most likely to be blank, mistyped or stale belongs to a player who has been here a
+            // while, and moving their galaxy is the one harm this setting exists to prevent. A new
+            // player with a typo gets ruleset 1 and a warning, which is cheap.
             int requested;
             if (setting.Length == 0 || !int.TryParse(digits, out requested))
             {
-                Plugin.Log.LogWarning("AnomalyRules = '" + raw + "' was not understood. Use a rules version number (for example 1) or Latest. Keeping the original rules, v" + OriginalAnomalySystemVersion + ", to be safe.");
-                reason = "AnomalyRules = '" + raw + "' not understood; kept on the original rules to be safe";
-                return OriginalAnomalySystemVersion;
+                Plugin.Log.LogWarning("AnomalyRules = '" + raw + "' was not understood. Use a ruleset number (" + OriginalRuleset + " to " + LatestRuleset + ") or Latest. Keeping ruleset " + OriginalRuleset + ", to be safe.");
+                reason = "AnomalyRules = '" + raw + "' not understood; kept on ruleset " + OriginalRuleset + " to be safe";
+                return OriginalRuleset;
             }
 
-            if (requested < OriginalAnomalySystemVersion || requested > CurrentAnomalySystemVersion)
+            if (requested < OriginalRuleset || requested > LatestRuleset)
             {
-                Plugin.Log.LogWarning("AnomalyRules = " + requested + " is not a rules version this build knows (" + OriginalAnomalySystemVersion + " to " + CurrentAnomalySystemVersion + "). Keeping the original rules, v" + OriginalAnomalySystemVersion + ", to be safe.");
-                reason = "AnomalyRules = " + requested + " is outside " + OriginalAnomalySystemVersion + ".." + CurrentAnomalySystemVersion + "; kept on the original rules to be safe";
-                return OriginalAnomalySystemVersion;
+                Plugin.Log.LogWarning("AnomalyRules = " + requested + " is not a ruleset this build knows (" + OriginalRuleset + " to " + LatestRuleset + "). Keeping ruleset " + OriginalRuleset + ", to be safe.");
+                reason = "AnomalyRules = " + requested + " is outside " + OriginalRuleset + ".." + LatestRuleset + "; kept on ruleset " + OriginalRuleset + " to be safe";
+                return OriginalRuleset;
             }
 
-            reason = "AnomalyRules = " + requested;
-            if (requested < CurrentAnomalySystemVersion)
-            {
-                reason += " (older than the current v" + CurrentAnomalySystemVersion +
-                          "; set AnomalyRules = Latest to use the new rules -- for every galaxy on this install)";
-            }
+            reason = "AnomalyRules = " + requested + PoolNote(requested);
             return requested;
+        }
+
+        /// <summary>Which kind of recipe list a ruleset uses, for the galaxy line in the log.</summary>
+        private static string PoolNote(int ruleset)
+        {
+            return AnomalyMath.HasFixedPool(ruleset) ? ", fixed recipe list" : ", recipe list follows the game";
         }
 
         /// <summary>
@@ -147,31 +155,36 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>
-        /// The rules in force. Part of every hash, so an install set to version 1 keeps rolling
-        /// version 1 after the current version moves on.
+        /// The generator version for the ruleset in force: the number every hash is keyed by.
+        /// Rulesets 1 and 2 share version 1 -- they differ only in which recipes may be drawn -- so
+        /// switching between them moves only the planets the extra recipes take. See
+        /// <see cref="AnomalyMath.GeneratorVersionFor"/>.
         ///
         /// Resolved once per galaxy, before density, because density is itself a function of it.
-        /// See <see cref="ResolveRuleVersion"/>: it is one config setting, nothing more.
         /// </summary>
         internal static int AnomalySystemVersion
         {
-            get { return _ruleVersion; }
+            get { return AnomalyMath.GeneratorVersionFor(_ruleset); }
         }
 
         /// <summary>
-        /// The rules a brand-new galaxy gets. Bump this when generation changes on purpose -- and
-        /// only then, because every galaxy that has already been pinned keeps the number it has.
-        /// The golden test locks each version's output permanently; a new version gets a new file.
+        /// The ruleset a fresh install writes into its config: 1, deliberately, even though 2
+        /// exists. Ruleset 2 is opt-in, because a galaxy under it can still move a planet or two
+        /// whenever the game adds a recipe, and a new player has not asked for that.
         /// </summary>
-        internal const int CurrentAnomalySystemVersion = 1;
+        internal const int DefaultRuleset = 1;
+
+        /// <summary>The newest ruleset this build knows, which is what Latest means.</summary>
+        internal const int LatestRuleset = AnomalyMath.LatestRuleset;
 
         /// <summary>
-        /// The oldest rules this build can still roll. Every 0.x release used version 1, and an
-        /// install that says 1 must keep getting exactly that forever.
+        /// The oldest ruleset, and the fallback for anything unreadable. Every 0.x release uses
+        /// ruleset 1, and an install that says 1 must keep getting exactly that forever.
         /// </summary>
-        internal const int OriginalAnomalySystemVersion = 1;
+        internal const int OriginalRuleset = 1;
 
-        private static int _ruleVersion = CurrentAnomalySystemVersion;
+        /// <summary>What AnomalyRules resolved to for the loaded galaxy.</summary>
+        private static int _ruleset = DefaultRuleset;
 
 
         internal const int DensityMinPercent = AnomalyMath.DensityMinPercent;
@@ -210,7 +223,8 @@ namespace PlanetaryAnomalies
         /// <summary>Drops all state. Called when the plugin unloads.</summary>
         internal static void Reset()
         {
-            _ruleVersion = CurrentAnomalySystemVersion;
+            _ruleset = DefaultRuleset;
+            _outsideRuleset.Clear();
             _galaxySeed = 0;
             _birthPlanetId = -1;
             _galaxyKnown = false;
@@ -486,18 +500,21 @@ namespace PlanetaryAnomalies
                 return false;
             }
 
+            // The ruleset first: since 0.5.1 it decides which recipes may be drawn at all, not only
+            // how they are drawn.
+            string ruleReason;
+            _ruleset = ResolveRuleVersion(out ruleReason);
+
             LoadExclusions();
             _eligible = BuildEligibleRecipes(recipes);
             ReportExclusions();
+            ReportRulesetPool(recipes);
 
             if (_eligible.Length == 0)
             {
                 Plugin.Log.LogError("No eligible recipes in this build; no planet will be anomalous.");
                 return false;
             }
-
-            string ruleReason;
-            _ruleVersion = ResolveRuleVersion(out ruleReason);
 
             _densityPercent = ResolveDensity(seed);
 
@@ -512,7 +529,7 @@ namespace PlanetaryAnomalies
                 _densityPercent + "% of non-home planets anomalous" +
                 (IsDensityOverridden() ? " (forced by config)" : " (derived from the seed)") +
                 ", output x" + _outputMultiplier + " (" + multiplierReason + ")" +
-                ", rules v" + _ruleVersion + " (" + ruleReason + ").");
+                ", ruleset " + _ruleset + " (" + ruleReason + ").");
 
             LogPoolIds();
 
@@ -936,19 +953,31 @@ namespace PlanetaryAnomalies
         ///
         /// Widening the pool shifts roughly one planet in N per recipe added, which is the
         /// accepted cost of a pool change. It does not affect the generator's arithmetic, so the
-        /// golden test correctly stays quiet.
+        /// golden test correctly stays quiet. Since 0.5.1 that cost is paid only under ruleset 2:
+        /// ruleset 1 draws from a fixed list, so recipes the game adds later are left out of it.
         /// </summary>
         private static RecipeProto[] BuildEligibleRecipes(RecipeProtoSet recipes)
         {
             List<RecipeProto> eligible = new List<RecipeProto>();
             RecipeProto[] all = recipes.dataArray;
 
+            _outsideRuleset.Clear();
             for (int i = 0; i < all.Length; i++)
             {
-                if (IsEligible(all[i]))
+                if (!IsEligible(all[i]))
                 {
-                    eligible.Add(all[i]);
+                    continue;
                 }
+
+                // Eligible by shape but not in the ruleset's list -- Dark Fog Lens under ruleset 1,
+                // for one. Not drawn; reported once per galaxy by ReportRulesetPool.
+                if (!AnomalyMath.InRulesetPool(_ruleset, all[i].ID))
+                {
+                    _outsideRuleset.Add(all[i]);
+                    continue;
+                }
+
+                eligible.Add(all[i]);
             }
 
             // Ascending id, so the list does not depend on how the game happened to load its
@@ -957,6 +986,61 @@ namespace PlanetaryAnomalies
             eligible.Sort(delegate(RecipeProto a, RecipeProto b) { return a.ID.CompareTo(b.ID); });
 
             return eligible.ToArray();
+        }
+
+        /// <summary>Recipes eligible by shape that the ruleset in force does not draw.</summary>
+        private static readonly List<RecipeProto> _outsideRuleset = new List<RecipeProto>();
+
+        /// <summary>
+        /// Says, once per galaxy, where the game's recipes and the ruleset's list disagree.
+        ///
+        /// Newer recipes left out is the ruleset working, and gets an info line that names them
+        /// and how to include them. A listed recipe missing from the game is the one thing a fixed
+        /// list cannot fix -- the planets that carried it have moved -- so that is a warning, with
+        /// the ids, since it is exactly what a bug report would need.
+        /// </summary>
+        private static void ReportRulesetPool(RecipeProtoSet recipes)
+        {
+            if (_outsideRuleset.Count > 0)
+            {
+                string names = "";
+                for (int i = 0; i < _outsideRuleset.Count; i++)
+                {
+                    RecipeProto r = _outsideRuleset[i];
+                    names += (i > 0 ? ", " : "") + PlayerFacingRecipeName(r) + " (recipe " + r.ID + ")";
+                }
+
+                Plugin.Log.LogInfo("Ruleset " + _ruleset + " draws from its own fixed list, so " + _outsideRuleset.Count +
+                                   " newer recipe(s) in this game are not drawn and move no planet: " + names +
+                                   ". Set AnomalyRules = " + LatestRuleset + " to include them; that moves only the planets they take.");
+            }
+
+            if (!AnomalyMath.HasFixedPool(_ruleset))
+            {
+                return;
+            }
+
+            string missing = "";
+            int count = 0;
+            for (int i = 0; i < AnomalyMath.RulesetOnePool.Length; i++)
+            {
+                int id = AnomalyMath.RulesetOnePool[i];
+                RecipeProto recipe = recipes.Exist(id) ? recipes.Select(id) : null;
+                if (recipe != null && (IsEligible(recipe) || IsExcludedByPlayer(recipe)))
+                {
+                    continue;
+                }
+
+                missing += (count > 0 ? "," : "") + id;
+                count++;
+            }
+
+            if (count > 0)
+            {
+                Plugin.Log.LogWarning("Ruleset " + _ruleset + " draws from " + AnomalyMath.RulesetOnePool.Length + " recipes, and " + count +
+                                      " of them are missing from this game or no longer eligible (recipe " + missing +
+                                      "). Planets that carried them have moved to other recipes. Please report this, with your game version.");
+            }
         }
 
         private static bool IsEligible(RecipeProto recipe)

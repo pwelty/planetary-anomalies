@@ -188,15 +188,19 @@ namespace PlanetaryAnomalies
             AnomalyRules = Config.Bind(
                 "Generation",
                 "AnomalyRules",
-                AnomalyManager.CurrentAnomalySystemVersion.ToString(),
-                "Which version of the anomaly rules this install uses: a version number, or Latest.\n" +
-                "Every 0.x release has used rules version 1. 1.0 will introduce version 2, which draws\n" +
-                "anomalies differently -- a galaxy rolled under 2 is a different galaxy.\n" +
-                "This line is written once, when the mod first runs, and the mod never changes it. So\n" +
-                "an install upgraded from 0.5 keeps 1, and its galaxies stay exactly as they are\n" +
-                "through 1.0 and beyond; a fresh install gets that release's default. Set Latest, or\n" +
-                "the new number, when you want the new rules -- for every galaxy on this install,\n" +
-                "old and new alike. Nothing is written to saves or anywhere else; this is the record.");
+                AnomalyManager.DefaultRuleset.ToString(),
+                "Which ruleset this install uses: 1, 2, or Latest.\n" +
+                "1 -- the pre-1.0 ruleset, and the default. Every 0.x release uses it. It draws from a\n" +
+                "  fixed list of 150 recipes, so a game update that adds recipes never moves a planet.\n" +
+                "2 -- ruleset 1 plus every recipe the game has gained since: Dark Fog Lens from game\n" +
+                "  version 0.10.35, and whatever comes next. Switching from 1 moves only the few planets\n" +
+                "  those recipes take -- about one anomalous planet in 150 per recipe -- and a later game\n" +
+                "  update can move a planet or two again. Recipes added by other mods count here too.\n" +
+                "Latest -- the newest ruleset this version of the mod knows. 1.0 will add ruleset 3,\n" +
+                "  which draws anomalies differently: a galaxy under 3 is a different galaxy.\n" +
+                "This line is written once, when the mod first runs, and the mod never changes it, so an\n" +
+                "upgraded install keeps what it has. It applies to every galaxy on this install, old and\n" +
+                "new alike. Nothing is written to saves or anywhere else; this is the record.");
 
             ExcludedRecipes = Config.Bind(
                 "Generation",

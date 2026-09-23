@@ -8,6 +8,10 @@ using PlanetaryAnomalies;
 // The recipe pool here is synthetic and fixed on purpose. The point is to lock the *arithmetic* --
 // density, presence, selection -- not the contents of DSP's recipe database, which legitimately
 // varies with the game version and other mods.
+//
+// Since 0.5.1 two more things are part of the contract and printed at the end: ruleset 1's own
+// recipe list, which is what keeps game updates from moving its planets, and which generator
+// version and pool each ruleset uses. New rulesets append lines; existing lines never move.
 internal static class GoldenRunner
 {
     public static void Main()
@@ -40,6 +44,19 @@ internal static class GoldenRunner
                         seed, planet, version, density, anomalous ? "yes" : "no", recipe));
                 }
             }
+        }
+
+        string[] ids = new string[AnomalyMath.RulesetOnePool.Length];
+        for (int i = 0; i < ids.Length; i++)
+        {
+            ids[i] = AnomalyMath.RulesetOnePool[i].ToString();
+        }
+        sb.AppendLine("ruleset 1 pool -> " + string.Join(",", ids));
+
+        for (int ruleset = 1; ruleset <= AnomalyMath.LatestRuleset; ruleset++)
+        {
+            sb.AppendLine(string.Format("ruleset {0} -> generator {1}, pool {2}",
+                ruleset, AnomalyMath.GeneratorVersionFor(ruleset), AnomalyMath.HasFixedPool(ruleset) ? "fixed" : "current"));
         }
 
         Console.Write(sb.ToString());

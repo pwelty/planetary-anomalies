@@ -23,10 +23,17 @@
     ///
     /// What may still legitimately change a galaxy:
     ///
-    /// - the eligible recipe pool gaining or losing entries, whether from a DSP update or another
-    ///   mod. Rendezvous selection keeps that to roughly one planet in N per recipe added, rather
-    ///   than nearly all of them;
-    /// - an explicit <c>AnomalySystemVersion</c> bump, which is what that constant is for.
+    /// - the player choosing another ruleset, which is what <c>AnomalyRules</c> is for;
+    /// - a recipe in ruleset 1's list disappearing from the game, or ceasing to be eligible.
+    ///   Nothing the mod can do keeps a planet on a recipe the game no longer has; rendezvous
+    ///   selection keeps the damage to the planets that carried it, and the log says so.
+    ///
+    /// What no longer can, under ruleset 1: a game update or another mod *adding* recipes. Until
+    /// 0.5.1 that moved roughly one planet in N per recipe added, and Dyson Sphere Program 0.10.35
+    /// did exactly that with Dark Fog Lens -- one planet in 127 in the first galaxy checked. So
+    /// ruleset 1 draws only from <see cref="RulesetOnePool"/>. Ruleset 2 is the same arithmetic
+    /// drawing from whatever the game has, for players who want new recipes and accept that the
+    /// next one can move a planet or two.
     /// </summary>
     internal static class AnomalyMath
     {
@@ -38,6 +45,67 @@
         internal const uint SaltPresence = 0x9E3779B9u;
         internal const uint SaltRecipe = 0x85EBCA6Bu;
         internal const uint SaltDensity = 0xC2B2AE35u;
+
+        /// <summary>The newest ruleset defined here, which is what AnomalyRules = Latest means.</summary>
+        internal const int LatestRuleset = 2;
+
+        /// <summary>
+        /// The generator version a ruleset hashes with -- the number every draw below is keyed by.
+        ///
+        /// Rulesets 1 and 2 share version 1: they differ only in which recipes may be drawn, so
+        /// switching between them moves only the planets the extra recipes take, never density or
+        /// presence. A ruleset that changes the arithmetic itself -- 1.0's, ruleset 3 -- gets a
+        /// version of its own, and every galaxy under it is a different galaxy.
+        /// </summary>
+        internal static int GeneratorVersionFor(int ruleset)
+        {
+            return 1;
+        }
+
+        /// <summary>Whether a ruleset draws from a fixed list rather than from whatever the game has.</summary>
+        internal static bool HasFixedPool(int ruleset)
+        {
+            return ruleset == 1;
+        }
+
+        /// <summary>Whether a recipe may be drawn under a ruleset at all. See <see cref="RulesetOnePool"/>.</summary>
+        internal static bool InRulesetPool(int ruleset, int recipeId)
+        {
+            if (!HasFixedPool(ruleset))
+            {
+                return true;
+            }
+
+            return System.Array.IndexOf(RulesetOnePool, recipeId) >= 0;
+        }
+
+        /// <summary>
+        /// Ruleset 1's recipes, by id: the 150 every pre-1.0 release drew from, as Dyson Sphere
+        /// Program 0.10.34 defined them.
+        ///
+        /// Fixed in 0.5.1, after 0.10.35 added Dark Fog Lens (recipe 162) and it took a planet in
+        /// the first galaxy checked -- Zavijava IV in seed 30085239, a Crystal Shell Set world until
+        /// that morning. AnomalyRules = 1 promises a galaxy stays exactly as it is, and a pool that
+        /// grows with the game cannot keep that promise.
+        ///
+        /// Recovered as 0.10.35's eligible pool minus recipe 162, because Steam updated the game a
+        /// minute before a baseline could be taken on 0.10.34. Three things agree: every 0.10.34 log
+        /// counted 150, 0.10.35 counts 151, and the patch notes name one new recipe.
+        ///
+        /// Part of the contract, like the arithmetic: the golden test prints it, so changing an id
+        /// fails the build. Player exclusions still apply on top of it.
+        /// </summary>
+        internal static readonly int[] RulesetOnePool =
+        {
+            1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 17, 19, 20, 21, 22, 23,
+            24, 25, 26, 28, 29, 30, 31, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+            46, 47, 48, 49, 50, 51, 52, 53, 54, 56, 57, 59, 60, 61, 62, 63, 64, 65, 66, 67,
+            68, 69, 70, 71, 72, 73, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89,
+            90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 103, 104, 105, 106, 107, 108, 109, 110,
+            111, 112, 113, 114, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131,
+            132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151,
+            152, 153, 154, 155, 156, 157, 158, 159, 160, 161
+        };
 
         /// <summary>
         /// The percentage of non-home planets carrying an anomaly in a given galaxy, drawn from the

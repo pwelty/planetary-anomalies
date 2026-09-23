@@ -2,7 +2,25 @@
 
 ## 0.5.1 (in development)
 
-- Dyson Sphere Program 0.10.35 adds a recipe, Dark Fog Lens. (Work in progress.)
+- Your galaxy stays exactly as it was through Dyson Sphere Program 0.10.35. The game update adds a
+  recipe, Dark Fog Lens, and under 0.5.0 it took about one anomalous planet in 150 -- one of 127 in
+  the first galaxy checked, where a Crystal Shell Set world became a Dark Fog Lens one. 0.5.1 puts
+  them back.
+
+  The fix is to say what ruleset 1 is. `AnomalyRules = 1` -- the pre-1.0 ruleset, and still the
+  default -- now fixes the recipe list as well as the rules: it draws from the same 150 recipes it
+  always has, and nothing a game update or another mod adds can move one of its planets. The log
+  names any recipe it leaves out.
+- New: **ruleset 2**, for players who want the new recipes. `AnomalyRules = 2` (or `Latest`) is
+  ruleset 1 drawing from every recipe the game has -- Dark Fog Lens now, and whatever arrives next.
+  Switching moves only the few planets those recipes take; density and which planets are anomalous
+  stay exactly as they are. It is opt-in because a later game update can move a planet or two
+  again, which is the thing ruleset 1 exists to prevent. It is also exactly what 0.5.0 did.
+- 1.0's new rules -- unique recipes, varied multipliers, research cubes -- will be **ruleset 3**.
+- If you run a mod that adds recipes: those are drawn under ruleset 2, and no longer under ruleset
+  1, so a ruleset-1 planet that carried one moves once, back to a recipe from the list.
+- Checked against Dyson Sphere Program 0.10.35: every hook the mod uses is where it was. The log
+  now lists the recipe pool by id on every load, for bug reports.
 
 ## 0.5.0
 
