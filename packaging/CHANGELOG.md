@@ -20,7 +20,10 @@ Nothing else changes.
   Switching moves only the few planets those recipes take; density and which planets are anomalous
   stay exactly as they are. It is opt-in because a later game update can move a planet or two
   again, which is the thing ruleset 1 exists to prevent. It is also exactly what 0.5.0 did.
-- 1.0's new rules -- unique recipes, varied multipliers, research cubes -- will be **ruleset 3**.
+- Coming in 1.0: **ruleset 3**, with more options. That is where the rest of the list lands --
+  research cubes, recipes with a by-product, varied multipliers, no duplicate anomalies within a
+  system -- none of which rulesets 1 and 2 will ever draw. Opt-in for existing installs, like
+  ruleset 2.
 - If you run a mod that adds recipes: those are drawn under ruleset 2, and no longer under ruleset
   1, so a ruleset-1 planet that carried one moves once, back to a recipe from the list.
 - Checked against Dyson Sphere Program 0.10.35: every hook the mod uses is where it was. The log

@@ -42,6 +42,10 @@ travel: someone you hand a save to will see that galaxy under whatever their own
 **Handles Dark Fog Lens, the recipe Dyson Sphere Program 0.10.35 just added.** Nothing else
 changes.
 
+**And a note on what comes next:** 1.0 brings **ruleset 3**, with more options -- research cubes,
+recipes with a by-product, varied multipliers, and more (see *What is (tentatively) coming in 1.0*
+below). Rulesets 1 and 2 never draw any of those, so nothing moves unless you choose it.
+
 **Your galaxy survives the game's update.** Dyson Sphere Program 0.10.35 added a recipe, Dark Fog
 Lens, and under 0.5.0 it quietly took a planet or two. 0.5.1 puts them back, and ruleset 1 now fixes
 its recipe list so no game update can do that again. **Want the lens anyway?** `AnomalyRules = 2`.
