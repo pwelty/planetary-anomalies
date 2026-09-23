@@ -2,6 +2,10 @@
 
 ## 0.5.1
 
+**A hotfix for Dyson Sphere Program 0.10.35.** The game update added a recipe that moved a planet
+or two in most galaxies. This puts them back, keeps it from happening again, and adds an opt-in for
+players who want the new recipe. Nothing else changes.
+
 - Your galaxy stays exactly as it was through Dyson Sphere Program 0.10.35. The game update adds a
   recipe, Dark Fog Lens, and under 0.5.0 it took about one anomalous planet in 150 -- one of 127 in
   the first galaxy checked, where a Crystal Shell Set world became a Dark Fog Lens one. 0.5.1 puts
