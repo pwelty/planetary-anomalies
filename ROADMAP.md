@@ -539,6 +539,13 @@ The two open questions above are now play questions, not design questions:
 
 ### Candidate: export the galaxy index as a single web page
 
+**On the 1.0 list, 23 Sep.** Paul: "the anomaly catalog html page is something too." It moves no
+planet, so the re-roll does not require it (see *Candidates for 1.0: four suggestions*); it goes in
+because it is wanted, and 1.0 is when it is most useful. The header stamps the rules version, and
+1.0 is exactly when players will be comparing a v1 galaxy with a v2 one. It is also the one surface
+with room to say *why* a planet's multiplier is what it is, if multipliers come to be priced by
+distance and danger -- a star map label has no space for that; a page does.
+
 Paul's idea, after I generated one by hand for his seed so he could plan around it: the artifact
 turned out to be more fun than a planning aid. A self-contained HTML file listing every anomaly you
 know about, grouped by system, that you can open in a browser, keep on a second monitor, or paste
@@ -566,8 +573,8 @@ Open questions:
   intrusive.
 - Does it become stale immediately? Yes, and that is fine: it is a snapshot, dated in the header.
 
-Low priority, high delight-per-line. A good thing to build on a day when the generator should not
-be touched.
+Once low priority; on the 1.0 list since 23 Sep. High delight-per-line either way, and still a good
+thing to build on a day when the generator should not be touched.
 
 **Refined after pinning landed.** Paul's preference is for this to be a page the *mod* generates,
 from inside the game, rather than a WebAssembly recomputation -- and that preference resolves a
@@ -1207,8 +1214,10 @@ Suggested when Paul asked for 1.0 ideas, and added to the list at his word. Idea
 moves planets and misses 1.0 waits for rules v3, which asks every player to opt in again. So the
 real 1.0 question is *which generation changes will we ever want?*, and the list should hold all of
 them. The corollary matters as much: what does not move planets -- the storm, the notebook, the
-seed searcher -- does not have to ship in 1.0 at all, and can follow in 1.x. That keeps 1.0 to the
-one thing only a major version can do. The bundle already changes several variables at once, which
+seed searcher -- is not forced into 1.0 by the re-roll. Some of it is wanted there anyway: Paul put
+the seed searcher on the 1.0 list on 14 Sep and the notebook on 23 Sep. The point is only that any
+of it can slip to 1.x without costing anyone a re-roll, and a generation change cannot. The bundle
+already changes several variables at once, which
 *Add one variable at a time* would normally refuse; that is the accepted price of re-rolling once,
 and a reason to play the generation changes on a few fresh seeds, with `LogEveryAnomaly` on, before
 release.
@@ -1497,7 +1506,8 @@ This is a sequencing hypothesis, not a commitment:
   last release before 1.0. See *What 0.5 was*.
 - **v1.0 — The one re-roll:** rules version 2, everything that moves planets, asked for once: no
   duplicate recipes within a system, varied multipliers, research cubes, recipes with a by-product,
-  and a weighted home draw for the early game. Alongside it, outside the game, the seed searcher.
+  and a weighted home draw for the early game. Alongside it: the seed searcher outside the game,
+  and the galaxy notebook page generated from inside it.
   Existing installs keep rules version 1 until they ask for the new ones.
 - **Later — Stateful experiment:** one awakening or commitment mechanic with explicit save
   semantics. The storm is the current candidate.
