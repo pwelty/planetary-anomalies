@@ -1171,6 +1171,29 @@ a pointer outward. See *Candidate for 1.0: the visit*.
 - *Whether it replaces the weighted home draw or sits beside it.* A better home "quietly removes
   the reason to leave"; a district gives home a decision instead. Undecided.
 
+**The alternative: a supervein.** Paul, the same day: "how about a supervein on homeplanet?" An
+idea for the list, not a decision. It follows the district's rule exactly -- it must not be where
+you would mine anyway. At the landing site it is free ore; on the far side of the home planet it
+is a choice between convenient normal veins now and a long belt to the rich one, which is the
+galaxy trade again at hour one.
+
+- *Cheaper to show than the monolith.* The game already draws veins and has a vein detail popup
+  (`UIVeinDetail`, `UIVeinDetailNode`), so "where is it" never arises; a line in that popup would
+  do what the item tooltip line does now.
+- *Only one meaning keeps the mod's promise.* An existing vein whose miners produce ×N is derived
+  from the seed on every load, like every anomaly -- `MinerComponent.InternalUpdate` is the seam.
+  A vein that should not be there (titanium or fire ice at home) is the more interesting version
+  strategically, but veins are world data the game saves (`PlanetFactory.Export` writes
+  `veinPool`): it would break "nothing is written to your saves" and outlive an uninstall. Ruled
+  out on that ground.
+- *It overlaps the district.* A ×10 iron vein and a ×10 iron-smelting district both mean "lots of
+  iron, from over there", so probably one or the other on the home planet. Each costs one new
+  thing: the supervein a new production hook on miners but no visuals; the district the existing
+  recipe hook plus a distance check, and the monolith to be seen. The district is closer to what
+  the mod does everywhere else -- recipes, not ore.
+- *To check before trusting the miner seam:* miners run in the hottest loop in the game and may
+  tick on worker threads in this version; the mod's caches are not thread-safe.
+
 **Versioning.** It changes the home planet of every existing galaxy, and a rules-v1 galaxy was
 promised to stay exactly as it is. So rules v2, in the 1.0 bundle. If it is built at all, two
 slices, per *Add one variable at a time*: the static monolith and its district first; the resonance
