@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1 (in development)
+
+- Dyson Sphere Program 0.10.35 adds a recipe, Dark Fog Lens. (Work in progress.)
+
 ## 0.5.0
 
 - Hover an item -- in the replicator, your inventory, the build menu, anywhere -- and its tooltip

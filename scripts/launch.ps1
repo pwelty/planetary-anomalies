@@ -70,7 +70,9 @@ Remove-Item Env:\DOORSTOP_DISABLE -ErrorAction SilentlyContinue
 Start-Process -FilePath $exe -WorkingDirectory $GameDir
 
 Write-Host "Launched. Watch for these lines in the log:" -ForegroundColor Green
-Write-Host "  Planetary Anomalies v0.5.0 loaded"
+$pluginText = [System.IO.File]::ReadAllText((Join-Path (Split-Path -Parent $PSScriptRoot) 'src\Plugin.cs'))
+$version = if ($pluginText -match 'PluginVersion\s*=\s*"([^"]+)"') { $Matches[1] } else { '?' }
+Write-Host "  Planetary Anomalies v$version loaded"
 Write-Host "  ANOMALY   (once a save is loaded)"
 Write-Host "  Anomaly attached to assembler #N   (once a matching smelter exists)"
 

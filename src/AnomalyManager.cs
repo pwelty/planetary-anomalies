@@ -514,6 +514,8 @@ namespace PlanetaryAnomalies
                 ", output x" + _outputMultiplier + " (" + multiplierReason + ")" +
                 ", rules v" + _ruleVersion + " (" + ruleReason + ").");
 
+            LogPoolIds();
+
             if (Plugin.LogEveryAnomaly != null && Plugin.LogEveryAnomaly.Value)
             {
                 SurveyGalaxy(galaxy);
@@ -633,7 +635,7 @@ namespace PlanetaryAnomalies
                     ? PlayerFacingItemName(r.Results[0])
                     : r.name;
 
-                line += (onLine > 0 ? ", " : "") + name + " [" + r.Type + "]";
+                line += (onLine > 0 ? ", " : "") + name + " [" + r.Type + ", recipe " + r.ID + "]";
                 onLine++;
 
                 if (onLine == 6)
@@ -762,6 +764,32 @@ namespace PlanetaryAnomalies
         }
 
         private static bool _densityWarned;
+
+        /// <summary>
+        /// The eligible pool as recipe ids, one line, every time a galaxy is resolved.
+        ///
+        /// Written for Dyson Sphere Program 0.10.35, the first game update since the mod shipped,
+        /// which adds a recipe. A recipe added to the pool takes the planets where it weighs most,
+        /// roughly one anomalous planet in N, so a game update can move a galaxy that
+        /// AnomalyRules = 1 promised would stay exactly as it is. Which ids were in the pool is
+        /// the one fact that decides it, and a bug report needs it without anyone having to
+        /// turn on LogEveryAnomaly.
+        /// </summary>
+        private static void LogPoolIds()
+        {
+            if (_eligible == null)
+            {
+                return;
+            }
+
+            string[] ids = new string[_eligible.Length];
+            for (int i = 0; i < _eligible.Length; i++)
+            {
+                ids[i] = _eligible[i].ID.ToString();
+            }
+
+            Plugin.Log.LogInfo("Eligible pool (" + _eligible.Length + " recipes, by id): " + string.Join(",", ids));
+        }
 
         private static bool IsDensityOverridden()
         {
