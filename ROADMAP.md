@@ -1548,6 +1548,38 @@ good part survives in *linked anomalies*, where the cost lands on one named plac
 it may sit beside rulesets as its own setting rather than inside one. To be decided with the saved-state
 question, not before it.
 
+### Candidate for 1.0 or later: chained anomalies -- use one to wake another
+
+An idea for the list, recorded 23 Sep; not a decision. Paul: "another idea is chained anomalies. you
+can unlock one only after using a different one."
+
+**What it does.** Some anomalies start dormant, and wake when the player has made use of another one.
+The galaxy stops being a scatter of good places and becomes a trail through them.
+
+**Why it fits.**
+
+- *It is the awakening Phase E has been waiting for.* Phase E names "one awakening or commitment
+  mechanic" as its experiment; this is a concrete one -- using something wakes something else.
+- *It can reach into the early game.* A chain that starts near home with a modest anomaly, and wakes a
+  stronger one further out, hands the player a reason to look outward in exactly the hours where the
+  mod is thinnest (*The early game is where the mod is thinnest*).
+- *It is the other half of linked anomalies.* Links weaken, chains wake; both are relations between two
+  planets, and both need the same disclosure on both ends, so they would share it.
+
+**What it needs.**
+
+- *The chain is stated, not discovered.* The dormant world says what wakes it -- "Dormant: wakes once
+  Tarazed V's anomaly has made 5,000" -- and the waking world says what it will wake. Finding a chain by
+  trial and error is what *Protect curiosity from chores* forbids.
+- *Waking persists.* If "used" meant "has machines running now", tearing down A would put B back to
+  sleep. So it needs the same saved-state answer as *finite anomalies*: a total taken from the game's
+  own production statistics, if they are complete enough -- not checked -- or real save data. The two
+  ideas should get one answer between them, not two.
+- *Short, and through anomalies worth using anyway.* Two or three links. A chain that asks the player to
+  build something they do not want, only to open the next door, is a chore list wearing a story.
+
+**Versioning.** It changes what planets carry, so ruleset 3 at the earliest.
+
 ### The multiplier is not a number, it is a price
 
 Paul, asked whether ×10 was too high: *"it's generally a LOT of work to set stuff up. For me anyway.
