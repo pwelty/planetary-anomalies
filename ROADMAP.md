@@ -1448,6 +1448,44 @@ generation, drones, miners -- and would each need their own hook.
 - *A ruleset.* It changes what planets carry, so ruleset 3 at the earliest. Nobody on ruleset 1 or 2
   ever gets one.
 
+### Candidate for 1.0: linked anomalies -- use one, weaken the other
+
+An idea for the list, recorded 23 Sep; not a decision. Paul: "what about LINKED anomalies? something
+like activating this recipe yields decreased X somewhere else."
+
+**Why it is interesting.** It is the first idea here that adds *state*: what one planet does depends
+on what the player has built on another. "The twin worlds share one resonance: draw on it here and it
+weakens there." That makes a decision at the scale of the galaxy -- which of two worlds to exploit,
+knowing either one costs the other -- and it scores high on the feature test's second question. It is
+close to what Phase C already sketches ("complementary anomaly corridors") and to Phase E's stateful
+anomalies.
+
+**Why it is dangerous.** It cuts against *Randomize the strategic situation, not machine reliability*.
+A factory slowing down three jumps away because of something built here reads as the game breaking,
+unless the player was told. So:
+
+- *Both ends say so, from the scan.* "Linked with Tarazed V: using one weakens the other." A link
+  nobody was told about is a bug report.
+- *One legible effect.* The simplest form is a pair where only one runs at full strength: using A
+  drops B from x10 to x3. One choice, stated plainly on both planets' panels.
+
+**Mechanically, better than it sounds.** "Activated" can be read from the world rather than
+remembered: the production patch already counts the machines attached to each anomaly ("Anomaly
+attached to N machines"), so "A is in use" means "A has machines running its recipe". Derived, not
+stored -- nothing is written to saves, which keeps Phase E's "explicit save semantics" worry out of it.
+The cost is a cross-planet check on the hottest path in the mod, so counts would be cached per
+planet, not recomputed per tick.
+
+**A bounded first version.** Links only within a star system -- twin planets -- where both ends are
+visible together, the story stays local and the explanation stays one line. Galaxy-wide links only if
+the local ones earn it in play.
+
+**The other half.** Positive links -- using A strengthens B -- are the same machinery pointed the other
+way, and closer to Phase C's corridors: a reason to develop two worlds together rather than choose
+between them.
+
+**Versioning.** It changes what planets carry, so ruleset 3 at the earliest.
+
 ### The multiplier is not a number, it is a price
 
 Paul, asked whether ×10 was too high: *"it's generally a LOT of work to set stuff up. For me anyway.
