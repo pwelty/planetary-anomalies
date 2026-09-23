@@ -1486,6 +1486,62 @@ between them.
 
 **Versioning.** It changes what planets carry, so ruleset 3 at the earliest.
 
+### Candidate for 1.0 or later: finite anomalies -- strangeness that runs down
+
+An idea for the list, recorded 23 Sep; not a decision. It arrived in three steps, and each step fixed
+a problem with the one before.
+
+1. *Per anomaly.* Paul: "something else could be a sort of 'timer' ... e.g. 'you can make only Z
+   items'". An anomaly becomes a resource that depletes, like an ore vein -- DSP's own language. It
+   makes a real decision: what a finite x10 is spent on, and when.
+2. *Galaxy-wide.* "or even 'you can produce only Z items with ALL anomalies across the galaxy before
+   they all turn off'". One shared reservoir for the whole galaxy: the player cannot use every
+   anomaly, so they choose what their galaxy is *for*. The story sits inside DSP's own theme -- a
+   universe of entropy and negentropy, and the anomalies as one phenomenon, fading.
+3. *Tranches.* "first 1000 uses, you can 20x. then next 2500 uses, 15x, etc." The answer to both
+   problems the first two raised:
+   - *No cliff.* Output steps down and settles at a floor instead of switching off, so the remote
+     factories built around anomalies become weaker, not pointless, and not all at once.
+   - *No hoarding.* The best rate is at the start, so waiting gains nothing. Finite shared resources
+     otherwise get hoarded -- the elixir nobody drinks -- which would mean players never using the
+     anomalies at all. Front-loading turns that around, and rewards being first to build on a world.
+
+**DSP already works this way.** Paul: "it's how veins currently work. seeps, too." Ore veins deplete to
+nothing; oil seeps slow as they are pumped and settle at a floor rather than running dry. Tranches with
+a floor are the seep model applied to strangeness -- so a finite anomaly is not a new rule to learn,
+it is the game's existing one reaching one more thing. The seep also suggests the shape: a smooth
+decline may read better than visible steps, as long as the current rate is always shown. And the
+game keeps its own depletion in the save (vein amounts are part of the factory data), which is the
+honest precedent for the question below.
+
+**What it needs.**
+
+- *Saved state, and there is no way around it.* This is the first idea that genuinely needs it: how
+  much of each anomaly (or of the galaxy's reservoir) has been spent. Everything since 0.1 has been
+  re-derived from the seed on every load, with nothing written to saves. The options: derive the count
+  from the game's own production statistics, which it already saves -- possible for the per-anomaly
+  form if the stats are complete enough, not checked; but the stats cannot separate anomaly output from
+  ordinary output, so the galaxy-wide form cannot use them -- or store it through DSP Mod Save (present
+  in Paul's profile; a new dependency), or decide deliberately to cross that line. Phase E already says
+  stateful anomalies need "explicit save semantics"; this is where that stops being hypothetical.
+- *A visible schedule.* "x20 for the next 312 crafts, then x15." Every step announced like any other
+  change, so a drop never reads as a machine breaking (*Randomize the strategic situation, not machine
+  reliability*).
+- *Tranches sized by the recipe, not by count.* "1000 uses" means a minute for twenty fast assemblers
+  and hours for a slow recipe. The sizes probably want to be crafting time or value, not raw crafts.
+- *Galaxy-wide is a mode, not the mod.* An opt-in challenge setting -- "entropy mode", off by default --
+  in the spirit of the multiplier being the player's dial. Never the ordinary way the mod plays.
+
+**Considered and set aside.** "For every item you make here, your production of inputs decreases across
+the galaxy." A small slowdown spread over every machine the player owns is the shape *Constraint/nerf*
+calls punishment confetti: it touches everything, nothing says why, and a player seeing their mining
+slow down could not trace it to one planet. It would also cost a check on every machine everywhere. Its
+good part survives in *linked anomalies*, where the cost lands on one named place and both ends say so.
+
+**Versioning.** Rulesets decide what planets carry; this decides how an anomaly behaves over time, so
+it may sit beside rulesets as its own setting rather than inside one. To be decided with the saved-state
+question, not before it.
+
 ### The multiplier is not a number, it is a price
 
 Paul, asked whether ×10 was too high: *"it's generally a LOT of work to set stuff up. For me anyway.
