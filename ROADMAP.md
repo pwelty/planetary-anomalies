@@ -1262,6 +1262,71 @@ be seen. *Open:* how often -- every load nags; once per install needs a remember
 be a second line the mod writes to its own config (it already rewrites a stale `AnomalyRules`), still
 nothing in saves. And a short *Upgrading to 1.0* section in the README.
 
+### Candidate for 1.0: say what a Dark Fog recipe is waiting on
+
+Found on 23 Sep, chasing a question that looked small: Paul could not find where to research Dark Fog
+Lens. The answer turned out to reach well past that recipe. An idea for the list, not a decision.
+
+**What the game does, from its code.**
+
+- *Some technologies are hidden, not locked.* `TechProto.IsHiddenTech` techs are not drawn in the tree
+  at all -- no greyed node, nothing to hint they exist -- until every item in their `PreItem` list has
+  been obtained at least once (`UITechNode.DetermineTechVisible`, via `GameHistoryData.ItemUnlocked`).
+  The Dark Fog techs work this way: the items are Dark Fog drops, recorded in
+  `GameHistoryData.enemyDropItemUnlocked`, and the research is done by hand with Dark Fog matrices.
+- *Drops come from the ground, and are gated by level.* The only loot roll against the drop-level
+  table is `EnemyDFGroundSystem.RandomDropItemOnce`. Space hives drop nothing, which matches Paul's
+  experience exactly: "I've blown up a few space hives (nothing ever drops from those) and dozens of
+  planetary ones." Each item records the lowest level it drops from, `ItemProto.EnemyDropLevel`.
+- *Every hive and base has a level.* Both `EnemyDFHiveSystem` and `DFGBaseComponent` carry an
+  `EvolveData` -- level, experience, experience per level. The game shows it in the Dark Fog monitor on
+  the HUD (`UIDarkFogMonitor`), for the bases and hives you track. Paul had never noticed the numbers;
+  his bases read 1, 5 and 6. Player reports put matrices at around level 12 and the rarer drops at 15,
+  18, 21 and 24 -- reports, not yet checked against the game's data.
+- *The settings that decide growth are fixed at creation.* Only the new-game screen (`UIGalaxySelect`,
+  through `UICombatSettingsDF`) writes starting level, growth speed, density, threat and experience
+  factors. Mid-game, only aggressiveness can change, through the Dark Fog Communicator
+  (`UIDFCommunicatorWindow`, with an item cost the code passes as a property id and count). Hostility,
+  not growth.
+
+**Why it matters to this mod.** Dark Fog-gated recipes are in the pool -- Negentropy Smelter, Dark Fog
+Lens under ruleset 2, probably others. In a galaxy on low combat settings they are not "one research
+away", they are behind a fight at levels the player may never reach. Paul: "I get killed by DF at
+these lower levels. I have no idea how to defend/attack at the levels required." In his galaxy, 3 of
+127 anomalies sat on unresearched recipes, and two of them were Negentropy Smelter (unlocked by
+Negentropy Recursion), on 40 Pyxidis I and Tarazed V. Both showed the Marker symbol correctly; he had
+simply never opened them. When he does, the panel says "On a recipe you have not researched yet" --
+true, and misleading about how far away it is.
+
+**Decided: they stay in the pool.** Paul: "I don't want them off the list." A Dark Fog-gated anomaly is
+the far end of the defence cost -- the most expensive anomaly there is, which is a reason to keep it,
+not remove it. The answer is disclosure, not exclusion.
+
+**The idea.** Say what it is waiting on, wherever the Marker speaks:
+
+- *In game:* the planet panel and the item tooltip name the gate -- "On a recipe you have not researched
+  yet. Its technology appears once you pick up <item>, which the Dark Fog drops from level N." Paul's
+  ask, in his words: "I would like some indication of that, so I know what's the minimum setting to get
+  this stuff."
+- *In the log:* every hidden technology, the items that reveal it, each item's drop level, and whether
+  the player has picked it up yet -- once per load.
+- *Possibly:* the galaxy's starting Dark Fog level from its combat settings, which says whether a drop
+  is available from the start.
+
+**The gap to be honest about.** A drop level is a fixed fact; how long a galaxy takes to reach it is not.
+It depends on growth speed, the experience factor and how much the player fights, so the mod can say
+"level 15" but not "at this setting, in N hours". Paul asked for "the minimum setting"; the nearest
+true answer is the level, plus the setting that starts bases there.
+
+**Open, only for Paul:** peace mode. There, nothing drops at all, so Dark Fog-gated recipes are not
+hard but impossible. Keeping them in the pool was decided for hard; whether it also holds for
+impossible has not been asked.
+
+**Small, and already known to be wrong:** the `LogEveryAnomaly` survey labels an unresearched anomaly
+`HIDDEN` even when `UnresearchedAnomalies = Marker` is showing it -- the label tests "scanned and
+researched" and ignores the setting (`AnomalyManager.cs`, the `SURVEY` line). Log only; nothing on
+screen is affected. Fix with the rest of 1.0, not as a release of its own.
+
 ### The multiplier is not a number, it is a price
 
 Paul, asked whether ×10 was too high: *"it's generally a LOT of work to set stuff up. For me anyway.
