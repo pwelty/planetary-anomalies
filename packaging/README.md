@@ -304,10 +304,10 @@ Off by default, and may change or go away.
 
 ## What is (tentatively) coming in 1.0
 
-Tentative, and in no promised order. What these have in common is that every one of them changes
-how anomalies are drawn, which is why they are waiting for each other: they ship together as a
-single change to the rules, and your existing galaxies keep the old rules unless you opt in. See
-*Before 1.0* above.
+Tentative, and in no promised order. Most of these change how anomalies are drawn, which is why
+they are waiting for each other: they ship together as a single change to the rules, and your
+existing galaxies keep the old rules unless you opt in. See *Before 1.0* above. The last two change
+nothing about your galaxy -- they are ways of seeing it.
 
 **No duplicate anomalies within a system.** Three sorter worlds around one star dilute what an
 anomaly means. Within a system, each recipe would appear at most once. Galaxy-wide uniqueness is
@@ -336,6 +336,11 @@ commit forty hours to it, or search for seeds where something you can build earl
 of home. It takes a long time in game to learn what a galaxy gave you, and the first hours are
 where that hurts most.
 
+**A page for your galaxy.** A single file, written by the mod from inside your game, listing every
+anomaly you have found, grouped by system -- to keep on a second monitor or hand to someone playing
+the same seed. Only what you have discovered: a field notebook, not the answer key. It records the
+rules and settings it was made under, so you can see why your galaxy differs from someone else's.
+
 ## Further out
 
 **More kinds of anomaly.** Output multipliers are the simplest possible effect and the only one
@@ -347,10 +352,6 @@ planets are strange in different ways.
 **Softer descriptions.** The panel tells you exactly what an anomaly does. There is an argument for
 saying only *what* is affected -- "improved sorter output" -- and letting you find out how much by
 building it. Existence stays free; magnitude becomes something you discover.
-
-**A page for your galaxy.** A single file listing every anomaly you have found, grouped by system,
-to keep on a second monitor or hand to someone playing the same seed. Only what you have
-discovered -- a field notebook, not the answer key.
 
 **A considered answer to proliferator**, rather than the current "does not crash".
 
