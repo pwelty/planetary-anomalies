@@ -35,6 +35,20 @@ anomaly does not remove logistics. It gives the player a compelling reason to bu
 
 ## Principles to protect
 
+### Everything circles around recipes
+
+Paul, 23 Sep, closing a long session of ideas: "our concept is everything circles around _recipes_."
+An anomaly is a property of a *recipe* in a *place*: this recipe, on this world, behaves differently.
+Not a vein, not a power plant, not drones, not the Dark Fog, not the galaxy at large. Other effects
+can be good ideas and still belong in another mod.
+
+It sorts the candidates. On the concept: multipliers and what prices them, planet-type personalities,
+the storm, the monolith's district (a recipe, inside a fence), Krell worlds and their natural version,
+debuffs on the recipe itself ("x10 output but x5 inputs"), and linked, finite and chained anomalies --
+all relations between recipe anomalies. Off it: the supervein (mining is not a recipe), and debuffs on
+infrastructure or on a mining supply chain (solar output, drone speed and miners are not recipes).
+Those are kept in the record, marked, rather than deleted.
+
 ### Location must matter
 
 An anomaly succeeds when it changes where production belongs, reroutes an established supply
@@ -1178,7 +1192,8 @@ a pointer outward. See *Candidate for 1.0: the visit*.
 - *Whether it replaces the weighted home draw or sits beside it.* A better home "quietly removes
   the reason to leave"; a district gives home a decision instead. Undecided.
 
-**The alternative: a supervein.** Paul, the same day: "how about a supervein on homeplanet?" An
+**The alternative: a supervein.** *Off the concept, as of 23 Sep: mining is not a recipe -- see
+*Everything circles around recipes*. Kept for the record.* Paul, the same day: "how about a supervein on homeplanet?" An
 idea for the list, not a decision. It follows the district's rule exactly -- it must not be where
 you would mine anyway. At the landing site it is free ore; on the far side of the home planet it
 is a choice between convenient normal veins now and a long belt to the rich one, which is the
@@ -1413,14 +1428,17 @@ there." A debuff on an unrelated recipe costs nothing. It does not create a deci
    input it is only two to one, a real gain rather than a windfall; and it takes five times the
    material shipped in, so belts, stations and supply become the bottleneck. *Create another
    logistics problem, not free items*, built into the recipe.
-2. *On infrastructure you need anyway.* Using an anomaly means building a factory there, and every
+2. *On infrastructure you need anyway.* *(Off the concept: power, drones and transport are not recipes
+   -- see *Everything circles around recipes*.)* Using an anomaly means building a factory there, and every
    factory needs power, belts, sorters and transport. "The ash sky here halves solar output"; "the
    field here slows drones". The world is still worth using, and using it means solving power or
    transport another way.
-3. *On the anomaly's own supply chain.* Titanium glass boosted, local titanium mining slowed: the
+3. *On the anomaly's own supply chain.* *(Off the concept where the chain is mining; on it where the
+   debuffed step is itself a recipe.)* Titanium glass boosted, local titanium mining slowed: the
    anomaly has to be fed from elsewhere, and one world becomes a small supply route.
 
-Forms 1 and 2 matter most. The point is that a debuff is not a recipe of its own; it is the *cost of
+Form 1 matters most, and is the one squarely on the concept -- the price sits on the recipe itself.
+Originally: forms 1 and 2 matter most. The point is that a debuff is not a recipe of its own; it is the *cost of
 using this place*.
 
 **It connects to three other threads.**
