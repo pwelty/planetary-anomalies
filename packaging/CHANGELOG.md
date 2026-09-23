@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.1 (in development)
+## 0.5.1
 
 - Your galaxy stays exactly as it was through Dyson Sphere Program 0.10.35. The game update adds a
   recipe, Dark Fog Lens, and under 0.5.0 it took about one anomalous planet in 150 -- one of 127 in
