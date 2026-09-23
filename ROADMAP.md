@@ -1514,6 +1514,12 @@ decline may read better than visible steps, as long as the current rate is alway
 game keeps its own depletion in the save (vein amounts are part of the factory data), which is the
 honest precedent for the question below.
 
+And spending it is never free. Paul: "you can't make 50,000 ingots just for fun. that has a real cost."
+Every craft counted against the budget consumes real inputs, power and time, so a tranche cannot be
+burned through to reach another, or wasted by accident, or farmed -- it is spent only on output the
+player actually wants, for the same reason nobody drains an ore vein for fun. The budget polices
+itself.
+
 **What it needs.**
 
 - *Saved state, and there is no way around it.* This is the first idea that genuinely needs it: how
