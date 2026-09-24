@@ -6,6 +6,68 @@ what the next session should pick up. Facts that outlive a session belong in
 
 ---
 
+## 2026-09-19 to 2026-09-24 — 0.5.0 and 0.5.1 released; ruleset 1 fixed; 1.0 ideas
+
+**A gap first.** No entries were written between 27 Aug and this one, across 0.2 to 0.5. That history
+is in `packaging/CHANGELOG.md` (what shipped), `ROADMAP.md` (why, and what was learned) and the git
+log; it is not reconstructed here. AGENTS.md asks for an entry per session, and this resumes it.
+
+**What changed.**
+
+- *0.5.0 finished and released* (22 Sep, tag `v0.5.0`). Last fixes before release: the item tooltip in
+  the replicator grid (the grid passes a recipe id *negated* as `itemId`); the tooltip line drawn in the
+  game's own text colour with only "Anomaly:" in gold; a read-through that found research state kept
+  per session rather than per game, menu-demo research leaking into the first real game, one broken
+  patch able to take every later patch with it (each surface now patches on its own), a tooltip
+  dictionary that leaked destroyed tooltips, and "ten to one" hard-coded in the Marker line.
+- *Research announcements were invisible, and had been since 0.5 began.* Two causes, both found by
+  reading `UIRealtimeTip.Update`: a tip's width is `sqrt(clamp01(0.2 + 7 x (1 - lifeTime)))`, so
+  lengthening a tip by raising `lifeTime` made it zero-width for most of its life; and
+  `InvokeRealtimeTip` multiplies its drift argument by 40, so 6 meant 240 px/s. Now `lifeTime` is pinned
+  at 0.8 while the announcement is read, drift is 0, and the landing position is logged in screen
+  pixels. verify.ps1 asserts the width formula.
+- *0.5.1 released* (23 Sep, tag `v0.5.1`), for Dyson Sphere Program 0.10.35, which added Dark Fog Lens
+  (recipe 162). Under 0.5.0 it took one of 127 anomalous planets in Paul's galaxy (Zavijava IV,
+  Crystal Shell Set until then). Ruleset 1 now draws only from a fixed list of 150 recipe ids
+  (`AnomalyMath.RulesetOnePool`, locked by the golden test); ruleset 2, opt-in, is the same arithmetic
+  on the game's full pool; 1.0's rules become ruleset 3. The pool is logged by id on every load.
+- *1.0.0 started* as a version bump only. No 1.0 development yet, at Paul's instruction.
+- *Roadmap:* 0.5 and 0.5.1 retrospectives; a new first principle, "everything circles around
+  recipes"; and a run of 1.0 candidates, recorded as ideas, not decisions -- the monolith (and a
+  supervein, marked off-concept), four suggestions (scope, priced multipliers, planet types, upgrade
+  notice), Dark Fog disclosure, Krell worlds and their natural-cause version, debuffs that bite, linked
+  anomalies, finite anomalies with tranches, chained anomalies. The seed searcher and galaxy page moved
+  onto the README's 1.0 list.
+
+**What is actually proven.**
+
+- In game, by Paul: announcements are seen (test tip on screen, geometry logged inside the screen at
+  full scale and opacity); the tooltip line shows in the replicator grid; under 0.5.1 on game 0.10.35,
+  Zavijava IV is Crystal Shell Set again and the log names Dark Fog Lens as not drawn.
+- Offline, with the mod's own generator: ruleset 1's list reproduces all 148 anomalous planets in the
+  Anomaly Catalogue for seed 30853643 (built on 0.10.34, 3 Sep) and all 127 in Paul's galaxy. That is
+  the evidence the recovered list matches 0.10.34's pool; the baseline could not be taken live because
+  Steam updated the game a minute before launch.
+- verify.ps1: 68 checks, including the golden test (201 results), pass against 0.10.35.
+
+**What is not.**
+
+- A *real* research announcement -- one naming a planet -- has not been seen since the display fix;
+  only the test tip has. Same code path, not the same proof.
+- Ruleset 2 has not been run in game. It is the 0.5.0 behaviour, so low risk, but unobserved.
+- The Dark Fog facts in the roadmap (hidden techs, level-gated ground drops, base levels, settings
+  fixed at creation) come from the game's code; the per-item drop levels and which item reveals Dark
+  Fog Lens come from its data and have not been read. Player reports of levels 12/15/18/21/24 are
+  unconfirmed.
+- The survey log labels Marker-mode anomalies `HIDDEN`. Known, log only, not fixed.
+
+**Where the next session starts.** 1.0 is Paul's to scope. The two decisions that shape it: which
+candidates ruleset 3 carries, and whether the mod starts writing to saves (finite and chained anomalies
+both need it). Nothing is built ahead of that. Downloads as of 24 Sep: 462 in total; 0.5.1 at 45 in its
+first day.
+
+---
+
 ## 2026-08-27 (later) — anomalies derived across the galaxy from the seed
 
 **Released as v0.1.0 on Thunderstore:**

@@ -190,15 +190,23 @@ Distribution notes from the same survey, useful for the duplicates question:
 - Any specific recipe has roughly a 37% chance of being absent from a galaxy this size. Absence is
   ordinary, not a bug -- worth remembering when someone reports "my galaxy has no X".
 
-### Downloads, as of 2026-09-23
+### Downloads, as of 2026-09-24
 
 | Version | Published | Downloads | Notes |
 | --- | --- | --- | --- |
 | 0.1.0 | 27 Aug | 70 | |
-| 0.2.0 | 29 Aug | 27 | superseded by 0.3.0 within 23 minutes |
-| 0.3.0 | 29 Aug | 143 | eleven days as the current version |
-| 0.4.0 | 9 Sep | 138 | 48 in its first day, 67 by the second, 94 by 14 Sep, 121 by 19 Sep, 138 by 23 Sep |
-| 0.5.0 | 22 Sep | 36 | about a day in |
+| 0.2.0 | 29 Aug | 28 | superseded by 0.3.0 within 23 minutes |
+| 0.3.0 | 29 Aug | 144 | eleven days as the current version |
+| 0.4.0 | 9 Sep | 139 | 48 in its first day, 67 by the second, 94 by 14 Sep, 121 by 19 Sep, 138 by 23 Sep |
+| 0.5.0 | 22 Sep | 36 | current for about 25 hours; not one download since 0.5.1 replaced it |
+| 0.5.1 | 23 Sep | 45 | about a day in |
+
+462 in total on 24 Sep. Two releases in two days, and the second drew more than the first: 45 for
+0.5.1 against 36 for 0.5.0, 81 across the pair. That fits the returning-audience reading below --
+players take updates as they appear, even a second one the next morning -- and says the update
+prompt reaches more people than 0.5.0's single day suggested. 0.5.0 stopped dead at 36 the moment
+0.5.1 existed, which is also worth knowing: a superseded version gets nothing, so a quick follow-up
+costs the earlier release its tail, not its players.
 
 414 in total on 23 Sep, a day after 0.5.0 went up. Its first day was 36 against 0.4.0's 48. Read
 with care, because of what a first day measures: those are players whose mod manager showed them an
