@@ -234,6 +234,7 @@ namespace PlanetaryAnomalies
             _galaxyKnown = false;
             _outputMultiplier = 10;
             _byPlanet.Clear();
+            _chosenRecipe.Clear();
             _withheldLogged.Clear();
             _eligible = null;
             _exclusions = null;
@@ -486,6 +487,7 @@ namespace PlanetaryAnomalies
 
             // New game, or a different save. Nothing carries over.
             _byPlanet.Clear();
+            _chosenRecipe.Clear();
             _withheldLogged.Clear();
             _eligible = null;
             _galaxySeed = seed;
@@ -608,7 +610,7 @@ namespace PlanetaryAnomalies
                             ", " + (researched
                                 ? "researched"
                                 : "NOT researched" + TechSuffix(anomaly.RecipeId)) +
-                            " -> " + (scanned && researched ? "SHOWN" : "HIDDEN") + "]");
+                            " -> " + SurveyVisibility(scanned, anomaly.RecipeId) + "]");
                         continue;
                     }
 
@@ -700,6 +702,24 @@ namespace PlanetaryAnomalies
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// What the player sees of an anomaly, for the survey line. It used to test only "scanned and
+        /// researched", so a Marker-mode anomaly -- drawn on the star map as a bare symbol -- was
+        /// logged as HIDDEN while the player was looking at it.
+        /// </summary>
+        private static string SurveyVisibility(bool scanned, int recipeId)
+        {
+            if (!scanned)
+            {
+                return "HIDDEN";
+            }
+
+            AnomalyVisibility visibility = VisibilityOfRecipe(recipeId);
+            return visibility == AnomalyVisibility.Full ? "SHOWN"
+                : visibility == AnomalyVisibility.Marker ? "MARKER"
+                : "HIDDEN";
         }
 
         /// <summary>
@@ -867,9 +887,8 @@ namespace PlanetaryAnomalies
         /// "Early" is read from the game rather than listed by hand, so it follows the game's own
         /// tree: a recipe is early if it needs no technology at all, or if the technology that
         /// unlocks it costs nothing beyond the first matrix -- electromagnetic, the blue one -- and
-        /// plain items. The first matrix is found, not assumed: it is the research recipe whose
-        /// inputs include no other matrix. Hidden technologies are never early; they wait on Dark
-        /// Fog drops.
+        /// plain items. The first matrix is found, not assumed: it is the matrix whose own research
+        /// needs no matrix. Hidden technologies are never early; they wait on Dark Fog drops.
         /// </summary>
         private static void BuildEarlyGameTables(GalaxyData galaxy)
         {
@@ -900,22 +919,33 @@ namespace PlanetaryAnomalies
                 }
             }
 
+            // The first matrix is the one you can research your way to without any matrix: the
+            // research recipe whose own unlocking technology costs none. The first version looked for
+            // the matrix *made* without other matrices, on the belief that each tier is built from the
+            // one below. It is not -- every matrix but Universe is made from ordinary items -- and it
+            // found five, fell back, and left the whole blue tier out of "early".
             int firstMatrix = -1;
             int candidates = 0;
             for (int i = 0; i < research.Count; i++)
             {
                 RecipeProto r = research[i];
-                bool usesMatrix = false;
-                for (int j = 0; r.Items != null && j < r.Items.Length; j++)
+                if (r.Results.Length == 0)
                 {
-                    if (matrices.Contains(r.Items[j]))
+                    continue;
+                }
+
+                TechProto tech = r.preTech;
+                bool techUsesMatrix = false;
+                for (int j = 0; tech != null && tech.Items != null && j < tech.Items.Length; j++)
+                {
+                    if (matrices.Contains(tech.Items[j]))
                     {
-                        usesMatrix = true;
+                        techUsesMatrix = true;
                         break;
                     }
                 }
 
-                if (!usesMatrix && r.Results.Length > 0)
+                if (!techUsesMatrix)
                 {
                     firstMatrix = r.Results[0];
                     candidates++;
@@ -998,38 +1028,192 @@ namespace PlanetaryAnomalies
             return planet != null && planet.star != null && _nearStars.Contains(planet.star.id);
         }
 
+        /// <summary>Recipes already decided for this galaxy, by planet: the draw, remembered.</summary>
+        private static readonly Dictionary<int, int> _chosenRecipe = new Dictionary<int, int>();
+
         /// <summary>
         /// The recipe a planet carries if it is anomalous: the one place every ruleset's draw is
-        /// decided, so the production path and the survey can never disagree.
+        /// decided, so the production path and the survey can never disagree. Remembered per galaxy,
+        /// because under NoDuplicates one planet's draw depends on its neighbours'.
         /// </summary>
         private static int ChooseRecipeIdFor(int planetId)
+        {
+            int cached;
+            if (_chosenRecipe.TryGetValue(planetId, out cached))
+            {
+                return cached;
+            }
+
+            int chosen = DrawRecipeIdFor(planetId);
+            _chosenRecipe[planetId] = chosen;
+            return chosen;
+        }
+
+        /// <summary>Ruleset 3 with NoDuplicates on.</summary>
+        private static bool NoDuplicatesApplies
+        {
+            get { return _ruleset >= 3 && (Plugin.NoDuplicates == null || Plugin.NoDuplicates.Value); }
+        }
+
+        /// <summary>
+        /// Whether a planet carries an anomaly -- Derive's gates, without deriving it. Used to find
+        /// which neighbours have already claimed a recipe.
+        /// </summary>
+        private static bool WouldBeAnomalous(int planetId)
+        {
+            if (planetId == _birthPlanetId)
+            {
+                if (HomeIsProtected)
+                {
+                    return false;
+                }
+
+                if (HomeGuaranteed)
+                {
+                    return !IsUnbuildable(planetId);
+                }
+            }
+
+            if (IsUnbuildable(planetId))
+            {
+                return false;
+            }
+
+            return AnomalyMath.IsAnomalous(_galaxySeed, planetId, AnomalySystemVersion, _densityPercent);
+        }
+
+        /// <summary>
+        /// The recipes a planet may not take under NoDuplicates: those already claimed by anomalous
+        /// planets earlier in its group, in planet-id order.
+        ///
+        /// The group is the planet's star system -- or, for a planet within 6 light years of home, every
+        /// system within 6 light years of home together. That wider group is where duplicates hurt: in
+        /// the first run with ruleset 3, Tesla Tower landed on five worlds near home and Wind Turbine
+        /// on two in one system. Paul: "a little crazy". Galaxy-wide uniqueness is not possible at the
+        /// densities people play -- at 75% there are more anomalous worlds than recipes -- so the rule
+        /// is kept to where the player actually is.
+        ///
+        /// Order by planet id makes it deterministic and local: a planet's draw depends only on the
+        /// lower-numbered planets of its own group, never on the order anything was looked at.
+        /// </summary>
+        private static HashSet<int> TakenInGroup(int planetId)
+        {
+            HashSet<int> taken = new HashSet<int>();
+            GameData data = GameMain.data;
+            GalaxyData galaxy = data != null ? data.galaxy : null;
+            PlanetData planet = galaxy != null ? galaxy.PlanetById(planetId) : null;
+            if (planet == null || planet.star == null)
+            {
+                return taken;
+            }
+
+            List<int> group = new List<int>();
+            if (_nearStars.Contains(planet.star.id))
+            {
+                foreach (int starId in _nearStars)
+                {
+                    AddPlanetIds(galaxy.StarById(starId), group);
+                }
+            }
+            else
+            {
+                AddPlanetIds(planet.star, group);
+            }
+
+            group.Sort();
+            for (int i = 0; i < group.Count; i++)
+            {
+                int other = group[i];
+                if (other >= planetId)
+                {
+                    break;
+                }
+
+                if (!WouldBeAnomalous(other))
+                {
+                    continue;
+                }
+
+                int recipe = ChooseRecipeIdFor(other);
+                if (recipe >= 0)
+                {
+                    taken.Add(recipe);
+                }
+            }
+
+            return taken;
+        }
+
+        private static void AddPlanetIds(StarData star, List<int> into)
+        {
+            if (star == null || star.planets == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < star.planets.Length; i++)
+            {
+                if (star.planets[i] != null)
+                {
+                    into.Add(star.planets[i].id);
+                }
+            }
+        }
+
+        private static int DrawRecipeIdFor(int planetId)
         {
             if (_eligible == null || _eligible.Length == 0)
             {
                 return -1;
             }
 
+            HashSet<int> taken = NoDuplicatesApplies ? TakenInGroup(planetId) : null;
+
             if (planetId == _birthPlanetId && HomeGuaranteed)
             {
                 List<int> early = new List<int>();
+                List<int> earlyFree = new List<int>();
                 for (int i = 0; i < _eligible.Length; i++)
                 {
-                    if (_earlyRecipes.Contains(_eligible[i].ID))
+                    int id = _eligible[i].ID;
+                    if (!_earlyRecipes.Contains(id))
                     {
-                        early.Add(_eligible[i].ID);
+                        continue;
+                    }
+
+                    early.Add(id);
+                    if (taken == null || !taken.Contains(id))
+                    {
+                        earlyFree.Add(id);
                     }
                 }
 
-                return early.Count > 0
-                    ? AnomalyMath.ChooseRecipeId(_galaxySeed, planetId, AnomalySystemVersion, early.ToArray())
+                List<int> pick = earlyFree.Count > 0 ? earlyFree : early;
+                return pick.Count > 0
+                    ? AnomalyMath.ChooseRecipeId(_galaxySeed, planetId, AnomalySystemVersion, pick.ToArray())
                     : -1;
             }
 
-            int[] ids = new int[_eligible.Length];
+            List<int> free = new List<int>();
             for (int i = 0; i < _eligible.Length; i++)
             {
-                ids[i] = _eligible[i].ID;
+                if (taken == null || !taken.Contains(_eligible[i].ID))
+                {
+                    free.Add(_eligible[i].ID);
+                }
             }
+
+            if (free.Count == 0)
+            {
+                // Every recipe already claimed in the group -- only possible with a tiny pool. Repeat
+                // rather than leave the planet empty.
+                for (int i = 0; i < _eligible.Length; i++)
+                {
+                    free.Add(_eligible[i].ID);
+                }
+            }
+
+            int[] ids = free.ToArray();
 
             if (NearbyLeansEarly && IsNearHome(planetId))
             {

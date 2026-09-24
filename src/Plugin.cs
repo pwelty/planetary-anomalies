@@ -28,6 +28,8 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<bool> HomePlanetNeverAnomalous;
         internal static ConfigEntry<bool> AnomalousHome;
         internal static ConfigEntry<bool> NearbyFavorsEarlyRecipes;
+        internal static ConfigEntry<bool> NoDuplicates;
+        internal static ConfigEntry<bool> ReplicatorFollowsPlanet;
         internal static ConfigEntry<int> OutputMultiplier;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
         internal static ConfigEntry<UnresearchedDisplay> UnresearchedAnomalies;
@@ -118,6 +120,9 @@ namespace PlanetaryAnomalies
                         (working.Length > 0 ? working : "nothing") + "." +
                         (broken.Length > 0 ? " NOT working: " + broken + " -- see the errors above." : "") +
                         " Production is idle until a planet has a factory (i.e. until something is built).");
+
+            // Not a disclosure surface: an effect, on its own seam, and inert unless the setting is on.
+            TryPatch(typeof(ReplicatorPatch), "the replicator (ReplicatorFollowsPlanet)");
         }
 
         /// <summary>
@@ -175,6 +180,16 @@ namespace PlanetaryAnomalies
                 "false: every world draws from the whole recipe list alike.\n" +
                 "Changes which recipe some nearby worlds carry, never which worlds are anomalous.");
 
+            NoDuplicates = Config.Bind(
+                "Generation",
+                "NoDuplicates",
+                true,
+                "Ruleset 3 only. No recipe is an anomaly twice in the same star system, and none twice\n" +
+                "among the star systems within 6 light years of home -- the worlds you reach first,\n" +
+                "where a repeat wastes the most.\n" +
+                "false: every world draws on its own, and repeats happen.\n" +
+                "Changes which recipe some worlds carry, never which worlds are anomalous.");
+
             AnomalyChancePercent = Config.Bind(
                 "Generation",
                 "AnomalyChancePercent",
@@ -195,6 +210,16 @@ namespace PlanetaryAnomalies
                     "at a glance. Changing this affects neither which planets are anomalous nor " +
                     "which recipe each one affects.",
                     new AcceptableValueRange<int>(2, 1000)));
+
+            ReplicatorFollowsPlanet = Config.Bind(
+                "Effect",
+                "ReplicatorFollowsPlanet",
+                true,
+                "When Icarus stands on an anomalous world, hand-crafting that world's anomalous recipe\n" +
+                "in the replicator makes the same multiple the machines there do.\n" +
+                "A job keeps its multiple if you fly away before it finishes, and a job still queued\n" +
+                "when you save is saved with it.\n" +
+                "false: the replicator ignores anomalies, as before 1.0.");
 
             StarmapLabel = Config.Bind(
                 "Display",

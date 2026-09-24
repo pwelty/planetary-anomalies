@@ -6,6 +6,12 @@
   recipes you can build early (`AnomalousHome`), and worlds within 6 light years of home lean
   toward those recipes (`NearbyFavorsEarlyRecipes`). Both on by default. Ruleset 3 is the default
   for a fresh install; an existing config keeps its ruleset.
+- `NoDuplicates` (ruleset 3, on by default): no recipe twice in one star system, and none twice
+  among the systems within 6 light years of home.
+- `ReplicatorFollowsPlanet` (on by default, for now): standing on an anomalous world, Icarus's
+  replicator makes that world's anomalous recipe at the same multiple its machines do.
+- The survey log (`LogEveryAnomaly`) now says MARKER for an anomaly Marker mode is showing, instead
+  of HIDDEN.
 
 ## 0.5.1
 

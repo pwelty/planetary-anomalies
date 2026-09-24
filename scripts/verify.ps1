@@ -381,6 +381,32 @@ if (-not $notify) {
     }
 }
 
+# --- ReplicatorFollowsPlanet ------------------------------------------------------------------------
+# The postfix reads the ForgeTask that AddTaskIterate returns and rewrites its productCounts; where
+# Icarus stands comes from GameMain.localPlanet.
+$forge = $gameAsm.MainModule.GetType('MechaForge')
+$addIterate = $forge.Methods | Where-Object { $_.Name -eq 'AddTaskIterate' -and $_.ReturnType.Name -eq 'ForgeTask' } | Select-Object -First 1
+if (-not $addIterate) {
+    $failures.Add("MechaForge.AddTaskIterate no longer returns a ForgeTask; ReplicatorFollowsPlanet would fail to patch.")
+} else {
+    Write-Host "OK  Harmony target: MechaForge.AddTaskIterate returns ForgeTask"
+}
+$forgeTask = $gameAsm.MainModule.GetType('ForgeTask')
+foreach ($needed in @('recipeId', 'productCounts', 'count')) {
+    $f = $forgeTask.Fields | Where-Object { $_.Name -eq $needed -and $_.IsPublic }
+    if (-not $f) {
+        $failures.Add("ForgeTask.$needed is missing or no longer public; ReplicatorFollowsPlanet cannot read or change the job.")
+    } else {
+        Write-Host "OK  ForgeTask.$needed is public"
+    }
+}
+$localPlanet = $gameAsm.MainModule.GetType('GameMain').Properties | Where-Object { $_.Name -eq 'localPlanet' -and $_.GetMethod -and $_.GetMethod.IsStatic -and $_.GetMethod.IsPublic }
+if (-not $localPlanet) {
+    $failures.Add("GameMain.localPlanet is missing or no longer public static; the replicator cannot tell where Icarus is.")
+} else {
+    Write-Host "OK  GameMain.localPlanet is public static"
+}
+
 $techProto = $gameAsm.MainModule.GetType('TechProto')
 $unlockRecipes = $techProto.Fields | Where-Object { $_.Name -eq 'UnlockRecipes' -and $_.IsPublic }
 if (-not $unlockRecipes) {
