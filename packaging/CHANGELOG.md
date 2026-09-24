@@ -8,6 +8,9 @@
   for a fresh install; an existing config keeps its ruleset.
 - `NoDuplicates` (ruleset 3, on by default): no recipe twice in one star system, and none twice
   among the systems within 6 light years of home.
+- `NoRepeatsInGalaxy` (ruleset 3, off by default): every recipe at most once in the whole galaxy,
+  handed out nearest first. With about 150 recipes, a dense galaxy runs out; the furthest worlds
+  then stay ordinary, and the log says how many.
 - `ReplicatorFollowsPlanet` (on by default, for now): standing on an anomalous world, Icarus's
   replicator makes that world's anomalous recipe at the same multiple its machines do.
 - The survey log (`LogEveryAnomaly`) now says MARKER for an anomaly Marker mode is showing, instead

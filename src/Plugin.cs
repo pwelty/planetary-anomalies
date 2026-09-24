@@ -29,6 +29,7 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<bool> AnomalousHome;
         internal static ConfigEntry<bool> NearbyFavorsEarlyRecipes;
         internal static ConfigEntry<bool> NoDuplicates;
+        internal static ConfigEntry<bool> NoRepeatsInGalaxy;
         internal static ConfigEntry<bool> ReplicatorFollowsPlanet;
         internal static ConfigEntry<int> OutputMultiplier;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
@@ -189,6 +190,18 @@ namespace PlanetaryAnomalies
                 "where a repeat wastes the most.\n" +
                 "false: every world draws on its own, and repeats happen.\n" +
                 "Changes which recipe some worlds carry, never which worlds are anomalous.");
+
+            NoRepeatsInGalaxy = Config.Bind(
+                "Generation",
+                "NoRepeatsInGalaxy",
+                false,
+                "Ruleset 3 only. Every recipe is an anomaly at most once in the whole galaxy. Takes over\n" +
+                "from NoDuplicates.\n" +
+                "There are only about 150 recipes, so at high density a galaxy has more anomalous worlds\n" +
+                "than recipes. They are handed out nearest first -- home, then outward -- and once every\n" +
+                "recipe is taken, the worlds still waiting, the furthest ones, stay ordinary. The log says\n" +
+                "how many.\n" +
+                "Off by default: a recipe on two or three worlds is a choice of which one you can hold.");
 
             AnomalyChancePercent = Config.Bind(
                 "Generation",

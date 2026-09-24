@@ -228,6 +228,8 @@ namespace PlanetaryAnomalies
             _ruleset = DefaultRuleset;
             _outsideRuleset.Clear();
             _earlyRecipes.Clear();
+            _starDistanceLy.Clear();
+            _galaxyAssigned = false;
             _nearStars.Clear();
             _galaxySeed = 0;
             _birthPlanetId = -1;
@@ -893,6 +895,8 @@ namespace PlanetaryAnomalies
         private static void BuildEarlyGameTables(GalaxyData galaxy)
         {
             _earlyRecipes.Clear();
+            _starDistanceLy.Clear();
+            _galaxyAssigned = false;
             _nearStars.Clear();
 
             if (_ruleset < 3 || _eligible == null || galaxy == null)
@@ -988,6 +992,7 @@ namespace PlanetaryAnomalies
                     double dy = star.uPosition.y - home.uPosition.y;
                     double dz = star.uPosition.z - home.uPosition.z;
                     double ly = Math.Sqrt(dx * dx + dy * dy + dz * dz) / AnomalyMath.LightYear;
+                    _starDistanceLy[star.id] = ly;
                     if (ly <= AnomalyMath.NearLightYears)
                     {
                         _nearStars.Add(star.id);
@@ -1044,9 +1049,121 @@ namespace PlanetaryAnomalies
                 return cached;
             }
 
-            int chosen = DrawRecipeIdFor(planetId);
+            if (GalaxyUniqueApplies)
+            {
+                EnsureGalaxyAssignment();
+                if (_chosenRecipe.TryGetValue(planetId, out cached))
+                {
+                    return cached;
+                }
+
+                // Not anomalous, so not in the assignment: its latent recipe, for the survey only.
+                int latent = DrawRecipeIdFor(planetId, null, true);
+                _chosenRecipe[planetId] = latent;
+                return latent;
+            }
+
+            HashSet<int> taken = NoDuplicatesApplies ? TakenInGroup(planetId) : null;
+            int chosen = DrawRecipeIdFor(planetId, taken, true);
             _chosenRecipe[planetId] = chosen;
             return chosen;
+        }
+
+        /// <summary>Ruleset 3 with NoRepeatsInGalaxy on. Takes over from NoDuplicates.</summary>
+        private static bool GalaxyUniqueApplies
+        {
+            get { return _ruleset >= 3 && Plugin.NoRepeatsInGalaxy != null && Plugin.NoRepeatsInGalaxy.Value; }
+        }
+
+        /// <summary>Every star's distance from the starting star, in light years. Ruleset 3.</summary>
+        private static readonly Dictionary<int, double> _starDistanceLy = new Dictionary<int, double>();
+
+        private static bool _galaxyAssigned;
+
+        /// <summary>
+        /// NoRepeatsInGalaxy: every recipe at most once in the whole galaxy, handed out nearest first.
+        ///
+        /// Paul, watching the same recipes turn up across a galaxy: "we prob need a 'no repeats anywhere
+        /// in the galaxy' setting, too". The limit is arithmetic: the pool is about 150 recipes, and at
+        /// high density a galaxy has more anomalous worlds than that. So once every recipe is taken, the
+        /// worlds still waiting stay ordinary -- and the order decides which. Nearest first: the home
+        /// planet, then outward by the star's distance from home, then by planet id within a system. The
+        /// worlds that lose out are the furthest, which is the right end to lose: the early game keeps
+        /// its anomalies, and the far galaxy thins.
+        ///
+        /// Done in one pass, in order, rather than recursively per planet: every world's draw depends on
+        /// every nearer world, and a recursion that deep has no place on Unity's main thread.
+        /// </summary>
+        private static void EnsureGalaxyAssignment()
+        {
+            if (_galaxyAssigned)
+            {
+                return;
+            }
+            _galaxyAssigned = true;
+
+            GameData data = GameMain.data;
+            GalaxyData galaxy = data != null ? data.galaxy : null;
+            if (galaxy == null || galaxy.stars == null)
+            {
+                return;
+            }
+
+            List<int> order = new List<int>();
+            for (int s = 0; s < galaxy.stars.Length; s++)
+            {
+                AddPlanetIds(galaxy.stars[s], order);
+            }
+
+            order.Sort(delegate(int a, int b)
+            {
+                int byDistance = DistanceOf(a).CompareTo(DistanceOf(b));
+                return byDistance != 0 ? byDistance : a.CompareTo(b);
+            });
+
+            HashSet<int> taken = new HashSet<int>();
+            int anomalous = 0;
+            int ordinary = 0;
+            for (int i = 0; i < order.Count; i++)
+            {
+                int planetId = order[i];
+                if (!WouldBeAnomalous(planetId))
+                {
+                    continue;
+                }
+
+                anomalous++;
+                int recipe = DrawRecipeIdFor(planetId, taken, false);
+                _chosenRecipe[planetId] = recipe;
+                if (recipe >= 0)
+                {
+                    taken.Add(recipe);
+                }
+                else
+                {
+                    ordinary++;
+                }
+            }
+
+            Plugin.Log.LogInfo("No repeats anywhere in the galaxy: " + taken.Count + " recipes on " + (anomalous - ordinary) +
+                               " worlds, nearest first. " + (ordinary > 0
+                                   ? ordinary + " further worlds stay ordinary because every recipe was already taken."
+                                   : "Every anomalous world got a recipe of its own."));
+        }
+
+        private static double DistanceOf(int planetId)
+        {
+            if (planetId == _birthPlanetId)
+            {
+                return -1.0;
+            }
+
+            GameData data = GameMain.data;
+            PlanetData planet = (data != null && data.galaxy != null) ? data.galaxy.PlanetById(planetId) : null;
+            double ly;
+            return planet != null && planet.star != null && _starDistanceLy.TryGetValue(planet.star.id, out ly)
+                ? ly
+                : double.MaxValue;
         }
 
         /// <summary>Ruleset 3 with NoDuplicates on.</summary>
@@ -1160,14 +1277,16 @@ namespace PlanetaryAnomalies
             }
         }
 
-        private static int DrawRecipeIdFor(int planetId)
+        /// <summary>
+        /// One planet's draw, excluding <paramref name="taken"/>. If every candidate is taken:
+        /// repeat when <paramref name="allowRepeat"/>, otherwise -1 -- the planet stays ordinary.
+        /// </summary>
+        private static int DrawRecipeIdFor(int planetId, HashSet<int> taken, bool allowRepeat)
         {
             if (_eligible == null || _eligible.Length == 0)
             {
                 return -1;
             }
-
-            HashSet<int> taken = NoDuplicatesApplies ? TakenInGroup(planetId) : null;
 
             if (planetId == _birthPlanetId && HomeGuaranteed)
             {
@@ -1188,7 +1307,7 @@ namespace PlanetaryAnomalies
                     }
                 }
 
-                List<int> pick = earlyFree.Count > 0 ? earlyFree : early;
+                List<int> pick = earlyFree.Count > 0 ? earlyFree : (allowRepeat ? early : earlyFree);
                 return pick.Count > 0
                     ? AnomalyMath.ChooseRecipeId(_galaxySeed, planetId, AnomalySystemVersion, pick.ToArray())
                     : -1;
@@ -1205,6 +1324,11 @@ namespace PlanetaryAnomalies
 
             if (free.Count == 0)
             {
+                if (!allowRepeat)
+                {
+                    return -1;
+                }
+
                 // Every recipe already claimed in the group -- only possible with a tiny pool. Repeat
                 // rather than leave the planet empty.
                 for (int i = 0; i < _eligible.Length; i++)
