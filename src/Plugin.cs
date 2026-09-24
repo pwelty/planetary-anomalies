@@ -26,6 +26,8 @@ namespace PlanetaryAnomalies
         // effect on the next load rather than mid-session.
         internal static ConfigEntry<string> AnomalyChancePercent;
         internal static ConfigEntry<bool> HomePlanetNeverAnomalous;
+        internal static ConfigEntry<bool> AnomalousHome;
+        internal static ConfigEntry<bool> NearbyFavorsEarlyRecipes;
         internal static ConfigEntry<int> OutputMultiplier;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
         internal static ConfigEntry<UnresearchedDisplay> UnresearchedAnomalies;
@@ -143,6 +145,7 @@ namespace PlanetaryAnomalies
                 "Generation",
                 "HomePlanetNeverAnomalous",
                 true,
+                "Rulesets 1 and 2 only; ruleset 3 uses AnomalousHome instead.\n" +
                 "Keeps the world you start on ordinary.\n" +
                 "On by default, deliberately: you would meet an anomaly before the star map exists to\n" +
                 "explain it, and anomalies are meant to be a reason to look outward rather than a\n" +
@@ -151,6 +154,26 @@ namespace PlanetaryAnomalies
                 "still have nothing, since it takes the same chance as everywhere else.\n" +
                 "This affects only the home planet. Every other world keeps exactly the anomaly it\n" +
                 "already had, because presence is an independent draw per planet.");
+
+            AnomalousHome = Config.Bind(
+                "Generation",
+                "AnomalousHome",
+                true,
+                "Ruleset 3 only. The world you start on always carries an anomaly, drawn only from\n" +
+                "recipes you can build early -- smelting, belts, sorters, assemblers and the like --\n" +
+                "so there is something to use in the first hours, before any other world is in reach.\n" +
+                "false: the home planet is never anomalous.\n" +
+                "Rulesets 1 and 2 ignore this and use HomePlanetNeverAnomalous.");
+
+            NearbyFavorsEarlyRecipes = Config.Bind(
+                "Generation",
+                "NearbyFavorsEarlyRecipes",
+                true,
+                "Ruleset 3 only. Worlds in star systems within 6 light years of home lean toward\n" +
+                "recipes you can build early, so what you can reach first is more often something you\n" +
+                "can use first. Worlds further out draw as usual.\n" +
+                "false: every world draws from the whole recipe list alike.\n" +
+                "Changes which recipe some nearby worlds carry, never which worlds are anomalous.");
 
             AnomalyChancePercent = Config.Bind(
                 "Generation",
@@ -189,15 +212,17 @@ namespace PlanetaryAnomalies
                 "Generation",
                 "AnomalyRules",
                 AnomalyManager.DefaultRuleset.ToString(),
-                "Which ruleset this install uses: 1, 2, or Latest.\n" +
-                "1 -- the pre-1.0 ruleset, and the default. Every 0.x release uses it. It draws from a\n" +
-                "  fixed list of 150 recipes, so a game update that adds recipes never moves a planet.\n" +
+                "Which ruleset this install uses: 1, 2, 3, or Latest.\n" +
+                "1 -- the pre-1.0 ruleset. Every 0.x release uses it. It draws from a fixed list of\n" +
+                "  150 recipes, so a game update that adds recipes never moves a planet.\n" +
                 "2 -- ruleset 1 plus every recipe the game has gained since: Dark Fog Lens from game\n" +
                 "  version 0.10.35, and whatever comes next. Switching from 1 moves only the few planets\n" +
                 "  those recipes take -- about one anomalous planet in 150 per recipe -- and a later game\n" +
                 "  update can move a planet or two again. Recipes added by other mods count here too.\n" +
-                "Latest -- the newest ruleset this version of the mod knows. 1.0 will add ruleset 3,\n" +
-                "  which draws anomalies differently: a galaxy under 3 is a different galaxy.\n" +
+                "3 -- the 1.0 ruleset, in development, and the default for a fresh install. It draws\n" +
+                "  anomalies differently, so a galaxy under 3 is a different galaxy: see AnomalousHome\n" +
+                "  and NearbyFavorsEarlyRecipes. Its recipe list follows the game, like ruleset 2.\n" +
+                "Latest -- the newest ruleset this version of the mod knows (3).\n" +
                 "This line is written once, when the mod first runs, and the mod never changes it, so an\n" +
                 "upgraded install keeps what it has. It applies to every galaxy on this install, old and\n" +
                 "new alike. Nothing is written to saves or anywhere else; this is the record.");

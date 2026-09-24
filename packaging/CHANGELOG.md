@@ -2,7 +2,10 @@
 
 ## 1.0.0 (in development)
 
-- Nothing yet.
+- Ruleset 3 begins, with the early game. The home planet always carries an anomaly drawn from
+  recipes you can build early (`AnomalousHome`), and worlds within 6 light years of home lean
+  toward those recipes (`NearbyFavorsEarlyRecipes`). Both on by default. Ruleset 3 is the default
+  for a fresh install; an existing config keeps its ruleset.
 
 ## 0.5.1
 

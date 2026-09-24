@@ -46,8 +46,12 @@
         internal const uint SaltRecipe = 0x85EBCA6Bu;
         internal const uint SaltDensity = 0xC2B2AE35u;
 
-        /// <summary>The newest ruleset defined here, which is what AnomalyRules = Latest means.</summary>
-        internal const int LatestRuleset = 2;
+        /// <summary>
+        /// The newest ruleset defined here, which is what AnomalyRules = Latest means. Ruleset 3 is
+        /// 1.0's, in development: until 1.0 ships its draw may still change, and it is only locked
+        /// by the golden test when it does.
+        /// </summary>
+        internal const int LatestRuleset = 3;
 
         /// <summary>
         /// The generator version a ruleset hashes with -- the number every draw below is keyed by.
@@ -59,7 +63,7 @@
         /// </summary>
         internal static int GeneratorVersionFor(int ruleset)
         {
-            return 1;
+            return ruleset >= 3 ? 2 : 1;
         }
 
         /// <summary>Whether a ruleset draws from a fixed list rather than from whatever the game has.</summary>
@@ -160,6 +164,80 @@
             }
 
             return best;
+        }
+
+        /// <summary>
+        /// How much more likely an early recipe is, in ruleset 3, on a world near home. Eight to
+        /// one: with roughly a fifth of the pool early, about two nearby anomalies in three land on
+        /// something buildable in the first hours. A starting point for play, not a finding.
+        /// </summary>
+        internal const int EarlyRecipeWeight = 8;
+
+        /// <summary>
+        /// What "near home" means in ruleset 3: star systems within this many light years of the
+        /// starting star. Six, at Paul's call -- "like the game does".
+        /// </summary>
+        internal const double NearLightYears = 6.0;
+
+        /// <summary>The game's light year, in its own position units (the star map uses the same).</summary>
+        internal const double LightYear = 2400000.0;
+
+        internal const uint SaltEntry = 0x27D4EB2Fu;
+
+        /// <summary>
+        /// Rendezvous selection where some candidates count more than others: a recipe with weight
+        /// w enters w times, each entry hashed on its own, and the heaviest single entry wins. A
+        /// candidate's chance is then its share of all entries.
+        ///
+        /// Integers on purpose. The textbook weighted rendezvous takes a logarithm of each hash, and
+        /// Math.Log is not guaranteed to round the same on every machine; a galaxy that differed in
+        /// its last bit between two players' CPUs would not be the same galaxy. Hashes, counts and
+        /// comparisons are exact everywhere.
+        /// </summary>
+        internal static int ChooseRecipeIdWeighted(int seed, int planetId, int version, int[] ids, int[] weights)
+        {
+            if (ids == null || ids.Length == 0 || weights == null || weights.Length != ids.Length)
+            {
+                return -1;
+            }
+
+            int best = -1;
+            uint bestWeight = 0;
+
+            for (int i = 0; i < ids.Length; i++)
+            {
+                int candidate = ids[i];
+                int entries = weights[i] < 1 ? 1 : weights[i];
+                for (int k = 0; k < entries; k++)
+                {
+                    uint weight = EntryWeight(seed, planetId, version, candidate, k);
+
+                    // Ties broken by lower id, as in ChooseRecipeId.
+                    if (best < 0 || weight > bestWeight || (weight == bestWeight && candidate < best))
+                    {
+                        best = candidate;
+                        bestWeight = weight;
+                    }
+                }
+            }
+
+            return best;
+        }
+
+        /// <summary>One entry's weight for <see cref="ChooseRecipeIdWeighted"/>.</summary>
+        internal static uint EntryWeight(int seed, int planetId, int version, int recipeId, int entry)
+        {
+            unchecked
+            {
+                uint h = 2166136261u;
+                h = MixBytes(h, (uint)seed);
+                h = MixBytes(h, (uint)planetId);
+                h = MixBytes(h, (uint)version);
+                h = MixBytes(h, SaltEntry);
+                h = MixBytes(h, (uint)recipeId);
+                h = MixBytes(h, (uint)entry);
+                return Avalanche(h);
+            }
         }
 
         /// <summary>

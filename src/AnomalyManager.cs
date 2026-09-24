@@ -168,11 +168,13 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>
-        /// The ruleset a fresh install writes into its config: 1, deliberately, even though 2
-        /// exists. Ruleset 2 is opt-in, because a galaxy under it can still move a planet or two
-        /// whenever the game adds a recipe, and a new player has not asked for that.
+        /// The ruleset a fresh install writes into its config: 3, 1.0's, at Paul's call. An upgraded
+        /// install keeps whatever its config already says, so no existing galaxy moves; only a
+        /// config with no AnomalyRules line gets this. Ruleset 3's recipe list follows the game, so a
+        /// new player's galaxy can move a planet or two when the game adds recipes -- ruleset 1 is
+        /// there for anyone who wants a galaxy that never moves.
         /// </summary>
-        internal const int DefaultRuleset = 1;
+        internal const int DefaultRuleset = 3;
 
         /// <summary>The newest ruleset this build knows, which is what Latest means.</summary>
         internal const int LatestRuleset = AnomalyMath.LatestRuleset;
@@ -225,6 +227,8 @@ namespace PlanetaryAnomalies
         {
             _ruleset = DefaultRuleset;
             _outsideRuleset.Clear();
+            _earlyRecipes.Clear();
+            _nearStars.Clear();
             _galaxySeed = 0;
             _birthPlanetId = -1;
             _galaxyKnown = false;
@@ -509,6 +513,7 @@ namespace PlanetaryAnomalies
             _eligible = BuildEligibleRecipes(recipes);
             ReportExclusions();
             ReportRulesetPool(recipes);
+            BuildEarlyGameTables(galaxy);
 
             if (_eligible.Length == 0)
             {
@@ -683,13 +688,7 @@ namespace PlanetaryAnomalies
                 return null;
             }
 
-            int[] ids = new int[_eligible.Length];
-            for (int i = 0; i < _eligible.Length; i++)
-            {
-                ids[i] = _eligible[i].ID;
-            }
-
-            int chosen = AnomalyMath.ChooseRecipeId(_galaxySeed, planetId, AnomalySystemVersion, ids);
+            int chosen = ChooseRecipeIdFor(planetId);
             for (int i = 0; i < _eligible.Length; i++)
             {
                 if (_eligible[i].ID != chosen || _eligible[i].Results == null || _eligible[i].Results.Length == 0)
@@ -819,11 +818,231 @@ namespace PlanetaryAnomalies
         /// </summary>
 
         /// <summary>
-        /// Whether the starting world is kept ordinary. True unless the player has said otherwise.
+        /// Whether the starting world is kept ordinary. Rulesets 1 and 2 ask HomePlanetNeverAnomalous;
+        /// ruleset 3 asks AnomalousHome, and keeps home ordinary only when that is off.
         /// </summary>
         private static bool HomeIsProtected
         {
-            get { return Plugin.HomePlanetNeverAnomalous == null || Plugin.HomePlanetNeverAnomalous.Value; }
+            get
+            {
+                if (_ruleset >= 3)
+                {
+                    return Plugin.AnomalousHome != null && !Plugin.AnomalousHome.Value;
+                }
+
+                return Plugin.HomePlanetNeverAnomalous == null || Plugin.HomePlanetNeverAnomalous.Value;
+            }
+        }
+
+        /// <summary>
+        /// Ruleset 3 with AnomalousHome on: the home planet skips the presence roll and always carries
+        /// an anomaly, drawn only from early recipes.
+        /// </summary>
+        private static bool HomeGuaranteed
+        {
+            get { return _ruleset >= 3 && (Plugin.AnomalousHome == null || Plugin.AnomalousHome.Value); }
+        }
+
+        /// <summary>Ruleset 3 with NearbyFavorsEarlyRecipes on.</summary>
+        private static bool NearbyLeansEarly
+        {
+            get { return _ruleset >= 3 && (Plugin.NearbyFavorsEarlyRecipes == null || Plugin.NearbyFavorsEarlyRecipes.Value); }
+        }
+
+        /// <summary>Recipes ruleset 3 counts as buildable in the first hours. See BuildEarlyGameTables.</summary>
+        private static readonly HashSet<int> _earlyRecipes = new HashSet<int>();
+
+        /// <summary>Stars within <see cref="AnomalyMath.NearLightYears"/> of the starting star.</summary>
+        private static readonly HashSet<int> _nearStars = new HashSet<int>();
+
+        /// <summary>
+        /// Ruleset 3's early-game tables: which recipes are early, and which stars are near home.
+        ///
+        /// Paul's problem, from a fresh run: "there's so much grind to reach other planets", and "I got
+        /// no good nearby anomalies after hours and hours of play". The pool is mostly mid- and
+        /// late-game, drawn uniformly, so the few worlds reachable early mostly carry things the
+        /// player cannot build for twenty hours. Ruleset 3 leans the draw near home toward what can
+        /// be built early, and gives the home planet one of its own.
+        ///
+        /// "Early" is read from the game rather than listed by hand, so it follows the game's own
+        /// tree: a recipe is early if it needs no technology at all, or if the technology that
+        /// unlocks it costs nothing beyond the first matrix -- electromagnetic, the blue one -- and
+        /// plain items. The first matrix is found, not assumed: it is the research recipe whose
+        /// inputs include no other matrix. Hidden technologies are never early; they wait on Dark
+        /// Fog drops.
+        /// </summary>
+        private static void BuildEarlyGameTables(GalaxyData galaxy)
+        {
+            _earlyRecipes.Clear();
+            _nearStars.Clear();
+
+            if (_ruleset < 3 || _eligible == null || galaxy == null)
+            {
+                return;
+            }
+
+            // Matrices are whatever research recipes make.
+            HashSet<int> matrices = new HashSet<int>();
+            List<RecipeProto> research = new List<RecipeProto>();
+            RecipeProto[] all = LDB.recipes.dataArray;
+            for (int i = 0; i < all.Length; i++)
+            {
+                RecipeProto r = all[i];
+                if (r == null || r.Type != ERecipeType.Research || r.Results == null)
+                {
+                    continue;
+                }
+
+                research.Add(r);
+                for (int j = 0; j < r.Results.Length; j++)
+                {
+                    matrices.Add(r.Results[j]);
+                }
+            }
+
+            int firstMatrix = -1;
+            int candidates = 0;
+            for (int i = 0; i < research.Count; i++)
+            {
+                RecipeProto r = research[i];
+                bool usesMatrix = false;
+                for (int j = 0; r.Items != null && j < r.Items.Length; j++)
+                {
+                    if (matrices.Contains(r.Items[j]))
+                    {
+                        usesMatrix = true;
+                        break;
+                    }
+                }
+
+                if (!usesMatrix && r.Results.Length > 0)
+                {
+                    firstMatrix = r.Results[0];
+                    candidates++;
+                }
+            }
+
+            if (candidates != 1)
+            {
+                Plugin.Log.LogWarning("Ruleset 3 could not pick out the first matrix (" + candidates +
+                                      " candidates); only recipes needing no matrix at all count as early.");
+                firstMatrix = -1;
+            }
+
+            string names = "";
+            for (int i = 0; i < _eligible.Length; i++)
+            {
+                RecipeProto r = _eligible[i];
+                if (r.preTech != null && !IsEarlyTech(r.preTech, matrices, firstMatrix))
+                {
+                    continue;
+                }
+
+                _earlyRecipes.Add(r.ID);
+                names += (names.Length > 0 ? ", " : "") + PlayerFacingRecipeName(r);
+            }
+
+            StarData home = galaxy.StarById(galaxy.birthStarId);
+            string near = "";
+            if (home != null && galaxy.stars != null)
+            {
+                for (int i = 0; i < galaxy.stars.Length; i++)
+                {
+                    StarData star = galaxy.stars[i];
+                    if (star == null)
+                    {
+                        continue;
+                    }
+
+                    double dx = star.uPosition.x - home.uPosition.x;
+                    double dy = star.uPosition.y - home.uPosition.y;
+                    double dz = star.uPosition.z - home.uPosition.z;
+                    double ly = Math.Sqrt(dx * dx + dy * dy + dz * dz) / AnomalyMath.LightYear;
+                    if (ly <= AnomalyMath.NearLightYears)
+                    {
+                        _nearStars.Add(star.id);
+                        near += (near.Length > 0 ? ", " : "") + star.displayName + " (" + ly.ToString("0.0") + " ly)";
+                    }
+                }
+            }
+
+            Plugin.Log.LogInfo("Ruleset 3 early-game draw: home anomaly " + (HomeGuaranteed ? "on" : "off") +
+                               ", nearby lean toward early recipes " + (NearbyLeansEarly ? "on (x" + AnomalyMath.EarlyRecipeWeight + ")" : "off") +
+                               ". " + _earlyRecipes.Count + " early recipes: " + names + ". " +
+                               _nearStars.Count + " star systems within " + AnomalyMath.NearLightYears + " ly of home: " + near + ".");
+        }
+
+        private static bool IsEarlyTech(TechProto tech, HashSet<int> matrices, int firstMatrix)
+        {
+            if (tech.IsHiddenTech)
+            {
+                return false;
+            }
+
+            for (int i = 0; tech.Items != null && i < tech.Items.Length; i++)
+            {
+                int item = tech.Items[i];
+                if (matrices.Contains(item) && item != firstMatrix)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool IsNearHome(int planetId)
+        {
+            GameData data = GameMain.data;
+            PlanetData planet = (data != null && data.galaxy != null) ? data.galaxy.PlanetById(planetId) : null;
+            return planet != null && planet.star != null && _nearStars.Contains(planet.star.id);
+        }
+
+        /// <summary>
+        /// The recipe a planet carries if it is anomalous: the one place every ruleset's draw is
+        /// decided, so the production path and the survey can never disagree.
+        /// </summary>
+        private static int ChooseRecipeIdFor(int planetId)
+        {
+            if (_eligible == null || _eligible.Length == 0)
+            {
+                return -1;
+            }
+
+            if (planetId == _birthPlanetId && HomeGuaranteed)
+            {
+                List<int> early = new List<int>();
+                for (int i = 0; i < _eligible.Length; i++)
+                {
+                    if (_earlyRecipes.Contains(_eligible[i].ID))
+                    {
+                        early.Add(_eligible[i].ID);
+                    }
+                }
+
+                return early.Count > 0
+                    ? AnomalyMath.ChooseRecipeId(_galaxySeed, planetId, AnomalySystemVersion, early.ToArray())
+                    : -1;
+            }
+
+            int[] ids = new int[_eligible.Length];
+            for (int i = 0; i < _eligible.Length; i++)
+            {
+                ids[i] = _eligible[i].ID;
+            }
+
+            if (NearbyLeansEarly && IsNearHome(planetId))
+            {
+                int[] weights = new int[ids.Length];
+                for (int i = 0; i < ids.Length; i++)
+                {
+                    weights[i] = _earlyRecipes.Contains(ids[i]) ? AnomalyMath.EarlyRecipeWeight : 1;
+                }
+
+                return AnomalyMath.ChooseRecipeIdWeighted(_galaxySeed, planetId, AnomalySystemVersion, ids, weights);
+            }
+
+            return AnomalyMath.ChooseRecipeId(_galaxySeed, planetId, AnomalySystemVersion, ids);
         }
 
         private static PlanetAnomaly Derive(int planetId)
@@ -855,7 +1074,9 @@ namespace PlanetaryAnomalies
                 return null;
             }
 
-            if (!AnomalyMath.IsAnomalous(_galaxySeed, planetId, AnomalySystemVersion, _densityPercent))
+            // Ruleset 3's home anomaly skips the presence roll: the point is that it is always there.
+            bool guaranteed = planetId == _birthPlanetId && HomeGuaranteed;
+            if (!guaranteed && !AnomalyMath.IsAnomalous(_galaxySeed, planetId, AnomalySystemVersion, _densityPercent))
             {
                 return null;
             }
@@ -905,13 +1126,7 @@ namespace PlanetaryAnomalies
         /// </summary>
         private static RecipeProto ChooseRecipe(int planetId)
         {
-            int[] ids = new int[_eligible.Length];
-            for (int i = 0; i < _eligible.Length; i++)
-            {
-                ids[i] = _eligible[i].ID;
-            }
-
-            int chosen = AnomalyMath.ChooseRecipeId(_galaxySeed, planetId, AnomalySystemVersion, ids);
+            int chosen = ChooseRecipeIdFor(planetId);
             if (chosen < 0)
             {
                 return null;
