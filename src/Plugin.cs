@@ -27,6 +27,7 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<string> AnomalyChancePercent;
         internal static ConfigEntry<bool> HomePlanetNeverAnomalous;
         internal static ConfigEntry<bool> AnomalousHome;
+        internal static ConfigEntry<bool> HomeSkipCombat;
         internal static ConfigEntry<bool> NearbyFavorsEarlyRecipes;
         internal static ConfigEntry<bool> NoDuplicates;
         internal static ConfigEntry<bool> NoRepeatsInGalaxy;
@@ -170,6 +171,16 @@ namespace PlanetaryAnomalies
                 "so there is something to use in the first hours, before any other world is in reach.\n" +
                 "false: the home planet is never anomalous.\n" +
                 "Rulesets 1 and 2 ignore this and use HomePlanetNeverAnomalous.");
+
+            HomeSkipCombat = Config.Bind(
+                "Generation",
+                "HomeSkipCombat",
+                true,
+                "Ruleset 3 only, with AnomalousHome on. The home planet's anomaly is never a weapon,\n" +
+                "ammunition or defensive building -- the early tech tree includes the first turrets and\n" +
+                "ammo, and a starting world making Gauss Turrets ten at a time is not much of a start.\n" +
+                "false: any early recipe can land on the home planet, combat included.\n" +
+                "Only the home planet is affected; other worlds draw combat recipes as usual.");
 
             NearbyFavorsEarlyRecipes = Config.Bind(
                 "Generation",

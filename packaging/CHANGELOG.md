@@ -6,6 +6,8 @@
   recipes you can build early (`AnomalousHome`), and worlds within 6 light years of home lean
   toward those recipes (`NearbyFavorsEarlyRecipes`). Both on by default. Ruleset 3 is the default
   for a fresh install; an existing config keeps its ruleset.
+- `HomeSkipCombat` (ruleset 3, on by default): the home planet's anomaly is never a weapon,
+  ammunition or defensive building. Other worlds are unaffected.
 - `NoDuplicates` (ruleset 3, on by default): no recipe twice in one star system, and none twice
   among the systems within 6 light years of home.
 - `NoRepeatsInGalaxy` (ruleset 3, off by default): every recipe at most once in the whole galaxy,

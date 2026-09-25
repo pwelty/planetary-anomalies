@@ -228,6 +228,7 @@ namespace PlanetaryAnomalies
             _ruleset = DefaultRuleset;
             _outsideRuleset.Clear();
             _earlyRecipes.Clear();
+            _combatRecipes.Clear();
             _starDistanceLy.Clear();
             _galaxyAssigned = false;
             _nearStars.Clear();
@@ -874,6 +875,51 @@ namespace PlanetaryAnomalies
         /// <summary>Recipes ruleset 3 counts as buildable in the first hours. See BuildEarlyGameTables.</summary>
         private static readonly HashSet<int> _earlyRecipes = new HashSet<int>();
 
+        /// <summary>Eligible recipes whose product is a weapon, ammunition or defence. See IsCombatItem.</summary>
+        private static readonly HashSet<int> _combatRecipes = new HashSet<int>();
+
+        /// <summary>Ruleset 3 with HomeSkipCombat on.</summary>
+        private static bool HomeSkipsCombat
+        {
+            get { return _ruleset >= 3 && (Plugin.HomeSkipCombat == null || Plugin.HomeSkipCombat.Value); }
+        }
+
+        /// <summary>
+        /// Whether an item is for fighting rather than building: a weapon, ammunition, a fighter, or a
+        /// defensive building. Read from the game's own fields, not a list.
+        ///
+        /// For HomeSkipCombat. The early tier of the tech tree includes the first combat technologies,
+        /// so the first home planet drawn under the corrected early list was a Battlefield Analysis Base
+        /// world -- early by the data, and not the something-to-build-in-the-first-hours the home
+        /// anomaly exists to be. Paul: "let's add setting for homeskipcombat=true".
+        /// </summary>
+        private static bool IsCombatItem(ItemProto item)
+        {
+            if (item == null)
+            {
+                return false;
+            }
+
+            if (item.Type == EItemType.Turret || item.Type == EItemType.Defense)
+            {
+                return true;
+            }
+
+            if (item.AmmoType != EAmmoType.None || item.BombType != EBombType.None)
+            {
+                return true;
+            }
+
+            if (ItemProto.kFighterIds != null && Array.IndexOf(ItemProto.kFighterIds, item.ID) >= 0)
+            {
+                return true;
+            }
+
+            PrefabDesc prefab = item.prefabDesc;
+            return prefab != null &&
+                   (prefab.isTurret || prefab.isBattleBase || prefab.isBeacon || prefab.isFieldGenerator || prefab.isCombatModule);
+        }
+
         /// <summary>Stars within <see cref="AnomalyMath.NearLightYears"/> of the starting star.</summary>
         private static readonly HashSet<int> _nearStars = new HashSet<int>();
 
@@ -895,6 +941,7 @@ namespace PlanetaryAnomalies
         private static void BuildEarlyGameTables(GalaxyData galaxy)
         {
             _earlyRecipes.Clear();
+            _combatRecipes.Clear();
             _starDistanceLy.Clear();
             _galaxyAssigned = false;
             _nearStars.Clear();
@@ -975,6 +1022,26 @@ namespace PlanetaryAnomalies
                 _earlyRecipes.Add(r.ID);
                 names += (names.Length > 0 ? ", " : "") + PlayerFacingRecipeName(r);
             }
+
+            string combat = "";
+            for (int i = 0; i < _eligible.Length; i++)
+            {
+                RecipeProto r = _eligible[i];
+                if (r.Results == null || r.Results.Length == 0 || !IsCombatItem(LDB.items.Select(r.Results[0])))
+                {
+                    continue;
+                }
+
+                _combatRecipes.Add(r.ID);
+                if (_earlyRecipes.Contains(r.ID))
+                {
+                    combat += (combat.Length > 0 ? ", " : "") + PlayerFacingRecipeName(r);
+                }
+            }
+
+            Plugin.Log.LogInfo("Ruleset 3: " + _combatRecipes.Count + " recipes are for fighting; the early ones are " +
+                               (combat.Length > 0 ? combat : "none") + ". HomeSkipCombat " +
+                               (HomeSkipsCombat ? "keeps them off the home planet." : "is off, so the home planet can draw them."));
 
             StarData home = galaxy.StarById(galaxy.birthStarId);
             string near = "";
@@ -1295,7 +1362,7 @@ namespace PlanetaryAnomalies
                 for (int i = 0; i < _eligible.Length; i++)
                 {
                     int id = _eligible[i].ID;
-                    if (!_earlyRecipes.Contains(id))
+                    if (!_earlyRecipes.Contains(id) || (HomeSkipsCombat && _combatRecipes.Contains(id)))
                     {
                         continue;
                     }
