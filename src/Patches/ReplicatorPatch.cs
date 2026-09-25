@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using HarmonyLib;
+using UnityEngine.UI;
 
 namespace PlanetaryAnomalies
 {
@@ -28,6 +30,7 @@ namespace PlanetaryAnomalies
     {
         private static bool _errorLogged;
         private static bool _firstLogged;
+        private static bool _queueErrorLogged;
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(MechaForge), "AddTaskIterate")]
@@ -76,6 +79,56 @@ namespace PlanetaryAnomalies
                 {
                     _errorLogged = true;
                     Plugin.Log.LogError("Failed to apply an anomaly to the replicator: " + e);
+                }
+            }
+        }
+
+        /// <summary>
+        /// The queue's number, told the truth.
+        ///
+        /// The first test in play: ten engines delivered, and the queue said "1". The window does mean
+        /// items -- UIReplicatorWindow.ActiveQueueText shows crafts times output -- but it reads the
+        /// output from the global RecipeProto, which this mod never changes, not from the job. So after
+        /// it writes the number, this rewrites it from the job's own productCounts: only for a job this
+        /// mod multiplied, and keeping the brackets the game puts around a sub-job's count.
+        ///
+        /// taskQueue and queueNumTexts are private; Harmony reaches them by name, and verify.ps1 checks
+        /// that the names are still there.
+        /// </summary>
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(UIReplicatorWindow), "ActiveQueueText")]
+        internal static void AfterActiveQueueText(int index, List<ForgeTask> ___taskQueue, Text[] ___queueNumTexts)
+        {
+            try
+            {
+                if (___taskQueue == null || ___queueNumTexts == null || index < 0 ||
+                    index >= ___taskQueue.Count || index >= ___queueNumTexts.Length || ___queueNumTexts[index] == null)
+                {
+                    return;
+                }
+
+                ForgeTask task = ___taskQueue[index];
+                if (task == null || task.productCounts == null || task.productCounts.Length != 1)
+                {
+                    return;
+                }
+
+                RecipeProto recipe = LDB.recipes.Select(task.recipeId);
+                if (recipe == null || recipe.ResultCounts == null || recipe.ResultCounts.Length != 1 ||
+                    task.productCounts[0] == recipe.ResultCounts[0])
+                {
+                    return;
+                }
+
+                int shown = task.count * task.productCounts[0];
+                ___queueNumTexts[index].text = task.parentTaskIndex < 0 ? shown.ToString() : "(" + shown + ")";
+            }
+            catch (Exception e)
+            {
+                if (!_queueErrorLogged)
+                {
+                    _queueErrorLogged = true;
+                    Plugin.Log.LogError("Failed to show the replicator queue's multiplied count: " + e);
                 }
             }
         }

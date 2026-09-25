@@ -14,7 +14,8 @@
   handed out nearest first. With about 150 recipes, a dense galaxy runs out; the furthest worlds
   then stay ordinary, and the log says how many.
 - `ReplicatorFollowsPlanet` (on by default, for now): standing on an anomalous world, Icarus's
-  replicator makes that world's anomalous recipe at the same multiple its machines do.
+  replicator makes that world's anomalous recipe at the same multiple its machines do, and the
+  replicator queue shows the multiplied count.
 - The survey log (`LogEveryAnomaly`) now says MARKER for an anomaly Marker mode is showing, instead
   of HIDDEN.
 

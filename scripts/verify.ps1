@@ -406,6 +406,17 @@ if (-not $localPlanet) {
 } else {
     Write-Host "OK  GameMain.localPlanet is public static"
 }
+# The queue count is rewritten after UIReplicatorWindow.ActiveQueueText(int index); the postfix binds the
+# index and two private fields by name.
+$repWin = $gameAsm.MainModule.GetType('UIReplicatorWindow')
+$aqt = $repWin.Methods | Where-Object { $_.Name -eq 'ActiveQueueText' -and $_.Parameters.Count -eq 1 -and $_.Parameters[0].Name -eq 'index' } | Select-Object -First 1
+$tq = $repWin.Fields | Where-Object { $_.Name -eq 'taskQueue' }
+$qt = $repWin.Fields | Where-Object { $_.Name -eq 'queueNumTexts' }
+if (-not $aqt -or -not $tq -or -not $qt) {
+    $failures.Add("UIReplicatorWindow.ActiveQueueText(index), taskQueue or queueNumTexts has changed; the replicator queue would show the unmultiplied count.")
+} else {
+    Write-Host "OK  Harmony target: UIReplicatorWindow.ActiveQueueText(index), with taskQueue and queueNumTexts by name"
+}
 
 $techProto = $gameAsm.MainModule.GetType('TechProto')
 $unlockRecipes = $techProto.Fields | Where-Object { $_.Name -eq 'UnlockRecipes' -and $_.IsPublic }
