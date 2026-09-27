@@ -1233,6 +1233,17 @@ namespace PlanetaryAnomalies
                 : double.MaxValue;
         }
 
+        /// <summary>
+        /// Ruleset 3 with ResearchCubes on: matrix recipes join the pool. Flat x10 for now, at Paul's
+        /// call ("cubes now at 10x, make it a setting") -- the roadmap had held them for varied
+        /// multipliers, since x10 Universe Matrix is a different order of thing from x10 iron, and
+        /// that pairing is still the plan.
+        /// </summary>
+        internal static bool CubesApply
+        {
+            get { return _ruleset >= 3 && (Plugin.ResearchCubes == null || Plugin.ResearchCubes.Value); }
+        }
+
         /// <summary>Ruleset 3 with NoDuplicates on.</summary>
         private static bool NoDuplicatesApplies
         {
@@ -1640,7 +1651,12 @@ namespace PlanetaryAnomalies
                 return false;
             }
 
-            if (recipe.Type != ERecipeType.Smelt &&
+            // Research cubes -- matrices, made in labs -- only under ruleset 3 with ResearchCubes on.
+            // Labs run them on the same per-machine RecipeExecuteData as assemblers, so the production
+            // sweep reaches them the same way; see PlanetFactoryBeforeGameTickPatch.
+            bool cube = recipe.Type == ERecipeType.Research && CubesApply;
+            if (!cube &&
+                recipe.Type != ERecipeType.Smelt &&
                 recipe.Type != ERecipeType.Assemble &&
                 recipe.Type != ERecipeType.Chemical &&
                 recipe.Type != ERecipeType.Refine &&

@@ -13,6 +13,8 @@
 - `NoRepeatsInGalaxy` (ruleset 3, off by default): every recipe at most once in the whole galaxy,
   handed out nearest first. With about 150 recipes, a dense galaxy runs out; the furthest worlds
   then stay ordinary, and the log says how many.
+- `ResearchCubes` (ruleset 3, on by default): matrices can be anomalies, made ten at a time by the
+  labs on that world. A flat x10 for now; varied multipliers are still planned for the rarer cubes.
 - `ReplicatorFollowsPlanet` (on by default, for now): standing on an anomalous world, Icarus's
   replicator makes that world's anomalous recipe at the same multiple its machines do, and the
   replicator queue shows the multiplied count.

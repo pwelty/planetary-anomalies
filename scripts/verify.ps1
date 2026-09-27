@@ -721,6 +721,23 @@ if (-not $red -or $red.FieldType.FullName -ne 'RecipeExecuteData') {
     Write-Host "OK  AssemblerComponent.recipeExecuteData : RecipeExecuteData"
 }
 
+# ResearchCubes: labs making matrices get the same swap, so LabComponent must still be a struct in a
+# pool, with the fields the sweep reads and writes.
+$labType = $gameAsm.MainModule.GetType('LabComponent')
+$labOk = $labType -and $labType.IsValueType
+foreach ($needed in @('id', 'researchMode', 'recipeId', 'recipeExecuteData')) {
+    if (-not ($labType.Fields | Where-Object { $_.Name -eq $needed -and $_.IsPublic })) { $labOk = $false }
+}
+$fs = $gameAsm.MainModule.GetType('FactorySystem')
+foreach ($needed in @('labPool', 'labCursor')) {
+    if (-not ($fs.Fields | Where-Object { $_.Name -eq $needed -and $_.IsPublic })) { $labOk = $false }
+}
+if (-not $labOk) {
+    $failures.Add("LabComponent or FactorySystem.labPool/labCursor changed; ResearchCubes anomalies would not reach labs.")
+} else {
+    Write-Host "OK  LabComponent is a struct with id, researchMode, recipeId, recipeExecuteData; FactorySystem.labPool/labCursor public"
+}
+
 Write-Host ""
 Write-Host "Resolved $checked reference(s) into $($interesting -join ', ')."
 

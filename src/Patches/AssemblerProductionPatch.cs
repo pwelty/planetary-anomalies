@@ -131,6 +131,37 @@ namespace PlanetaryAnomalies
                 attached++;
             }
 
+            // Labs making matrices, for ResearchCubes. LabComponent is a struct in a pool like the
+            // assembler, and InternalUpdateAssemble reads the same RecipeExecuteData fields, so the
+            // same swap applies. Labs in research mode are skipped: they make no items. New labs do
+            // not move the assembler cursor, so they are picked up by the regular sweep, within half
+            // a second.
+            LabComponent[] labs = system.labPool;
+            if (labs != null)
+            {
+                int labCursor = system.labCursor;
+                if (labCursor > labs.Length)
+                {
+                    labCursor = labs.Length;
+                }
+
+                for (int i = 1; i < labCursor; i++)
+                {
+                    if (labs[i].id != i || labs[i].researchMode || labs[i].recipeId != recipeId)
+                    {
+                        continue;
+                    }
+
+                    if (ReferenceEquals(labs[i].recipeExecuteData, anomalousData))
+                    {
+                        continue;
+                    }
+
+                    labs[i].recipeExecuteData = anomalousData;
+                    attached++;
+                }
+            }
+
             if (attached > 0 && _attachLogged.Add(planet.id))
             {
                 AnomalyManager.NoteApplied(planet, attached);

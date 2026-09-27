@@ -31,6 +31,7 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<bool> NearbyFavorsEarlyRecipes;
         internal static ConfigEntry<bool> NoDuplicates;
         internal static ConfigEntry<bool> NoRepeatsInGalaxy;
+        internal static ConfigEntry<bool> ResearchCubes;
         internal static ConfigEntry<bool> ReplicatorFollowsPlanet;
         internal static ConfigEntry<int> OutputMultiplier;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
@@ -213,6 +214,17 @@ namespace PlanetaryAnomalies
                 "recipe is taken, the worlds still waiting, the furthest ones, stay ordinary. The log says\n" +
                 "how many.\n" +
                 "Off by default: a recipe on two or three worlds is a choice of which one you can hold.");
+
+            ResearchCubes = Config.Bind(
+                "Generation",
+                "ResearchCubes",
+                true,
+                "Ruleset 3 only. Research cubes -- the matrices labs make -- can be anomalies too, so a\n" +
+                "world may make electromagnetic or universe matrices ten at a time in its labs.\n" +
+                "A cube world is the one place a player would reorganise a galaxy around, and the cubes\n" +
+                "are consumed forever. For now every cube anomaly is the same multiple as the rest;\n" +
+                "varied multipliers are planned to make the rarer cubes rarer.\n" +
+                "false: no matrix is ever an anomaly.");
 
             AnomalyChancePercent = Config.Bind(
                 "Generation",
