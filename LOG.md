@@ -6,6 +6,71 @@ what the next session should pick up. Facts that outlive a session belong in
 
 ---
 
+## 2026-09-24 to 2026-09-28 — ruleset 3 begins: the early game, uniqueness, the replicator, cubes
+
+Development of 1.0, played and tuned in a loop: Paul played a fresh run (seed 84201727, ruleset 3,
+AnomalyChancePercent 75), reported, reloaded; each change was committed, pushed and installed between
+reloads, with its changelog line in the same commit. All of it is ruleset 3 only unless noted, and every
+new behaviour is a config setting.
+
+**What changed** (commits `c9e09b1` to `db3180c`).
+
+- *Ruleset 3 exists* (`c9e09b1`): generator version 2, recipe list follows the game, the default for a
+  fresh install; Latest means 3. `AnomalousHome` (home always carries an early recipe) and
+  `NearbyFavorsEarlyRecipes` (stars within 6 ly of home -- 2,400,000 units per ly, as the star map uses
+  -- draw early recipes at x8). "Early" is read from the game: no unlocking tech, or a tech costing only
+  the first matrix and plain items; never a hidden tech. The weighted draw is integer-only rendezvous (a
+  recipe of weight w enters w times) because Math.Log is not guaranteed to round alike everywhere.
+- *Round 2* (`b749b43`): the first matrix was sought as the one made without other matrices -- wrong,
+  every matrix below Universe is made from ordinary items -- so the fallback left 17 early recipes and no
+  blue tier. Now it is the matrix whose own research needs no matrix: 52 early. `NoDuplicates`: no recipe
+  twice in a system or among the systems within 6 ly of home, decided in planet-id order within the
+  group. `ReplicatorFollowsPlanet`: postfix on `MechaForge.AddTaskIterate` multiplies the new job's
+  `productCounts` when Icarus stands on a world with that anomaly. The survey log's Marker label.
+- `NoRepeatsInGalaxy` (`758bed6`, off by default): every recipe once in the galaxy, handed out nearest
+  first in one ordered pass; once the pool is spent the furthest worlds stay ordinary.
+- `HomeSkipCombat` (`027e3cb`): the early tier includes the first combat techs, and the home planet came
+  up Battlefield Analysis Base. Combat is read from the game's fields (item type Turret/Defense, ammo and
+  bomb types, fighter ids, turret/battle-base/beacon/field-generator/combat-module buildings).
+- The replicator queue showed "1" while delivering ten (`0325b83`): `UIReplicatorWindow.ActiveQueueText`
+  multiplies crafts by the *global* recipe's output. A postfix rewrites the number from the job's own
+  `productCounts`, binding the private `taskQueue` and `queueNumTexts` by name.
+- `ResearchCubes` (`db3180c`, flat x10 for now): matrix recipes join the pool. Labs in produce mode run
+  the same per-machine `RecipeExecuteData` as assemblers (`LabComponent.InternalUpdateAssemble` reads the
+  same fields), so the production sweep now swaps it on labs too.
+
+**What is actually proven.**
+
+- In game, by Paul: a *real* research announcement, naming planets, drawn on screen and seen ("yeah 2
+  wind turbines on 1 system") -- the item still open from the previous entry; the replicator delivering
+  ten engines on Castor III.
+- From the log of the run, per round: the nearby early share went 50% with 17 early recipes (the
+  arithmetic for that list: 17x8 against 134) to 75% with 52; no repeats within any system or near home
+  under `NoDuplicates`; 151 recipes on 151 worlds, 7 far worlds ordinary, under `NoRepeatsInGalaxy`; with
+  cubes, 157 recipes on 157 worlds, 1 ordinary, all six matrices placed (none within 6 ly), and no recipe
+  missing its execute data. Home: Magnetic Coil, then Battlefield Analysis Base, then Engine.
+- Offline, with the mod's own generator: the weighted draw gives 66.3% against 66.7% expected over 13,000
+  draws, deterministically. verify.ps1 passes against 0.10.35, the golden test's 201 original results
+  unchanged; new checks cover the replicator, its queue and the lab seam.
+
+**What is not.**
+
+- The replicator queue now reading ten -- the fix is installed, not yet seen.
+- A lab producing a matrix at x10: every cube world in this galaxy is far from home.
+- Ruleset 3's draw is not locked: it changes whenever a setting or the pool does, by design until 1.0
+  ships, when its golden output is recorded.
+- Defaults for release are undecided -- `ReplicatorFollowsPlanet` is on "for now", against the roadmap's
+  earlier argument for off; whether the x8 lean and 75% nearby share are right; whether the home draw
+  should skip cubes as well as combat.
+- The lab window has no anomaly marker. The README says nothing about any of this yet; that is the
+  release docs pass.
+
+**Where the next session starts.** Keep the play-and-tweak loop going on seed 84201727 if Paul wants;
+otherwise the next ruleset 3 candidates by his list: varied multipliers (which cubes are waiting on),
+by-product recipes, then the idea-list items. Check the replicator queue reads ten on the next load.
+
+---
+
 ## 2026-09-19 to 2026-09-24 — 0.5.0 and 0.5.1 released; ruleset 1 fixed; 1.0 ideas
 
 **A gap first.** No entries were written between 27 Aug and this one, across 0.2 to 0.5. That history

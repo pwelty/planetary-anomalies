@@ -736,6 +736,9 @@ are actually shared. After two or three real effects, extract the smallest commo
 
 #### Candidate: does Icarus's replicator obey the anomaly?
 
+*Built for 1.0 as the setting `ReplicatorFollowsPlanet` (on for now, release default undecided) -- see
+*1.0 in development: ruleset 3 so far*. The notes below are the case as it was made before building.*
+
 Paul's question. Today: no. The seam is `AssemblerComponent.recipeExecuteData`, which is factory
 machines only; the mecha replicator is `MechaForge`, an unrelated system with its own task queue.
 
@@ -1000,6 +1003,9 @@ off if you want it. Off, the home planet takes exactly the same draw as everywhe
 one-in-three to two-in-three chance depending on density, of a uniformly random recipe. Which might
 be Assembling Machine Mk.I, worth having at hour one, or Antimatter Capsule, worth nothing for
 forty hours. It is a fair coin, not a starting gift, and the documentation says so.
+
+*Built for 1.0 as `AnomalousHome` and `NearbyFavorsEarlyRecipes`, both settings -- see *1.0 in
+development: ruleset 3 so far*.*
 
 **For 1.0: a weighted home draw.** Home always anomalous, drawn from recipes the player can actually
 build in the first hours -- smelting, belts, sorters, assemblers, the things placed by the hundred
@@ -1858,6 +1864,50 @@ Two things this taught.
 1.0's game version, and let a ruleset 4 or an opt-in like ruleset 2 carry newer recipes. The cost is
 that new game recipes then never become anomalies for anyone on the default until they opt in. Worth
 deciding with the rest of the 1.0 bundle, not now.
+
+## 1.0 in development: ruleset 3 so far
+
+Built between 24 and 28 Sep in a play-and-tweak loop on one fresh galaxy (seed 84201727, 75% density):
+Paul played, said what felt off, and reloaded after each change. Everything below is ruleset 3 only
+except the replicator, and every behaviour is a setting. Commits `c9e09b1` to `db3180c`; details in
+LOG.md.
+
+| Setting | Default | What it does | Came from |
+| --- | --- | --- | --- |
+| `AnomalyRules = 3` | fresh installs | 1.0's ruleset: generator version 2, recipe list follows the game | the ruleset split in 0.5.1 |
+| `AnomalousHome` | on | home always carries an early recipe | *The early game is where the mod is thinnest* |
+| `NearbyFavorsEarlyRecipes` | on | stars within 6 ly of home draw early recipes at x8 | the same; "near" = 6 ly at Paul's call |
+| `HomeSkipCombat` | on | the home anomaly is never a weapon, ammo or defence | home came up Battlefield Analysis Base |
+| `NoDuplicates` | on | no recipe twice in a system, or within 6 ly of home | Tesla Tower on five worlds near home |
+| `NoRepeatsInGalaxy` | off | every recipe once in the galaxy, nearest first | Paul: "no repeats anywhere" |
+| `ResearchCubes` | on | matrices can be anomalies, x10 in that world's labs | the 1.0 list; flat x10 for now |
+| `ReplicatorFollowsPlanet` | on, for now | hand-crafting on an anomalous world makes its multiple | *Candidate: does Icarus's replicator obey the anomaly?* |
+
+**What the loop taught.**
+
+- *Early is a fact about the tech tree, and the tree was not what was assumed.* The first definition of
+  the first matrix -- the one made without other matrices -- was wrong: every matrix below Universe is
+  made from ordinary items. The one that holds is the matrix whose *research* needs no matrix. The blue
+  tier then turned out larger than expected (52 recipes, including the whole oil and chemical start,
+  since red cubes are made from its products) and to include the first combat techs.
+- *A lean concentrates.* With a short early list and an x8 weight, the same few recipes landed again and
+  again near home -- five Tesla Towers. Uniqueness was not a separate feature so much as the lean's other
+  half.
+- *Uniqueness has arithmetic.* About 150 recipes cannot cover a galaxy at 75%. Galaxy-wide uniqueness
+  therefore thins the far galaxy (7 worlds here, 1 once cubes widened the pool), and nearest-first is
+  what makes that the right end to thin.
+- *Adding recipes rarely moves an existing pick.* Cubes joined, and home and every nearby world kept
+  their recipes -- rendezvous selection again, and nearest-first on top of it. Paul noticed: "nothing
+  changed in home system". New options reshuffle the neighbourhood only when they change what it may
+  draw, as `HomeSkipCombat` did.
+- *Surfaces keep reading the prototype.* The replicator queue multiplied crafts by the global recipe's
+  output and said "1" while delivering ten -- the same UI-lies defect as the tooltip and the planet
+  panel, on a new surface, fixed the same way.
+
+**Still open before 1.0.** Release defaults (the replicator above all); whether x8 and a 75% nearby early
+share are right; whether the home draw should skip cubes as well as combat (the blue matrix counts as
+early); varied multipliers, which cubes were meant to wait for; a lab-window marker; locking ruleset 3's
+draw in the golden test when 1.0 ships; and the README.
 
 ## The one re-roll
 
