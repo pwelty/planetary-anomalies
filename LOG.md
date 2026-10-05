@@ -55,7 +55,8 @@ new behaviour is a config setting.
 
 **What is not.**
 
-- The replicator queue now reading ten -- the fix is installed, not yet seen.
+- ~~The replicator queue now reading ten~~ -- confirmed by Paul in play after the power-cut restart
+  ("yes that works").
 - A lab producing a matrix at x10: every cube world in this galaxy is far from home.
 - Ruleset 3's draw is not locked: it changes whenever a setting or the pool does, by design until 1.0
   ships, when its golden output is recorded.
