@@ -214,6 +214,42 @@ if ($null -eq $asmWindow) {
     }
 }
 
+# The lab twin of the machine marker. Here factory and factorySystem are private and arrive by
+# Harmony field injection (___factory, ___factorySystem), which fails at patch time if renamed.
+$labWindow = $gameAsm.MainModule.GetType('UILabWindow')
+if ($null -eq $labWindow) {
+    $failures.Add("Harmony target type 'UILabWindow' does not exist in the installed game.")
+} else {
+    $labUpdate = $labWindow.Methods | Where-Object { $_.Name -eq '_OnUpdate' -and $_.Parameters.Count -eq 0 }
+    if (-not $labUpdate) {
+        $failures.Add("Harmony target 'UILabWindow._OnUpdate()' does not exist in the installed game.")
+    } else {
+        Write-Host "OK  Harmony target: UILabWindow._OnUpdate()"
+    }
+
+    $labState = $labWindow.Fields | Where-Object { $_.Name -eq 'stateText' }
+    if (-not $labState -or -not $labState.IsPublic) {
+        $failures.Add("UILabWindow.stateText is missing or no longer public.")
+    } else {
+        Write-Host "OK  UILabWindow.stateText is public"
+    }
+
+    foreach ($needed in @('factory', 'factorySystem')) {
+        if (-not ($labWindow.Fields | Where-Object { $_.Name -eq $needed })) {
+            $failures.Add("UILabWindow.$needed is gone; the lab marker injects it by name.")
+        } else {
+            Write-Host "OK  UILabWindow.$needed exists (injected by name)"
+        }
+    }
+
+    $labIdGetter = $labWindow.Methods | Where-Object { $_.Name -eq 'get_labId' }
+    if (-not $labIdGetter -or -not $labIdGetter.IsPublic) {
+        $failures.Add("UILabWindow.labId is missing or no longer public.")
+    } else {
+        Write-Host "OK  UILabWindow.labId is public"
+    }
+}
+
 # The star map marker. Its correctness rests on planet being written ONLY in _OnInit/_OnFree --
 # if a label could be rebound to another planet without _OnInit running, a marker could survive
 # onto the wrong world. Assert that, because it is an assumption about behaviour, not just names.

@@ -431,3 +431,25 @@ Known costs, accepted for Stage 0 and recorded rather than hidden:
   machine running vanilla output for one extra tick after its recipe changes.
 - Anything else that reassigns `recipeExecuteData` (another mod, a recipe change, a save load)
   simply reverts that machine until the next tick re-applies the swap.
+
+## Lab window (read 2026-10-10, DSP 0.10.35.29104)
+
+Read with Cecil from `Assembly-CSharp.dll` modified 2026-09-29T12:18:57Z, SHA-256
+`6C122E5443E6843979B4064050DFCB5E0D75577A0B64F6AE4111290238B33C12` (not the 0.10.34 file above).
+
+`UILabWindow` is the lab twin of `UIAssemblerWindow`, but its access differs:
+
+| Member | Access | Use |
+| --- | --- | --- |
+| `Text stateText` | public field | marker surface, as on the assembler window |
+| `int labId` | public getter (`get_labId`), private setter | index into `FactorySystem.labPool` |
+| `PlanetFactory factory` | **private** field | reached by Harmony injection `___factory` |
+| `FactorySystem factorySystem` | **private** field | reached by Harmony injection `___factorySystem` |
+| `void _OnUpdate()` | private, no parameters | postfix target |
+
+`_OnUpdate` closes the window and returns early if `labId == 0`, `factory == null`, or
+`labPool[labId].id != labId`. Otherwise the produce-mode branches read so far each write `stateText`
+(working / low power / no power and so on) before rejoining, so an appended marker
+is rewritten each frame. Two further `ret` sites (offsets 912, 924) were not traced; the patch
+guards against a stale marker with an `EndsWith` check, as the assembler marker does. Research-mode
+labs are never marked, since they make no items.

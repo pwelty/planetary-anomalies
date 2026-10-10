@@ -6,6 +6,38 @@ what the next session should pick up. Facts that outlive a session belong in
 
 ---
 
+## 2026-10-10 — the lab window marker; first cube world reached
+
+Paul reached Graffias IV, this galaxy's Universe Matrix world (seed 84201727), and set up a lab.
+
+**What changed.** `UILabWindowPatch` (`src/Patches/LabWindowPatch.cs`): a postfix on
+`UILabWindow._OnUpdate` appends `ANOMALY ×10` to `stateText` for a produce-mode lab making the
+planet's anomalous recipe. It mirrors the assembler marker. The difference is that `factory` and
+`factorySystem` are private on the lab window, so they come in by Harmony field injection.
+Registered as its own display surface ("the lab window"). verify.ps1 checks the target and the
+fields it uses. Signatures are in `docs/inspection.md` under "Lab window", read against 0.10.35.29104.
+
+**What is actually proven.**
+
+- From the game log: the production sweep attached the anomaly to one lab on Graffias IV ("Anomaly
+  attached to 1 machine on Graffias IV ... output is now x10"). The replicator showed ×10 there too.
+- In game, by Paul, informally: the lab's matrices are "coming out pretty fast". That is consistent
+  with ×10, but nobody counted, so it does not yet prove a lab makes ten per cycle.
+- Build and verify.ps1 pass.
+
+**What is not.**
+
+- The lab marker has not been seen in game. It needs a game restart to load.
+- A counted ×10 from a lab: watch the output count step by 10, or compare Universe Matrix made
+  against Antimatter used in the planet's production stats.
+- Whether production statistics count lab output at ×10, and whether the lab's output cap behaves
+  well at ×10. Neither is inspected for labs.
+
+**Where the next session starts.** Ask Paul whether the lab window shows the marker after a restart
+and whether the count steps by 10. Then carry on with the ruleset 3 list from the entry below.
+
+---
+
 ## 2026-09-24 to 2026-09-28 — ruleset 3 begins: the early game, uniqueness, the replicator, cubes
 
 Development of 1.0, played and tuned in a loop: Paul played a fresh run (seed 84201727, ruleset 3,

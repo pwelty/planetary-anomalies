@@ -95,12 +95,12 @@ namespace PlanetaryAnomalies
             Type[] surfaces =
             {
                 typeof(UIPlanetDetailPatch), typeof(UIAssemblerWindowPatch), typeof(UIStarmapPlanetPatch),
-                typeof(UIStarmapStarPatch), typeof(ItemTipPatch), typeof(TechUnlockPatch)
+                typeof(UIStarmapStarPatch), typeof(ItemTipPatch), typeof(TechUnlockPatch), typeof(UILabWindowPatch)
             };
             string[] surfaceNames =
             {
                 "the planet panel", "the machine window", "star map planet labels",
-                "star map star labels", "item tooltips", "research announcements"
+                "star map star labels", "item tooltips", "research announcements", "the lab window"
             };
 
             string working = "";
