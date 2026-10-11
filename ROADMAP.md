@@ -1316,6 +1316,13 @@ Lens. The answer turned out to reach well past that recipe. An idea for the list
   clearing it early, and it dropped Dark Fog matrices once it reached level 12 -- "never gotten that
   before. I've usually destroyed my home DF base LONG before level 12". The higher levels are still
   reports.
+  *And the matrix is what reveals Dark Fog Lens* -- the question this section started from. Picking one
+  up made exactly one technology appear in his tree ("it revealed 1 tech. DF lens"). The matrix itself
+  cannot be made: with research cubes enabled the pool gained exactly the six ordinary matrices and no
+  seventh. The lens recipe, from the log: 1 Graviton Lens + 12 Dark Fog Matrix -> 1 Dark Fog Lens. So a
+  lens anomaly (NairalZaurak III in seed 84201727) turns twelve drop-only matrices into ten lenses --
+  the scarcest input in the game stretched tenfold, and a strong case for the disclosure this section
+  proposes: a player should be able to learn that world is worth a level-12 base.
 - *The settings that decide growth are fixed at creation.* Only the new-game screen (`UIGalaxySelect`,
   through `UICombatSettingsDF`) writes starting level, growth speed, density, threat and experience
   factors. Mid-game, only aggressiveness can change, through the Dark Fog Communicator
