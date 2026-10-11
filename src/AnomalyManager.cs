@@ -1043,6 +1043,24 @@ namespace PlanetaryAnomalies
                                (combat.Length > 0 ? combat : "none") + ". HomeSkipCombat " +
                                (HomeSkipsCombat ? "keeps them off the home planet." : "is off, so the home planet can draw them."));
 
+            string several = "";
+            int severalCount = 0;
+            for (int i = 0; i < _eligible.Length; i++)
+            {
+                RecipeProto r = _eligible[i];
+                if (r.Results != null && r.Results.Length > 1)
+                {
+                    severalCount++;
+                    several += (several.Length > 0 ? ", " : "") + PlayerFacingRecipeName(r) + " (recipe " + r.ID + ")";
+                }
+            }
+
+            if (severalCount > 0)
+            {
+                Plugin.Log.LogInfo("Ruleset 3: " + severalCount + " recipes with more than one output are in the pool, " +
+                                   "every output multiplied: " + several + ".");
+            }
+
             StarData home = galaxy.StarById(galaxy.birthStarId);
             string near = "";
             if (home != null && galaxy.stars != null)
@@ -1242,6 +1260,17 @@ namespace PlanetaryAnomalies
         internal static bool CubesApply
         {
             get { return _ruleset >= 3 && (Plugin.ResearchCubes == null || Plugin.ResearchCubes.Value); }
+        }
+
+        /// <summary>
+        /// Ruleset 3 with MultiOutputRecipes on: recipes with more than one output -- plasma refining,
+        /// X-ray cracking, graphene from fire ice, antimatter -- join the pool, and every output is
+        /// multiplied, the by-product included. Paul: "x10 for all". The by-product is then the catch:
+        /// ten times the hydrogen to store, burn or ship, with no extra rule needed to make it one.
+        /// </summary>
+        internal static bool MultiOutputApplies
+        {
+            get { return _ruleset >= 3 && (Plugin.MultiOutputRecipes == null || Plugin.MultiOutputRecipes.Value); }
         }
 
         /// <summary>Ruleset 3 with NoDuplicates on.</summary>
@@ -1670,11 +1699,31 @@ namespace PlanetaryAnomalies
                 return false;
             }
 
-            return recipe.Items != null && recipe.Items.Length >= 1
-                && recipe.ItemCounts != null && recipe.ItemCounts.Length == recipe.Items.Length
-                && recipe.Results != null && recipe.Results.Length == 1
-                && recipe.ResultCounts != null && recipe.ResultCounts.Length == 1
-                && recipe.ResultCounts[0] > 0;
+            if (recipe.Items == null || recipe.Items.Length < 1 ||
+                recipe.ItemCounts == null || recipe.ItemCounts.Length != recipe.Items.Length ||
+                recipe.Results == null || recipe.ResultCounts == null ||
+                recipe.Results.Length < 1 || recipe.ResultCounts.Length != recipe.Results.Length)
+            {
+                return false;
+            }
+
+            // One output type, unless ruleset 3's MultiOutputRecipes is on. The single-output rule was
+            // only ever standing in for "one clear product"; the production seam has multiplied every
+            // output since the start.
+            if (recipe.Results.Length > 1 && !MultiOutputApplies)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < recipe.ResultCounts.Length; i++)
+            {
+                if (recipe.ResultCounts[i] <= 0)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -1829,10 +1878,14 @@ namespace PlanetaryAnomalies
                 return null;
             }
 
-            string body = "";
+            // One output: the recipe's name and its count. Several: the recipe's name on its own line,
+            // then each product by its own name -- repeating the recipe name per line would say
+            // "Plasma Refining: 2 -> 20, Plasma Refining: 1 -> 10" and name neither product.
+            bool severalOutputs = recipe.Results.Length > 1;
+            string body = severalOutputs ? PlayerFacingRecipeName(recipe) : "";
             for (int i = 0; i < recipe.Results.Length && i < recipe.ResultCounts.Length; i++)
             {
-                if (i > 0)
+                if (body.Length > 0)
                 {
                     body += "\n";
                 }
@@ -1842,7 +1895,7 @@ namespace PlanetaryAnomalies
                 // The arrow, multiplication sign and middot used in this project are literal UTF-8.
                 // csc reads them correctly and they render correctly in game -- both verified. Keep
                 // to characters already proven here rather than introducing untested ones.
-                body += PlayerFacingRecipeName(recipe) + ": " +
+                body += (severalOutputs ? PlayerFacingItemName(recipe.Results[i]) : PlayerFacingRecipeName(recipe)) + ": " +
                         normal + " → " + (normal * anomaly.OutputMultiplier);
             }
 

@@ -15,6 +15,9 @@
   then stay ordinary, and the log says how many.
 - `ResearchCubes` (ruleset 3, on by default): matrices can be anomalies, made ten at a time by the
   labs on that world. A flat x10 for now; varied multipliers are still planned for the rarer cubes.
+- `MultiOutputRecipes` (ruleset 3, on by default): recipes with more than one output -- plasma
+  refining, X-ray cracking, graphene from fire ice, antimatter -- can be anomalies. Every output
+  is multiplied, by-product included, and the planet panel lists each product on its own line.
   The lab window says ANOMALY ×10 on a lab making that world's matrix, as the assembler window
   already does for machines.
 - `ReplicatorFollowsPlanet` (on by default, for now): standing on an anomalous world, Icarus's

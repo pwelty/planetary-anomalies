@@ -32,6 +32,7 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<bool> NoDuplicates;
         internal static ConfigEntry<bool> NoRepeatsInGalaxy;
         internal static ConfigEntry<bool> ResearchCubes;
+        internal static ConfigEntry<bool> MultiOutputRecipes;
         internal static ConfigEntry<bool> ReplicatorFollowsPlanet;
         internal static ConfigEntry<int> OutputMultiplier;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
@@ -225,6 +226,16 @@ namespace PlanetaryAnomalies
                 "are consumed forever. For now every cube anomaly is the same multiple as the rest;\n" +
                 "varied multipliers are planned to make the rarer cubes rarer.\n" +
                 "false: no matrix is ever an anomaly.");
+
+            MultiOutputRecipes = Config.Bind(
+                "Generation",
+                "MultiOutputRecipes",
+                true,
+                "Ruleset 3 only. Recipes with more than one output can be anomalies -- plasma refining,\n" +
+                "X-ray cracking, graphene from fire ice, antimatter. Every output is multiplied, the\n" +
+                "by-product included: an anomalous refinery makes ten times the hydrogen as well as ten\n" +
+                "times the oil, which is more to use and more to get rid of.\n" +
+                "false: only recipes with a single output are drawn, as in rulesets 1 and 2.");
 
             AnomalyChancePercent = Config.Bind(
                 "Generation",
