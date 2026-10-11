@@ -1312,6 +1312,10 @@ Lens. The answer turned out to reach well past that recipe. An idea for the list
   the HUD (`UIDarkFogMonitor`), for the bases and hives you track. Paul had never noticed the numbers;
   his bases read 1, 5 and 6. Player reports put matrices at around level 12 and the rarer drops at 15,
   18, 21 and 24 -- reports, not yet checked against the game's data.
+  *Level 12 confirmed in play, 11 Oct:* on the ruleset 3 run Paul let his home base grow instead of
+  clearing it early, and it dropped Dark Fog matrices once it reached level 12 -- "never gotten that
+  before. I've usually destroyed my home DF base LONG before level 12". The higher levels are still
+  reports.
 - *The settings that decide growth are fixed at creation.* Only the new-game screen (`UIGalaxySelect`,
   through `UICombatSettingsDF`) writes starting level, growth speed, density, threat and experience
   factors. Mid-game, only aggressiveness can change, through the Dark Fog Communicator
