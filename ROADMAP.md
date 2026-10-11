@@ -1323,6 +1323,8 @@ Lens. The answer turned out to reach well past that recipe. An idea for the list
   lens anomaly (NairalZaurak III in seed 84201727) turns twelve drop-only matrices into ten lenses --
   the scarcest input in the game stretched tenfold, and a strong case for the disclosure this section
   proposes: a player should be able to learn that world is worth a level-12 base.
+  The research itself costs 1,000 matrices -- Paul had 44 when the tech appeared: "gonna take a
+  while". So the gate is the level, then a long farm, then twelve more per lens.
 - *The settings that decide growth are fixed at creation.* Only the new-game screen (`UIGalaxySelect`,
   through `UICombatSettingsDF`) writes starting level, growth speed, density, threat and experience
   factors. Mid-game, only aggressiveness can change, through the Dark Fog Communicator
