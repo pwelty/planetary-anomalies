@@ -15,6 +15,9 @@
   then stay ordinary, and the log says how many.
 - `ResearchCubes` (ruleset 3, on by default): matrices can be anomalies, made ten at a time by the
   labs on that world. A flat x10 for now; varied multipliers are still planned for the rarer cubes.
+  Labs keep at most 10 finished matrices before they stop, which a x10 craft overflows -- a
+  Gravity Matrix world never started, and single-matrix worlds ran a batch at a time. Anomalous
+  labs now have room for two batches; ordinary labs are unchanged.
 - `MultiOutputRecipes` (ruleset 3, on by default): recipes with more than one output -- plasma
   refining, X-ray cracking, graphene from fire ice, antimatter -- can be anomalies. Every output
   is multiplied, by-product included, and the planet panel lists each product on its own line.

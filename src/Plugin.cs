@@ -127,6 +127,7 @@ namespace PlanetaryAnomalies
 
             // Not a disclosure surface: an effect, on its own seam, and inert unless the setting is on.
             TryPatch(typeof(ReplicatorPatch), "the replicator (ReplicatorFollowsPlanet)");
+            TryPatch(typeof(LabOutputCapPatch), "the lab output limit (ResearchCubes)");
         }
 
         /// <summary>

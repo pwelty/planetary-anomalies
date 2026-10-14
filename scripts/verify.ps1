@@ -774,6 +774,23 @@ if (-not $labOk) {
     Write-Host "OK  LabComponent is a struct with id, researchMode, recipeId, recipeExecuteData; FactorySystem.labPool/labCursor public"
 }
 
+# LabOutputCapPatch rewrites the lab's fixed output limit -- "ldc.i4.s 10; ldarg.0; ldfld speedOverride" --
+# which appears once per output shape. Without it a cube anomaly over 10 per craft never starts.
+$labCraft = $labType.Methods | Where-Object { $_.Name -eq 'InternalUpdateAssemble' } | Select-Object -First 1
+$capSites = 0
+if ($labCraft -and $labCraft.HasBody) {
+    $li = $labCraft.Body.Instructions
+    for ($i = 0; $i + 2 -lt $li.Count; $i++) {
+        $isTen = ($li[$i].OpCode.Name -eq 'ldc.i4.s' -or $li[$i].OpCode.Name -eq 'ldc.i4') -and [int]$li[$i].Operand -eq 10
+        if ($isTen -and $li[$i + 1].OpCode.Name -eq 'ldarg.0' -and $li[$i + 2].OpCode.Name -eq 'ldfld' -and $li[$i + 2].Operand.Name -eq 'speedOverride') { $capSites++ }
+    }
+}
+if ($capSites -ne 2) {
+    $failures.Add("LabComponent.InternalUpdateAssemble's output limit pattern was found $capSites time(s), not 2; LabOutputCapPatch would leave cube worlds stalled.")
+} else {
+    Write-Host "OK  Lab output limit found twice in LabComponent.InternalUpdateAssemble (LabOutputCapPatch)"
+}
+
 Write-Host ""
 Write-Host "Resolved $checked reference(s) into $($interesting -join ', ')."
 
