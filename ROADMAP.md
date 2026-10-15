@@ -1325,6 +1325,39 @@ Lens. The answer turned out to reach well past that recipe. An idea for the list
   proposes: a player should be able to learn that world is worth a level-12 base.
   The research itself costs 1,000 matrices -- Paul had 44 when the tech appeared: "gonna take a
   while". So the gate is the level, then a long farm, then twelve more per lens.
+- *The ladder, confirmed in play* (seed 84201727, Oct). Paul parked defences just outside his home
+  planet's Dark Fog base and farmed it instead of clearing it -- "I have large storages FULL of stuff now"
+  -- and it climbed while he ignored it:
+
+  | Base level | What appeared |
+  | --- | --- |
+  | 12 | Dark Fog Matrix drops; Dark Fog Lens technology revealed |
+  | 15 | a second hidden technology (which one not recorded) |
+  | 24 | Core Element drops |
+  | 30 | reached by the farmed base -- the top of the ladder |
+
+  Every level the player reports put on the ladder (12, 15, 18, 21, 24) now has at least one in-play
+  point except 18 and 21. The practical lesson is the one Paul had never met in 663 hours: a Dark Fog base
+  left alive is a supply line, and clearing the home base early forecloses all of it.
+- *What each drop is for*, read from the inputs of the anomalous recipes in that galaxy -- with
+  NoRepeatsInGalaxy on and 158 of 161 eligible recipes placed, close to the full list, though a drop could
+  still feed one of the three unplaced recipes or one the mod cannot draw:
+
+  | Drop | Ingredient of | Anomaly world (x10) |
+  | --- | --- | --- |
+  | Core Element | Strange Annihilation Fuel Rod (8 antimatter rods + 1 Core Element + 2 strange matter + 1 frame material) | KausBorealis III |
+  | Matter Recombinator, Energy Shard | Re-composing Assembler (assembler Mk.IV) | NairalZaurak I |
+  | Negentropy Singularity, Energy Shard | Negentropy Smelter | Vildiur I |
+  | Silicon-based Neuron, Dark Fog Matrix | Self-evolution Lab | Kaffaljidma I |
+  | Dark Fog Matrix | Dark Fog Lens | NairalZaurak III |
+
+  So every Dark Fog drop has a world in that galaxy where it goes ten times as far. That is the strongest
+  argument yet for this candidate: the information exists in the game's data, it decides whether a
+  player's full storage is worth hauling across the galaxy, and nothing in the game or the mod says it.
+- *Where the loot filter is*, since full storage is the first thing a farming player hits: the Z combat
+  screen's tool panel has a filter button (`UIZS_ToolPanel.OnFilterButtonClick`), and the Battlefield
+  Analysis Base window has one too (`loopFilterButton`), apparently shown only with the base's auto
+  pick-up on. Both open the same list; a disabled item is no longer collected.
 - *The settings that decide growth are fixed at creation.* Only the new-game screen (`UIGalaxySelect`,
   through `UICombatSettingsDF`) writes starting level, growth speed, density, threat and experience
   factors. Mid-game, only aggressiveness can change, through the Dark Fog Communicator
