@@ -190,16 +190,30 @@ Distribution notes from the same survey, useful for the duplicates question:
 - Any specific recipe has roughly a 37% chance of being absent from a galaxy this size. Absence is
   ordinary, not a bug -- worth remembering when someone reports "my galaxy has no X".
 
-### Downloads, as of 2026-09-24
+### Downloads, as of 2026-10-19
 
 | Version | Published | Downloads | Notes |
 | --- | --- | --- | --- |
-| 0.1.0 | 27 Aug | 70 | |
-| 0.2.0 | 29 Aug | 28 | superseded by 0.3.0 within 23 minutes |
-| 0.3.0 | 29 Aug | 144 | eleven days as the current version |
-| 0.4.0 | 9 Sep | 139 | 48 in its first day, 67 by the second, 94 by 14 Sep, 121 by 19 Sep, 138 by 23 Sep |
-| 0.5.0 | 22 Sep | 36 | current for about 25 hours; not one download since 0.5.1 replaced it |
-| 0.5.1 | 23 Sep | 45 | about a day in |
+| 0.1.0 | 27 Aug | 84 | |
+| 0.2.0 | 29 Aug | 45 | superseded by 0.3.0 within 23 minutes |
+| 0.3.0 | 29 Aug | 163 | eleven days as the current version |
+| 0.4.0 | 9 Sep | 154 | 48 in its first day, 67 by the second, 94 by 14 Sep, 121 by 19 Sep, 138 by 23 Sep |
+| 0.5.0 | 22 Sep | 50 | current for about 25 hours |
+| 0.5.1 | 23 Sep | 199 | 45 in its first day; 199 by 19 Oct |
+
+695 in total on 19 Oct, 26 days after 0.5.1. Two readings, one of them a correction.
+
+0.5.1 is the best-taken release so far: about six a day after its first-day burst (154 in the 25 days
+to 19 Oct), against 0.4.0's four or five. Nothing was promoted in between, so that is the underlying
+rate of new players finding the mod, and it is rising.
+
+And the correction: the paragraph below says 0.5.0 "stopped dead at 36" once 0.5.1 existed. It did
+not -- it reached 50. Every old version gained in the same 25 days: 0.1.0 +14, 0.2.0 +17, 0.3.0 +19,
+0.4.0 +15, 0.5.0 +14. So there is a floor of roughly half a download a day on every version, chosen or
+not -- mirrors, bots, pinned profiles -- and any version's count should be read with that floor taken
+off first. The claim came from one day's data, which was too short to see the floor.
+
+The next paragraphs were written on 24 Sep, at 462.
 
 462 in total on 24 Sep. Two releases in two days, and the second drew more than the first: 45 for
 0.5.1 against 36 for 0.5.0, 81 across the pair. That fits the returning-audience reading below --
