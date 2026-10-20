@@ -26,8 +26,9 @@
 - The storm (`Storm`, ruleset 3, on by default): between 10 and 20 minutes into a new game, an
   anomalous storm from the nearest world whose anomaly needs no research reaches your home planet.
   For 30 minutes your machines there make that recipe at its multiple; then it passes, and you are
-  told which world has it for good. Announced at both ends, and shown on the home planet's panel and
-  in the machine window while it lasts. With `ReplicatorFollowsPlanet` on, the replicator at home
+  told which world has it for good. Announced at both ends, and shown on the home planet's panel, in
+  the machine window, and under the small globe in the top-right corner, with the minutes left, while
+  it lasts. With `ReplicatorFollowsPlanet` on, the replicator at home
   makes it at the same multiple. Nothing is saved; it follows the save's own clock.
 - `ReplicatorFollowsPlanet` (on by default, for now): standing on an anomalous world, Icarus's
   replicator makes that world's anomalous recipe at the same multiple its machines do, and the

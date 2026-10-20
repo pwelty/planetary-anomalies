@@ -214,6 +214,17 @@ if ($null -eq $asmWindow) {
     }
 }
 
+# The storm's corner line: UIPlanetGlobe._OnUpdate writes the climate line into geoInfoText, and the
+# postfix appends to it.
+$globe = $gameAsm.MainModule.GetType('UIPlanetGlobe')
+$globeUpdate = if ($globe) { $globe.Methods | Where-Object { $_.Name -eq '_OnUpdate' -and $_.Parameters.Count -eq 0 } } else { $null }
+$geoInfo = if ($globe) { $globe.Fields | Where-Object { $_.Name -eq 'geoInfoText' -and $_.IsPublic -and $_.FieldType.Name -eq 'Text' } } else { $null }
+if (-not $globeUpdate -or -not $geoInfo) {
+    $failures.Add("UIPlanetGlobe._OnUpdate() or its public Text geoInfoText is gone; the storm's corner line has no seam.")
+} else {
+    Write-Host "OK  Harmony target: UIPlanetGlobe._OnUpdate(), geoInfoText public (the storm's corner line)"
+}
+
 # The lab twin of the machine marker. Here factory and factorySystem are private and arrive by
 # Harmony field injection (___factory, ___factorySystem), which fails at patch time if renamed.
 $labWindow = $gameAsm.MainModule.GetType('UILabWindow')

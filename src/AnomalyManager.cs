@@ -2520,6 +2520,17 @@ namespace PlanetaryAnomalies
             return _stormRecipe;
         }
 
+        /// <summary>The corner globe's storm line, or null: "Gear ×10, 23 min".</summary>
+        internal static string StormGlobeLine(int planetId)
+        {
+            if (!EnsureStorm() || ActiveStormRecipe(planetId) <= 0)
+            {
+                return null;
+            }
+
+            return RecipeLabel(_stormRecipe) + ", " + StormMinutesLeft(GameMain.gameTick) + " min";
+        }
+
         /// <summary>The planet panel's storm line, or null.</summary>
         internal static string StormLineFor(int planetId)
         {
