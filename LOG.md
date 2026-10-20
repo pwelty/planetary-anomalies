@@ -46,7 +46,8 @@ meant for a fresh one. Ruleset 3 only, every behaviour a config setting, changel
 
 - The storm has not run in game at all: arrival, the announcements, the panel line, the marker, or
   machines going back to x1 when it ends (including a reload during and after it).
-- The lab limit fix in play: nobody has gone back to Sadira I to see the lab start.
+- ~~The lab limit fix in play~~ -- confirmed by Paul on 20 Oct: the Green Matrix lab on Sadira I
+  "was fine" after the fix.
 - Which tech appeared at Dark Fog level 15.
 
 **Where the next session starts.** Paul starts a new run (ruleset 3) to test the storm. The load log
