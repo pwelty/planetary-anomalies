@@ -6,6 +6,57 @@ what the next session should pick up. Facts that outlive a session belong in
 
 ---
 
+## 2026-10-11 to 2026-10-20 — by-products, the lab limit, Dark Fog from play, the storm
+
+The same play-and-tweak loop on seed 84201727 until Paul had exhausted the run, then the first feature
+meant for a fresh one. Ruleset 3 only, every behaviour a config setting, changelog in the same commit.
+
+**What changed.**
+
+- `MultiOutputRecipes` (`6f813bd`, on): recipes with a by-product join the pool; every product is
+  multiplied, and the planet panel lists each on its own line.
+- Labs on cube worlds can start (`3cc78ab`). Paul's Green Matrix lab on Sadira I would not run: a lab
+  holds at most 10 finished matrices, and a x10 craft of a two-matrix recipe overflows that before it
+  begins. `LabOutputCapPatch`, a transpiler -- the limit is a constant mid-method, so no safer seam --
+  gives anomalous labs room for two batches. The seam is in `docs/inspection.md`.
+- Dark Fog, from Paul's play (`a050a9d` to `09bd366`, roadmap only): the base-level ladder (Matrix
+  and the Lens tech at 12, a second hidden tech at 15, Core Element at 24, a farmed base reaching 30),
+  the Lens research costing 1,000 matrices, and each drop's x10 world in that galaxy. This is
+  evidence for the Dark Fog disclosure candidate, not a decision to build it.
+- Downloads as of 19 Oct (`6a3bfa1`): 695, 0.5.1 at 199, and a correction -- superseded versions keep
+  gaining about half a download a day, so 0.5.0 did not "stop dead".
+- **The storm** (`b535282`, setting `Storm`, on). Between minutes 10 and 20 of game time (the minute
+  from the seed), the nearest anomalous non-home world whose recipe needs no research lends its anomaly
+  to home for 30 minutes. It is announced on arrival and when it passes, with a STORM line and minutes
+  left on home's planet panel and STORM xN in the machine window. The clock is `GameMain.gameTick`,
+  restored from the save, so nothing is stored. It is the only anomaly that is taken away again, so
+  its sweep alone restores machines to the shared execute data.
+- The game updated itself on 15 Oct to 0.10.35.29151. Build and verify pass against it; hash and the
+  clock facts are in `docs/inspection.md`.
+
+**What is actually proven.**
+
+- In game, by Paul, informally: by-product worlds "I THINK IT'S working"; the Dark Fog ladder and
+  drops as listed.
+- Statically: a new game's clock starts at 0. `timei` is an instance field with no initializer on a
+  per-game component, written only by its own tick and by the save import (Cecil, 20 Oct).
+- Build and verify.ps1 pass; the golden test's 202 results are unchanged.
+
+**What is not.**
+
+- The storm has not run in game at all: arrival, the announcements, the panel line, the marker, or
+  machines going back to x1 when it ends (including a reload during and after it).
+- The lab limit fix in play: nobody has gone back to Sadira I to see the lab start.
+- Which tech appeared at Dark Fog level 15.
+
+**Where the next session starts.** Paul starts a new run (ruleset 3) to test the storm. The load log
+names it: "Storm: from X (...), reaching Home at minute N ... This save is at minute M" -- M should be
+0 for a new game. Then build something that X's recipe uses on home before minute N, and watch it go
+x10 and back. After that, the remaining 1.0 list is Paul's to choose from (ROADMAP, "1.0 in
+development").
+
+---
+
 ## 2026-10-10 — the lab window marker; first cube world reached
 
 Paul reached Graffias IV, this galaxy's Universe Matrix world (seed 84201727), and set up a lab.

@@ -453,3 +453,31 @@ Read with Cecil from `Assembly-CSharp.dll` modified 2026-09-29T12:18:57Z, SHA-25
 is rewritten each frame. Two further `ret` sites (offsets 912, 924) were not traced; the patch
 guards against a stale marker with an `EndsWith` check, as the assembler marker does. Research-mode
 labs are never marked, since they make no items.
+
+## Ruleset 3 seams (recorded 2026-10-20, DSP 0.10.35.29151)
+
+Read with Cecil from `Assembly-CSharp.dll` modified 2026-10-15T11:08:59Z (Steam updated the game
+that day from 29104), 8,034,304 bytes, SHA-256
+`EF314425DADE51F529F184F07BE136CD3C2660A6A81515603C7226FBE7AB1D8C`. verify.ps1 checks each of these.
+
+**Replicator** (`ReplicatorFollowsPlanet`). `MechaForge.AddTaskIterate` returns the `ForgeTask` it
+queued, and each task carries its own `productCounts`; a postfix multiplies them. The queue number
+comes from `UIReplicatorWindow.ActiveQueueText(int index)`, which multiplies crafts by the *global*
+recipe's output, so a second postfix rewrites it from the task. `taskQueue` (`List<ForgeTask>`) and
+`queueNumTexts` (`Text[]`) are private and bound by name.
+
+**Lab output limit** (`ResearchCubes`). `LabComponent.InternalUpdateAssemble` stops a lab whose
+finished output would pass `10 * ((speedOverride + 9999) / 10000)`. The pattern
+`ldc.i4.s 10; ldarg.0; ldfld speedOverride` appears twice, once per output shape. A x10 craft of a
+recipe making two or more overflows it, so the lab never starts. `LabOutputCapPatch` is a
+transpiler -- no prefix or postfix can reach a constant in the middle of the method -- that replaces
+the 10 with `max(10, 2 * largest product count)` read from the lab's own `recipeExecuteData`, which
+leaves ordinary labs at 10.
+
+**The game clock** (the storm). `GameMain.gameTick` is a public static property over the instance
+field `GameMain.timei` (`long`); with no instance it reads 0. Only two places write `timei`:
+`GameMain.FixedUpdate` (the tick) and `set_gameTick`, whose only callers are `GameData.Import`
+(reading the save's `Int64`) and `DebugGameData.Update`. `GameMain` is a scene component -- `Awake`
+sets the instance, `OnDestroy` tears it down -- and `timei` has no initializer, so a new game starts
+at 0 and a loaded one at the saved tick. 60 ticks a second at normal speed; the storm counts
+3,600 ticks to the minute.
