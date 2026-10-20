@@ -44,8 +44,13 @@ meant for a fresh one. Ruleset 3 only, every behaviour a config setting, changel
 
 **What is not.**
 
-- The storm has not run in game at all: arrival, the announcements, the panel line, the marker, or
-  machines going back to x1 when it ends (including a reload during and after it).
+- ~~The storm in game~~ -- run on 20 Oct, new game, seed 12261908: "Storm: from DenebKaitos I (Gear
+  x10), reaching γ Ursae Majoris III at minute 11 ... This save is at minute 0". Paul saw the arrival
+  announcement, STORM x10 in the assembler window, the STORM line in the planet description, and the
+  end announcement. The log shows three assemblers switched to x10 as he built them and all three
+  "back to normal" when it passed. Still unseen: a reload during and after a storm, gears visibly
+  back to one per craft, and two later additions (`5d550a8` the replicator follows the storm,
+  `010a8be` a storm line under the corner globe) built and verified but not yet installed.
 - ~~The lab limit fix in play~~ -- confirmed by Paul on 20 Oct: the Green Matrix lab on Sadira I
   "was fine" after the fix.
 - Which tech appeared at Dark Fog level 15.
