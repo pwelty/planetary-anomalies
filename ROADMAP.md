@@ -1160,7 +1160,7 @@ demonstration whose entire point is to send you outward, and it takes itself awa
 
 ### Candidate for 1.0 or later: more than one storm
 
-An idea for the list, recorded 20 Oct; not a decision. The storm shipped in ruleset 3 as one storm per
+An idea for the list, recorded 20 Oct; not a decision. The storm was built for ruleset 3 as one storm per
 game (`b535282`), the visit above with "start with one" taken literally. Paul, after his first one had
 passed: "i can wait until second storm". He expected another. That is evidence about how the
 first one felt -- like a mechanic, not a tutorial -- and it is the first answer to the visit's *How often*,
