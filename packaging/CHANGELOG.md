@@ -18,6 +18,8 @@
   Labs keep at most 10 finished matrices before they stop, which a x10 craft overflows -- a
   Gravity Matrix world never started, and single-matrix worlds ran a batch at a time. Anomalous
   labs now have room for two batches; ordinary labs are unchanged.
+  The lab window says ANOMALY ×10 on a lab making that world's matrix, as the assembler window
+  already does for machines.
 - `MultiOutputRecipes` (ruleset 3, on by default): recipes with more than one output -- plasma
   refining, X-ray cracking, graphene from fire ice, antimatter -- can be anomalies. Every output
   is multiplied, by-product included, and the planet panel lists each product on its own line.
@@ -25,9 +27,8 @@
   anomalous storm from the nearest world whose anomaly needs no research reaches your home planet.
   For 30 minutes your machines there make that recipe at its multiple; then it passes, and you are
   told which world has it for good. Announced at both ends, and shown on the home planet's panel and
-  in the machine window while it lasts. Nothing is saved; it follows the save's own clock.
-  The lab window says ANOMALY ×10 on a lab making that world's matrix, as the assembler window
-  already does for machines.
+  in the machine window while it lasts. With `ReplicatorFollowsPlanet` on, the replicator at home
+  makes it at the same multiple. Nothing is saved; it follows the save's own clock.
 - `ReplicatorFollowsPlanet` (on by default, for now): standing on an anomalous world, Icarus's
   replicator makes that world's anomalous recipe at the same multiple its machines do, and the
   replicator queue shows the multiplied count.

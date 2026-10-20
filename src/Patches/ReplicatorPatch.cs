@@ -30,6 +30,7 @@ namespace PlanetaryAnomalies
     {
         private static bool _errorLogged;
         private static bool _firstLogged;
+        private static bool _stormLogged;
         private static bool _queueErrorLogged;
 
         [HarmonyPostfix]
@@ -54,22 +55,40 @@ namespace PlanetaryAnomalies
                     return;
                 }
 
+                // The planet's own anomaly, or a storm passing over home.
+                int multiplier;
+                string source;
                 PlanetAnomaly anomaly = AnomalyManager.AnomalyFor(planet.id);
-                if (anomaly == null || anomaly.RecipeId != __result.recipeId)
+                if (anomaly != null && anomaly.RecipeId == __result.recipeId)
+                {
+                    multiplier = anomaly.OutputMultiplier;
+                    source = "planet";
+                }
+                else if (AnomalyManager.ActiveStormRecipe(planet.id) == __result.recipeId)
+                {
+                    multiplier = AnomalyManager.OutputMultiplier;
+                    source = "storm";
+                }
+                else
                 {
                     return;
                 }
 
                 for (int i = 0; i < __result.productCounts.Length; i++)
                 {
-                    __result.productCounts[i] *= anomaly.OutputMultiplier;
+                    __result.productCounts[i] *= multiplier;
                 }
 
-                if (!_firstLogged)
+                if (!_firstLogged || (source == "storm" && !_stormLogged))
                 {
                     _firstLogged = true;
-                    Plugin.Log.LogInfo("Replicator follows the planet (once): recipe " + __result.recipeId + " on " +
-                                       planet.displayName + " makes x" + anomaly.OutputMultiplier + " per craft, " +
+                    if (source == "storm")
+                    {
+                        _stormLogged = true;
+                    }
+
+                    Plugin.Log.LogInfo("Replicator follows the " + source + " (once): recipe " + __result.recipeId + " on " +
+                                       planet.displayName + " makes x" + multiplier + " per craft, " +
                                        __result.count + " craft(s) queued.");
                 }
             }
