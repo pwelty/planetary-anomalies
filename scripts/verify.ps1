@@ -442,6 +442,15 @@ if (-not $localPlanet) {
 } else {
     Write-Host "OK  GameMain.localPlanet is public static"
 }
+# The storm runs on the save's own clock: GameMain.gameTick, restored from the save by GameData.Import.
+$gameTickProp = $gameAsm.MainModule.GetType('GameMain').Properties | Where-Object { $_.Name -eq 'gameTick' -and $_.GetMethod -and $_.GetMethod.IsStatic -and $_.GetMethod.IsPublic }
+$gdImport = $gameAsm.MainModule.GetType('GameData').Methods | Where-Object { $_.Name -eq 'Import' } | Select-Object -First 1
+$restores = $gdImport -and $gdImport.HasBody -and ($gdImport.Body.Instructions | Where-Object { $_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.Name -eq 'set_gameTick' })
+if (-not $gameTickProp -or -not $restores) {
+    $failures.Add("GameMain.gameTick is gone or no longer restored from the save by GameData.Import; the storm's timing would not follow the save.")
+} else {
+    Write-Host "OK  GameMain.gameTick is public static and restored from the save (the storm's clock)"
+}
 # The queue count is rewritten after UIReplicatorWindow.ActiveQueueText(int index); the postfix binds the
 # index and two private fields by name.
 $repWin = $gameAsm.MainModule.GetType('UIReplicatorWindow')

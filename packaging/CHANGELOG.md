@@ -21,6 +21,11 @@
 - `MultiOutputRecipes` (ruleset 3, on by default): recipes with more than one output -- plasma
   refining, X-ray cracking, graphene from fire ice, antimatter -- can be anomalies. Every output
   is multiplied, by-product included, and the planet panel lists each product on its own line.
+- The storm (`Storm`, ruleset 3, on by default): between 10 and 20 minutes into a new game, an
+  anomalous storm from the nearest world whose anomaly needs no research reaches your home planet.
+  For 30 minutes your machines there make that recipe at its multiple; then it passes, and you are
+  told which world has it for good. Announced at both ends, and shown on the home planet's panel and
+  in the machine window while it lasts. Nothing is saved; it follows the save's own clock.
   The lab window says ANOMALY ×10 on a lab making that world's matrix, as the assembler window
   already does for machines.
 - `ReplicatorFollowsPlanet` (on by default, for now): standing on an anomalous world, Icarus's

@@ -238,6 +238,7 @@ namespace PlanetaryAnomalies
             _outputMultiplier = 10;
             _byPlanet.Clear();
             _chosenRecipe.Clear();
+            ResetStorm();
             _withheldLogged.Clear();
             _eligible = null;
             _exclusions = null;
@@ -491,6 +492,7 @@ namespace PlanetaryAnomalies
             // New game, or a different save. Nothing carries over.
             _byPlanet.Clear();
             _chosenRecipe.Clear();
+            ResetStorm();
             _withheldLogged.Clear();
             _eligible = null;
             _galaxySeed = seed;
@@ -2348,6 +2350,302 @@ namespace PlanetaryAnomalies
             }
 
             return false;
+        }
+
+        // ---------------------------------------------------------------------------------------
+        // The storm.
+        // ---------------------------------------------------------------------------------------
+
+        /// <summary>Minutes of game time before the storm can arrive, and the seeded spread after that.</summary>
+        private const int StormEarliestMinutes = 10;
+        private const int StormSpreadMinutes = 10;
+
+        /// <summary>How long the storm stays, in minutes of game time.</summary>
+        private const int StormMinutes = 30;
+
+        private const long TicksPerMinute = 3600;
+        private const uint SaltStorm = 0x165667B1u;
+        private const int StormSweepTicks = 30;
+
+        private static bool _stormScheduled;
+        private static long _stormStart;
+        private static long _stormEnd;
+        private static int _stormRecipe = -1;
+        private static int _stormSource = -1;
+        private static RecipeExecuteData _stormData;
+        private static int _stormPhase;
+        private static int _stormCountdown;
+        private static bool _stormAttached;
+
+        /// <summary>Ruleset 3 with Storm on.</summary>
+        private static bool StormApplies
+        {
+            get { return _ruleset >= 3 && (Plugin.Storm == null || Plugin.Storm.Value); }
+        }
+
+        private static void ResetStorm()
+        {
+            _stormScheduled = false;
+            _stormStart = 0;
+            _stormEnd = 0;
+            _stormRecipe = -1;
+            _stormSource = -1;
+            _stormData = null;
+            _stormPhase = 0;
+            _stormCountdown = 0;
+            _stormAttached = false;
+        }
+
+        /// <summary>
+        /// Schedules the storm for this galaxy, once: which world it comes from, which recipe it
+        /// carries, and when.
+        ///
+        /// Paul's idea, from early in 0.5: "what if in the early game, you get 'visited' ... and you get
+        /// their buff on home planet for like 30 mins", then "since no aliens, maybe we call it a solar
+        /// flare or cosmic storm". The roadmap's case for it: it *previews* an anomaly rather than
+        /// granting one -- for half an hour the home planet makes something ten to one, the player is
+        /// told exactly where that came from, and then it ends, leaving a want for one specific world.
+        ///
+        /// The source is the nearest anomalous world, nearest first by star distance, whose recipe needs
+        /// no research at all -- the only recipes certain to be buildable in the first half hour -- and
+        /// is not the home planet's own anomaly. The time is drawn from the seed: between 10 and 20
+        /// minutes of game time, for 30 minutes. GameMain.gameTick is the save's own clock -- GameData.Import
+        /// restores it from the save -- so nothing is stored: reloading mid-storm finds the same storm, and
+        /// loading after it has passed finds none.
+        /// </summary>
+        private static bool EnsureStorm()
+        {
+            if (_stormScheduled)
+            {
+                return _stormRecipe > 0;
+            }
+
+            if (!StormApplies || !EnsureGalaxy())
+            {
+                return false;
+            }
+            _stormScheduled = true;
+
+            GameData data = GameMain.data;
+            GalaxyData galaxy = data != null ? data.galaxy : null;
+            if (galaxy == null || galaxy.stars == null)
+            {
+                return false;
+            }
+
+            PlanetAnomaly home = AnomalyFor(_birthPlanetId, false);
+            int homeRecipe = home != null ? home.RecipeId : -1;
+
+            List<int> order = new List<int>();
+            for (int s = 0; s < galaxy.stars.Length; s++)
+            {
+                AddPlanetIds(galaxy.stars[s], order);
+            }
+
+            order.Sort(delegate(int a, int b)
+            {
+                int byDistance = DistanceOf(a).CompareTo(DistanceOf(b));
+                return byDistance != 0 ? byDistance : a.CompareTo(b);
+            });
+
+            for (int i = 0; i < order.Count; i++)
+            {
+                int planetId = order[i];
+                if (planetId == _birthPlanetId)
+                {
+                    continue;
+                }
+
+                PlanetAnomaly anomaly = AnomalyFor(planetId, false);
+                if (anomaly == null || anomaly.RecipeId == homeRecipe)
+                {
+                    continue;
+                }
+
+                RecipeProto recipe = LDB.recipes.Select(anomaly.RecipeId);
+                if (recipe == null || recipe.preTech != null)
+                {
+                    continue;
+                }
+
+                RecipeExecuteData shared;
+                if (!RecipeProto.recipeExecuteData.TryGetValue(recipe.ID, out shared) || shared == null ||
+                    shared.productCounts == null || shared.requires == null || shared.requireCounts == null)
+                {
+                    continue;
+                }
+
+                _stormRecipe = recipe.ID;
+                _stormSource = planetId;
+                _stormData = BuildAnomalousExecuteData(shared);
+                break;
+            }
+
+            if (_stormRecipe <= 0)
+            {
+                Plugin.Log.LogInfo("Storm: no anomalous world carries a recipe that needs no research, so this galaxy has no storm.");
+                return false;
+            }
+
+            uint h = AnomalyMath.Hash(_galaxySeed, 0, AnomalySystemVersion, SaltStorm);
+            _stormStart = (StormEarliestMinutes + (long)(h % (uint)StormSpreadMinutes)) * TicksPerMinute;
+            _stormEnd = _stormStart + StormMinutes * TicksPerMinute;
+
+            long now = GameMain.gameTick;
+            Plugin.Log.LogInfo("Storm: from " + PlanetName(_stormSource) + " (" + RecipeLabel(_stormRecipe) + "), reaching " +
+                               PlanetName(_birthPlanetId) + " at minute " + (_stormStart / TicksPerMinute) + " of game time for " +
+                               StormMinutes + " minutes. This save is at minute " + (now / TicksPerMinute) +
+                               (now >= _stormEnd ? ", so it has already passed." : now >= _stormStart ? ", so it is here now." : "."));
+            return true;
+        }
+
+        private static bool StormActive(long tick)
+        {
+            return _stormRecipe > 0 && tick >= _stormStart && tick < _stormEnd;
+        }
+
+        private static long StormMinutesLeft(long tick)
+        {
+            return (_stormEnd - tick + TicksPerMinute - 1) / TicksPerMinute;
+        }
+
+        /// <summary>The storm's recipe if it is over this planet right now, otherwise -1.</summary>
+        internal static int ActiveStormRecipe(int planetId)
+        {
+            if (planetId != _birthPlanetId || !_stormScheduled || !StormActive(GameMain.gameTick))
+            {
+                return -1;
+            }
+
+            return _stormRecipe;
+        }
+
+        /// <summary>The planet panel's storm line, or null.</summary>
+        internal static string StormLineFor(int planetId)
+        {
+            if (!EnsureStorm() || ActiveStormRecipe(planetId) <= 0)
+            {
+                return null;
+            }
+
+            return "STORM\nFrom " + PlanetName(_stormSource) + ": " + RecipeLabel(_stormRecipe) + " here for " +
+                   StormMinutesLeft(GameMain.gameTick) + " more minutes.";
+        }
+
+        /// <summary>
+        /// Main thread, every frame the tip layer is open: announces the storm's arrival and its end.
+        /// Loaded mid-storm, it announces what is left; loaded after, it says nothing.
+        /// </summary>
+        internal static void StormTick()
+        {
+            if (!EnsureStorm())
+            {
+                return;
+            }
+
+            long tick = GameMain.gameTick;
+            if (_stormPhase == 0)
+            {
+                if (tick >= _stormEnd)
+                {
+                    _stormPhase = 2;
+                    return;
+                }
+
+                if (tick >= _stormStart)
+                {
+                    _stormPhase = 1;
+                    TechUnlockPatch.Announce("ANOMALY: a storm from " + PlanetName(_stormSource) + " has reached " +
+                                             PlanetName(_birthPlanetId) + ". " + RecipeLabel(_stormRecipe) +
+                                             " here for the next " + StormMinutesLeft(tick) + " minutes.");
+                }
+
+                return;
+            }
+
+            if (_stormPhase == 1 && tick >= _stormEnd)
+            {
+                _stormPhase = 2;
+                TechUnlockPatch.Announce("ANOMALY: the storm has passed. " + PlanetName(_stormSource) + " still makes " +
+                                         RecipeLabel(_stormRecipe) + ".");
+            }
+        }
+
+        /// <summary>
+        /// Production, from the BeforeGameTick prefix: while the storm is over the home planet, its
+        /// machines on the storm's recipe get the multiplied execute data; once it has passed, they get
+        /// the shared data back. The only anomaly in the mod that is taken away again, so the only place
+        /// that restores.
+        /// </summary>
+        internal static void ApplyStorm(PlanetFactory factory)
+        {
+            if (factory == null || factory.planet == null || factory.planet.id != _birthPlanetId)
+            {
+                return;
+            }
+
+            if (!_stormAttached && !EnsureStorm())
+            {
+                return;
+            }
+
+            if (_stormCountdown > 0)
+            {
+                _stormCountdown--;
+                return;
+            }
+            _stormCountdown = StormSweepTicks;
+
+            bool active = StormActive(GameMain.gameTick);
+            if (!active && !_stormAttached)
+            {
+                return;
+            }
+
+            FactorySystem system = factory.factorySystem;
+            if (system == null || system.assemblerPool == null)
+            {
+                return;
+            }
+
+            RecipeExecuteData shared = null;
+            if (!active && !RecipeProto.recipeExecuteData.TryGetValue(_stormRecipe, out shared))
+            {
+                return;
+            }
+
+            AssemblerComponent[] pool = system.assemblerPool;
+            int cursor = system.assemblerCursor < pool.Length ? system.assemblerCursor : pool.Length;
+            int changed = 0;
+            for (int i = 1; i < cursor; i++)
+            {
+                if (pool[i].id != i || pool[i].recipeId != _stormRecipe)
+                {
+                    continue;
+                }
+
+                if (active)
+                {
+                    if (!ReferenceEquals(pool[i].recipeExecuteData, _stormData))
+                    {
+                        pool[i].recipeExecuteData = _stormData;
+                        changed++;
+                    }
+                }
+                else if (ReferenceEquals(pool[i].recipeExecuteData, _stormData) && shared != null)
+                {
+                    pool[i].recipeExecuteData = shared;
+                    changed++;
+                }
+            }
+
+            if (changed > 0)
+            {
+                Plugin.Log.LogInfo("Storm: " + changed + " machine(s) on " + factory.planet.displayName +
+                                   (active ? " now make " + RecipeLabel(_stormRecipe) + "." : " are back to normal."));
+            }
+
+            _stormAttached = active;
         }
 
         private static string PlanetName(int planetId)

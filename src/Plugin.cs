@@ -33,6 +33,7 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<bool> NoRepeatsInGalaxy;
         internal static ConfigEntry<bool> ResearchCubes;
         internal static ConfigEntry<bool> MultiOutputRecipes;
+        internal static ConfigEntry<bool> Storm;
         internal static ConfigEntry<bool> ReplicatorFollowsPlanet;
         internal static ConfigEntry<int> OutputMultiplier;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
@@ -237,6 +238,18 @@ namespace PlanetaryAnomalies
                 "by-product included: an anomalous refinery makes ten times the hydrogen as well as ten\n" +
                 "times the oil, which is more to use and more to get rid of.\n" +
                 "false: only recipes with a single output are drawn, as in rulesets 1 and 2.");
+
+            Storm = Config.Bind(
+                "Generation",
+                "Storm",
+                true,
+                "Ruleset 3 only. Early in a new game -- between 10 and 20 minutes of game time -- an\n" +
+                "anomalous storm from the nearest world whose anomaly needs no research reaches your home\n" +
+                "planet. For 30 minutes your machines there make that recipe at the anomaly's multiple; then\n" +
+                "it passes, and you are told the world that has it for good. Announced when it arrives and\n" +
+                "when it ends; the home planet's panel and the machine window show it while it lasts.\n" +
+                "Nothing is saved: the storm follows the save's own clock.\n" +
+                "false: no storm.");
 
             AnomalyChancePercent = Config.Bind(
                 "Generation",

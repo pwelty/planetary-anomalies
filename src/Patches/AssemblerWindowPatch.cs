@@ -50,7 +50,8 @@ namespace PlanetaryAnomalies
                 }
 
                 PlanetAnomaly anomaly = AnomalyManager.AnomalyFor(factory.planet.id);
-                if (anomaly == null)
+                int stormRecipe = AnomalyManager.ActiveStormRecipe(factory.planet.id);
+                if (anomaly == null && stormRecipe <= 0)
                 {
                     return;
                 }
@@ -77,13 +78,25 @@ namespace PlanetaryAnomalies
                 }
 
                 // Live pool slots store their own index back into id; recycled ones do not.
-                if (system.assemblerPool[id].id != id ||
-                    system.assemblerPool[id].recipeId != anomaly.RecipeId)
+                if (system.assemblerPool[id].id != id)
                 {
                     return;
                 }
 
-                string marker = "   ·   ANOMALY ×" + anomaly.OutputMultiplier;
+                int recipe = system.assemblerPool[id].recipeId;
+                string marker;
+                if (anomaly != null && recipe == anomaly.RecipeId)
+                {
+                    marker = "   ·   ANOMALY ×" + anomaly.OutputMultiplier;
+                }
+                else if (stormRecipe > 0 && recipe == stormRecipe)
+                {
+                    marker = "   ·   STORM ×" + AnomalyManager.OutputMultiplier;
+                }
+                else
+                {
+                    return;
+                }
 
                 // The game rewrites stateText on every update, in every branch, so appending does
                 // not normally accumulate. This guards the case where some path returns without

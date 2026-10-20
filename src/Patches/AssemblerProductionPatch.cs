@@ -84,6 +84,9 @@ namespace PlanetaryAnomalies
                     planet.displayName + ", planet id " + planet.id + ").");
             }
 
+            // The storm first: it can be over a home planet that has no anomaly of its own.
+            AnomalyManager.ApplyStorm(__instance);
+
             PlanetAnomaly anomaly = AnomalyManager.AnomalyFor(planet.id);
             if (anomaly == null)
             {

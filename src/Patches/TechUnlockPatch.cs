@@ -223,6 +223,7 @@ namespace PlanetaryAnomalies
                 HoldTips();
                 NoticeNewGame();
                 DrainCompleted();
+                AnomalyManager.StormTick();
                 QueueTestIfAsked();
 
                 if (_pending.Count == 0 && _overflow == 0)
@@ -373,6 +374,16 @@ namespace PlanetaryAnomalies
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// An announcement from elsewhere in the mod -- the storm -- through the same queue, pacing
+        /// and drawing as research announcements, so it is seen the same way.
+        /// </summary>
+        internal static void Announce(string message)
+        {
+            Plugin.Log.LogInfo("Announced: " + message);
+            Enqueue(message);
         }
 
         private static void Enqueue(string message)

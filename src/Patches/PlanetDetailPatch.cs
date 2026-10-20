@@ -45,7 +45,8 @@ namespace PlanetaryAnomalies
                 }
 
                 AnomalyVisibility visibility = AnomalyManager.VisibilityFor(planet.id);
-                if (visibility == AnomalyVisibility.None)
+                string storm = AnomalyManager.StormLineFor(planet.id);
+                if (visibility == AnomalyVisibility.None && storm == null)
                 {
                     return;
                 }
@@ -53,9 +54,17 @@ namespace PlanetaryAnomalies
                 // The panel has room to be a sentence rather than a symbol, so Marker mode says
                 // plainly what it is withholding and why. "Something is here, and you cannot use it
                 // yet" is a reason to come back; a bare mark in a paragraph of text is a puzzle.
-                string description = visibility == AnomalyVisibility.Full
-                    ? AnomalyManager.DescribeForPlanet(planet.id)
-                    : "ANOMALY\nOn a recipe you have not researched yet.";
+                string description = visibility == AnomalyVisibility.None ? null
+                    : visibility == AnomalyVisibility.Full
+                        ? AnomalyManager.DescribeForPlanet(planet.id)
+                        : "ANOMALY\nOn a recipe you have not researched yet.";
+
+                // The storm, when it is over this planet, after the planet's own anomaly.
+                if (storm != null)
+                {
+                    description = string.IsNullOrEmpty(description) ? storm : description + "\n\n" + storm;
+                }
+
                 if (string.IsNullOrEmpty(description))
                 {
                     return;
