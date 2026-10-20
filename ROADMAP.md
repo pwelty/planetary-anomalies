@@ -1158,6 +1158,35 @@ Against it, honestly: it is thirty minutes of free items at home, which *Create 
 problem, not free items* would normally refuse. What answers that is the purpose -- it is a
 demonstration whose entire point is to send you outward, and it takes itself away.
 
+### Candidate for 1.0 or later: more than one storm
+
+An idea for the list, recorded 20 Oct; not a decision. The storm shipped in ruleset 3 as one storm per
+game (`b535282`), the visit above with "start with one" taken literally. Paul, after his first one had
+passed: "i can wait until second storm". He expected another. That is evidence about how the
+first one felt -- like a mechanic, not a tutorial -- and it is the first answer to the visit's *How often*,
+which was left for play to decide.
+
+**Ways it could recur**, each still drawn from the seed and the clock, so nothing is saved:
+
+- *On a schedule.* Every so often -- an hour or two of game time, the gap drawn from the seed -- a storm
+  from the next-nearest anomalous world, so each one points somewhere new and further out.
+- *On research.* A storm when a tech unlocks a recipe that some anomalous world makes, from that world:
+  you have just learned to build it, and for thirty minutes you feel what it does there. That ties
+  storms to the research announcements, which already name those worlds.
+
+**What it needs to settle.**
+
+- *Still a preview, never a supply.* Each storm should bring a recipe home does not already have and
+  the player can build now, from a world not yet shown. Repeated storms of the same thing are free
+  items, which *Create another logistics problem, not free items* refuses.
+- *Rarer as the game goes on.* Early, a storm is a hook; late, with a logistics network built, it is
+  noise. Stopping after the first few, or once the player has left home, are both candidates.
+- *Settings.* `Storm` stays the switch; how often (`StormCount`, or a gap in minutes) would be its own
+  setting, off or one by default until play says otherwise.
+
+**Versioning.** It changes no planet's anomaly, only what visits home and when, so it can live in
+ruleset 3 behind a setting.
+
 ### Candidate for 1.0: the monolith -- an industrial district at home
 
 An idea, recorded 23 Sep, not a decision. Paul, turning over the early game: "I was even wondering
