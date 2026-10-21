@@ -1536,6 +1536,14 @@ that is strange rather than merely steep (*Candidate for 1.0: debuffs that bite*
 - *Weird, not punishing.* The debuff should read like the world's nature, not a tax: machines that
   draw five times the power, or work only on the night side, or a recipe that eats five times its
   inputs to make a hundred. Each still has to be stated on the machine and the planet panel.
+- *The night debuff, Paul's version:* "like Krell, if you run it at night, it just eats the inputs and
+  nothing is produced." The Krell machines feed something after dark -- the film's monster from the
+  id, without needing to show it. It is the best debuff so far because it is a fact about *place*,
+  down to where on the planet: build on the day side, or plan for the half of every rotation that
+  swallows your steel. And it rewards looking closely -- a tidally locked Krell world has a day side
+  that never ends, which a player can find and build on. Not inspected: whether a machine's position
+  against the sun is cheap to read per tick (solar panels must compute something like it), and the
+  machine window has to say "night: the Krell machines are consuming" or it reads as a broken factory.
 
 ### Candidate for 1.0: debuffs that bite -- the price on the thing you came for
 
