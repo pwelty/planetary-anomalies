@@ -1711,6 +1711,76 @@ The galaxy stops being a scatter of good places and becomes a trail through them
 
 **Versioning.** It changes what planets carry, so ruleset 3 at the earliest.
 
+### Varied multipliers: the proposal as of 21 Oct
+
+Under discussion, not a decision. Paul: "these are all gonna have to be optional. so a player can just
+retain the old experience if they want."
+
+**A multiplier moves no planet.** It changes the number, never which planet carries which recipe. So
+varied multipliers do not need the re-roll *The one re-roll* bundles them into: they can be switched on
+or off in a running game, could apply on any ruleset, and can be tuned after 1.0 without breaking the
+locked draw. Off, everything is today's flat `OutputMultiplier`.
+
+**Three switches that combine**, rather than one mode -- each a story Paul could tell about a run:
+
+| Setting | Off (today) | On | The story |
+| --- | --- | --- | --- |
+| `MultiplierFromDanger` | x10 everywhere | a step up for a system with hives, two for a heavy one, from the hive counts fixed at creation | "I fought for that world" |
+| `MultiplierFromRecipe` | same for every recipe | bigger for cheap bulk items, smaller for expensive ones (Universe Matrix, frames) | "anomalies make the boring stuff easy" |
+| `LegendaryWorld` | none | one world per galaxy at x100 | "I found the one" |
+
+Danger is the suggested first build: the roadmap has argued it longest (*Candidates for 1.0: four
+suggestions*, item 2), and its inputs are fixed by the seed -- `StarData.initialHiveCount`,
+`maxHiveCount` and `hivePatternLevel`, written only by `StarGen.CreateStar` and `CreateBirthStar`.
+Each number should carry its reason wherever it is shown ("x20, hive system").
+
+### Candidate: speed instead of output
+
+An idea for the list, from Reddit, recorded 21 Oct; not a decision. Paul: "someone also suggested a
+_speedup_ not just a x10."
+
+**A different effect, not a different number.** x10 output turns one set of inputs into ten products:
+free material. A speed-up makes a machine craft ten times faster, consuming ten times the inputs:
+nothing free, but one assembler doing the work of ten *if it can be fed*. That is *Create another
+logistics problem, not free items* almost word for word -- a speed world pulls belts and vessels toward
+it rather than handing out stock. It is also the second effect the release sequence has held a place
+for since v0.2.
+
+**What it would need**, unchecked:
+
+- The per-machine `RecipeExecuteData` the mod already swaps carries the craft time, so the seam is
+  probably the one in use.
+- Input buffers and sorters at ten times the pace may starve the machine -- possibly the right
+  difficulty, possibly just broken-looking. The lab output limit (`LabOutputCapPatch`) bites again.
+- Its own word everywhere. "x10" promises output; a speed world must say speed.
+
+**As a setting:** `AnomalyEffect = Output | Speed | Mixed`, Mixed letting the seed give some worlds one
+kind. Output stays the default, so the old experience is kept. Like the multiplier, it changes what an
+anomaly does, not where it is.
+
+### Candidate: more than one anomaly per planet
+
+An idea for the list, from Reddit, recorded 21 Oct; not a decision. Paul: "another idea from there was
+>1 per planet."
+
+**The tension.** One recipe per world is what makes a world *about* something (*Location must matter*):
+"the Gear world". Two unrelated anomalies blur that. Two *related* ones sharpen it instead -- iron ingot
+and gear, or the two halves of a chain -- and make a small industrial district (*Make places tell
+industrial stories*), which is close to the monolith's idea, reached from the other side.
+
+**What it needs to settle.**
+
+- *Related or random.* Random doubles the count; related makes a story. Related needs a definition the
+  game's data supports: one recipe's output is the other's input.
+- *Generation.* A second anomaly drawn with its own salt moves no first anomaly, so existing planets
+  keep theirs; but it changes what planets carry, and the uniqueness settings (`NoDuplicates`,
+  `NoRepeatsInGalaxy`) would have to count seconds too -- ruleset 3 at the earliest.
+- *Disclosure.* Every surface assumes one recipe per planet: the label, the panel, the markers, the
+  storm. Each would need to say two things without getting long.
+
+**As a setting:** a chance for a second anomaly (`SecondAnomalyChancePercent`, 0 = today), not a count,
+so a second one stays notable.
+
 ### The multiplier is not a number, it is a price
 
 Paul, asked whether ×10 was too high: *"it's generally a LOT of work to set stuff up. For me anyway.
