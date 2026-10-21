@@ -180,37 +180,36 @@
         internal const double NearLightYears = 6.0;
 
         /// <summary>
-        /// MultiplierFromDanger: one more step of the base multiplier per Dark Fog hive the star system
-        /// started with, up to <see cref="DangerMaxHives"/> -- x1, x2, x3, x4.
+        /// MultiplierFromDanger, in percent of the base: 100 plus one step per Dark Fog hive the star
+        /// system started with, counting at most <paramref name="maxHives"/>. At the default step of
+        /// 100 and three hives: 100, 200, 300, 400.
         /// </summary>
-        internal const int DangerMaxHives = 3;
-
-        internal static int DangerFactor(int hives)
+        internal static int DangerPercent(int hives, int stepPercent, int maxHives)
         {
-            int clamped = hives < 0 ? 0 : (hives > DangerMaxHives ? DangerMaxHives : hives);
-            return 1 + clamped;
+            int clamped = hives < 0 ? 0 : (hives > maxHives ? maxHives : hives);
+            return 100 + stepPercent * clamped;
         }
 
         /// <summary>
-        /// MultiplierFromDistance, in tenths: the nearest third of the other star systems by distance
-        /// from home 10 (x1), the middle third 15, the farthest third 20. By rank rather than light
-        /// years, so it reads the same in a small galaxy and a huge one.
+        /// MultiplierFromDistance: which third of the other star systems, ranked by distance from home,
+        /// this one falls in -- 0 nearest, 1 middle, 2 farthest. By rank rather than light years, so it
+        /// reads the same in a small galaxy and a huge one.
         /// </summary>
-        internal static int DistanceTenths(int rank, int count)
+        internal static int DistanceBand(int rank, int count)
         {
             if (count <= 0 || rank < 0)
             {
-                return 10;
+                return 0;
             }
 
             int third = (int)((long)rank * 3 / count);
-            return third <= 0 ? 10 : (third == 1 ? 15 : 20);
+            return third <= 0 ? 0 : (third == 1 ? 1 : 2);
         }
 
-        /// <summary>The base multiplier with both factors applied, rounded to the nearest whole.</summary>
-        internal static int VariedMultiplier(int baseMultiplier, int dangerFactor, int distanceTenths)
+        /// <summary>The base multiplier with both percentages applied, rounded to the nearest whole.</summary>
+        internal static int VariedMultiplier(int baseMultiplier, int dangerPercent, int distancePercent)
         {
-            return (int)(((long)baseMultiplier * dangerFactor * distanceTenths + 5) / 10);
+            return (int)(((long)baseMultiplier * dangerPercent * distancePercent + 5000) / 10000);
         }
 
         /// <summary>The game's light year, in its own position units (the star map uses the same).</summary>

@@ -160,8 +160,40 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>Lowest and highest share of OutputMultiplier the difficulty can give.</summary>
-        private const float DifficultyFloor = 0.3f;
-        private const float DifficultyCeiling = 3.0f;
+        private static float DifficultyFloor
+        {
+            get { return (Plugin.DifficultyMinPercent != null ? Plugin.DifficultyMinPercent.Value : 30) / 100f; }
+        }
+
+        private static float DifficultyCeiling
+        {
+            get { return Math.Max(DifficultyFloor, (Plugin.DifficultyMaxPercent != null ? Plugin.DifficultyMaxPercent.Value : 300) / 100f); }
+        }
+
+        private static int TuningDangerStep
+        {
+            get { return Plugin.DangerStepPercent != null ? Plugin.DangerStepPercent.Value : 100; }
+        }
+
+        private static int TuningDangerMaxHives
+        {
+            get { return Plugin.DangerMaxHives != null ? Plugin.DangerMaxHives.Value : 3; }
+        }
+
+        private static int DistancePercentFor(int band)
+        {
+            if (band >= 2)
+            {
+                return Plugin.DistanceFarPercent != null ? Plugin.DistanceFarPercent.Value : 200;
+            }
+
+            if (band == 1)
+            {
+                return Plugin.DistanceMiddlePercent != null ? Plugin.DistanceMiddlePercent.Value : 150;
+            }
+
+            return 100;
+        }
 
         /// <summary>
         /// OutputMultiplier scaled by the galaxy's Dark Fog difficulty, the game's own score
@@ -2573,7 +2605,7 @@ namespace PlanetaryAnomalies
         // ---------------------------------------------------------------------------------------
 
         private static readonly Dictionary<int, int> _starHives = new Dictionary<int, int>();
-        private static readonly Dictionary<int, int> _starDistanceTenths = new Dictionary<int, int>();
+        private static readonly Dictionary<int, int> _starDistanceBand = new Dictionary<int, int>();
         private static readonly Dictionary<int, double> _starLy = new Dictionary<int, double>();
         private static bool _dangerApplies;
         private static bool _distanceApplies;
@@ -2587,7 +2619,7 @@ namespace PlanetaryAnomalies
         private static void ResetMultiplierTables()
         {
             _starHives.Clear();
-            _starDistanceTenths.Clear();
+            _starDistanceBand.Clear();
             _starLy.Clear();
             _dangerApplies = false;
             _distanceApplies = false;
@@ -2646,19 +2678,19 @@ namespace PlanetaryAnomalies
                 double farFrom = -1.0;
                 for (int i = 0; i < others.Count; i++)
                 {
-                    int tenths = AnomalyMath.DistanceTenths(i, others.Count);
+                    int band = AnomalyMath.DistanceBand(i, others.Count);
                     if (_starLy[others[i].id] <= AnomalyMath.NearLightYears)
                     {
-                        tenths = 10;
+                        band = 0;
                     }
 
-                    _starDistanceTenths[others[i].id] = tenths;
-                    if (tenths == 15 && middleFrom < 0)
+                    _starDistanceBand[others[i].id] = band;
+                    if (band == 1 && middleFrom < 0)
                     {
                         middleFrom = _starLy[others[i].id];
                     }
 
-                    if (tenths == 20 && farFrom < 0)
+                    if (band == 2 && farFrom < 0)
                     {
                         farFrom = _starLy[others[i].id];
                     }
@@ -2666,8 +2698,8 @@ namespace PlanetaryAnomalies
 
                 _distanceApplies = true;
                 Plugin.Log.LogInfo("MultiplierFromDistance: " + others.Count + " other star systems ranked by distance from home. " +
-                                   "Nearest third x1, middle third x1.5" + (middleFrom >= 0 ? " (from " + middleFrom.ToString("0.0") + " ly)" : "") +
-                                   ", farthest third x2" + (farFrom >= 0 ? " (from " + farFrom.ToString("0.0") + " ly)" : "") + ".");
+                                   "Nearest third x1, middle third " + DistancePercentFor(1) + "%" + (middleFrom >= 0 ? " (from " + middleFrom.ToString("0.0") + " ly)" : "") +
+                                   ", farthest third " + DistancePercentFor(2) + "%" + (farFrom >= 0 ? " (from " + farFrom.ToString("0.0") + " ly)" : "") + ".");
             }
 
             if (dangerOn)
@@ -2678,7 +2710,7 @@ namespace PlanetaryAnomalies
                 }
                 else
                 {
-                    int[] bySteps = new int[AnomalyMath.DangerMaxHives + 1];
+                    int[] bySteps = new int[4];
                     string withHives = "";
                     for (int i = 0; i < galaxy.stars.Length; i++)
                     {
@@ -2690,7 +2722,7 @@ namespace PlanetaryAnomalies
 
                         int hives = Math.Max(0, star.initialHiveCount);
                         _starHives[star.id] = hives;
-                        bySteps[Math.Min(hives, AnomalyMath.DangerMaxHives)]++;
+                        bySteps[Math.Min(hives, 3)]++;
                         if (hives > 0)
                         {
                             withHives += (withHives.Length > 0 ? ", " : "") + star.displayName + " " + hives;
@@ -2735,26 +2767,29 @@ namespace PlanetaryAnomalies
             int starId = planet.star.id;
             string why = "";
 
-            int danger = 1;
+            int danger = 100;
             int hives;
             if (_dangerApplies && _starHives.TryGetValue(starId, out hives))
             {
-                danger = AnomalyMath.DangerFactor(hives);
+                danger = AnomalyMath.DangerPercent(hives, TuningDangerStep, TuningDangerMaxHives);
                 why += hives == 0
                     ? "no Dark Fog hives in this system at the start"
                     : hives + (hives == 1 ? " Dark Fog hive" : " Dark Fog hives") + " in this system at the start";
             }
 
-            int tenths = 10;
+            int band = 0;
+            int distance = 100;
             if (_distanceApplies)
             {
-                if (!_starDistanceTenths.TryGetValue(starId, out tenths))
+                if (!_starDistanceBand.TryGetValue(starId, out band))
                 {
-                    tenths = 10;
+                    band = 0;
                 }
 
+                distance = DistancePercentFor(band);
+
                 double ly;
-                string far = tenths >= 20 ? "far from home" : (tenths >= 15 ? "mid-way out" : "near home");
+                string far = band >= 2 ? "far from home" : (band == 1 ? "mid-way out" : "near home");
                 if (_starLy.TryGetValue(starId, out ly) && starId != planet.galaxy.birthStarId)
                 {
                     far += " (" + ly.ToString("0") + " ly)";
@@ -2767,7 +2802,7 @@ namespace PlanetaryAnomalies
                 why += (why.Length > 0 ? "; " : "") + far;
             }
 
-            int multiplier = AnomalyMath.VariedMultiplier(baseMultiplier, danger, tenths);
+            int multiplier = AnomalyMath.VariedMultiplier(baseMultiplier, danger, distance);
             if (_baseFromDifficulty)
             {
                 why = "base ×" + baseMultiplier + " from the Dark Fog difficulty; " + why;
