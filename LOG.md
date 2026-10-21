@@ -34,8 +34,8 @@ results unchanged (201 on 0.5.2, 202 on main). For vanilla names the live lookup
 **What is not.** The modded-name fix has not been seen working: More Mega Structures is not installed
 here. 0.5.2 has not been loaded in game. Nothing about Galactic Scale is confirmed.
 
-**Where the next session starts.** Paul uploads 0.5.2; then, on his word, push main and
-`release-0.5.x` and tag `v0.5.2` on the branch. Then the Galactic Scale log when it arrives -- a
+**Where the next session starts.** 0.5.2 is out: uploaded by Paul on 21 Oct, tagged `v0.5.2` on
+`release-0.5.x` (7b8d46f), both branches pushed. Next, the Galactic Scale log when it arrives -- a
 cheap hardening is ready to propose either way: remember the galaxy object, not only its seed, and
 put star and planet counts in the survey header. Varied multipliers: three questions to Paul are
 open (what made a world worth the trip; whether anything goes below x10; surprise or explainable).
