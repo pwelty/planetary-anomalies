@@ -481,3 +481,10 @@ field `GameMain.timei` (`long`); with no instance it reads 0. Only two places wr
 sets the instance, `OnDestroy` tears it down -- and `timei` has no initializer, so a new game starts
 at 0 and a loaded one at the saved tick. 60 ticks a second at normal speed; the storm counts
 3,600 ticks to the minute.
+
+**Display names are a cache** (read 2026-10-21, same file). `Proto.name` is an auto-property; the only
+writer that matters is `RecipeProto.RefreshTranslation` (and `ItemProto`'s), which sets it to
+`Localization.Translate(Name)` -- `Name` being the Chinese source key. A proto another mod adds, whose
+translation is registered after that refresh, keeps the key as its name. `Localization` is static:
+`Translate(string)`, `CanTranslate(string)` and `isCJK` are public. The mod now translates `Name` at
+display time (`AnomalyManager.LiveName`).
