@@ -37,6 +37,13 @@ The log says which ruleset is in force on every load.
 One honest note. The setting lives in your config on your machine, not in the save, so it does not
 travel: someone you hand a save to will see that galaxy under whatever their own config says.
 
+## What's new in 0.5.2
+
+**Recipe names from other mods now show in your language.** With a mod that adds recipes -- More
+Mega Structures' star cannon parts, reported by a player -- an anomaly on one of them could be labelled
+with its untranslated Chinese name in an English game. Nothing else changes: every planet keeps the
+anomaly it had.
+
 ## What's new in 0.5.1
 
 **Handles Dark Fog Lens, the recipe Dyson Sphere Program 0.10.35 just added.** Nothing else
