@@ -160,39 +160,32 @@ namespace PlanetaryAnomalies
         }
 
         /// <summary>Lowest and highest share of OutputMultiplier the difficulty can give.</summary>
-        private static float DifficultyFloor
+        private const float DifficultyFloor = 0.3f;
+        private const float DifficultyCeiling = 3.0f;
+
+        /// <summary>The danger switch counts at most this many hives.</summary>
+        private const int DangerMaxHives = 3;
+
+        private static float Dial(BepInEx.Configuration.ConfigEntry<float> entry)
         {
-            get { return (Plugin.DifficultyMinPercent != null ? Plugin.DifficultyMinPercent.Value : 30) / 100f; }
+            return entry != null ? Math.Max(0f, entry.Value) : 1f;
         }
 
-        private static float DifficultyCeiling
+        /// <summary>A factor's distance from 1, scaled by its dial: 2 at 1.5 becomes 2.5, at 0.5 becomes 1.5.</summary>
+        private static float Dialled(float factor, float dial)
         {
-            get { return Math.Max(DifficultyFloor, (Plugin.DifficultyMaxPercent != null ? Plugin.DifficultyMaxPercent.Value : 300) / 100f); }
+            return 1f + (factor - 1f) * dial;
         }
 
         private static int TuningDangerStep
         {
-            get { return Plugin.DangerStepPercent != null ? Plugin.DangerStepPercent.Value : 100; }
-        }
-
-        private static int TuningDangerMaxHives
-        {
-            get { return Plugin.DangerMaxHives != null ? Plugin.DangerMaxHives.Value : 3; }
+            get { return (int)Math.Round(100f * Dial(Plugin.DangerStrength), MidpointRounding.AwayFromZero); }
         }
 
         private static int DistancePercentFor(int band)
         {
-            if (band >= 2)
-            {
-                return Plugin.DistanceFarPercent != null ? Plugin.DistanceFarPercent.Value : 200;
-            }
-
-            if (band == 1)
-            {
-                return Plugin.DistanceMiddlePercent != null ? Plugin.DistanceMiddlePercent.Value : 150;
-            }
-
-            return 100;
+            float factor = band >= 2 ? 2.0f : (band == 1 ? 1.5f : 1.0f);
+            return (int)Math.Round(100f * Dialled(factor, Dial(Plugin.DistanceStrength)), MidpointRounding.AwayFromZero);
         }
 
         /// <summary>
@@ -239,6 +232,13 @@ namespace PlanetaryAnomalies
 
                 reason = "Dark Fog difficulty " + score.ToString("0.00") + " against " + reference.ToString("0.00") +
                          " for the default settings: x" + configured + " scaled by " + share.ToString("0.00");
+            }
+
+            float dial = Dial(Plugin.DifficultyStrength);
+            if (dial != 1f)
+            {
+                share = Math.Max(0.05f, Dialled(share, dial));
+                reason += ", dial " + dial.ToString("0.##") + " makes it " + share.ToString("0.00");
             }
 
             int multiplier = (int)Math.Round(configured * share, MidpointRounding.AwayFromZero);
@@ -2771,7 +2771,7 @@ namespace PlanetaryAnomalies
             int hives;
             if (_dangerApplies && _starHives.TryGetValue(starId, out hives))
             {
-                danger = AnomalyMath.DangerPercent(hives, TuningDangerStep, TuningDangerMaxHives);
+                danger = AnomalyMath.DangerPercent(hives, TuningDangerStep, DangerMaxHives);
                 why += hives == 0
                     ? "no Dark Fog hives in this system at the start"
                     : hives + (hives == 1 ? " Dark Fog hive" : " Dark Fog hives") + " in this system at the start";

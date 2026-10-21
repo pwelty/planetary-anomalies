@@ -38,12 +38,9 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<int> OutputMultiplier;
         internal static ConfigEntry<bool> MultiplierFromDifficulty;
         internal static ConfigEntry<bool> MultiplierFromDanger;
-        internal static ConfigEntry<int> DifficultyMinPercent;
-        internal static ConfigEntry<int> DifficultyMaxPercent;
-        internal static ConfigEntry<int> DangerStepPercent;
-        internal static ConfigEntry<int> DangerMaxHives;
-        internal static ConfigEntry<int> DistanceMiddlePercent;
-        internal static ConfigEntry<int> DistanceFarPercent;
+        internal static ConfigEntry<float> DifficultyStrength;
+        internal static ConfigEntry<float> DangerStrength;
+        internal static ConfigEntry<float> DistanceStrength;
         internal static ConfigEntry<bool> MultiplierFromDistance;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
         internal static ConfigEntry<UnresearchedDisplay> UnresearchedAnomalies;
@@ -289,7 +286,7 @@ namespace PlanetaryAnomalies
                 false,
                 "Scales OutputMultiplier by the galaxy's Dark Fog difficulty -- the score the game shows when\n" +
                 "you create a galaxy, against 1.0 for the default settings -- between 0.3 and 3 times: x3 to\n" +
-                "x30 at the default 10 (DifficultyMinPercent, DifficultyMaxPercent). Peace mode counts as the floor, x3. Change the Dark Fog's\n" +
+                "x30 at the default 10. Peace mode counts as the floor, x3. Dial: DifficultyStrength. Change the Dark Fog's\n" +
                 "aggressiveness mid-game and the multiple follows within a few seconds, announced. Applies to\n" +
                 "every anomaly, home included, and combines with MultiplierFromDanger and\n" +
                 "MultiplierFromDistance by multiplying. Supersedes the experimental\n" +
@@ -302,7 +299,7 @@ namespace PlanetaryAnomalies
                 false,
                 "Anomalies in star systems that start with Dark Fog hives make more: one more step of\n" +
                 "OutputMultiplier per hive, up to three -- x20 with one hive, x30 with two, x40 with three or\n" +
-                "more, at the default 10 (tuned by DangerStepPercent and DangerMaxHives). The count is the\n" +
+                "more, at the default 10 (dial: DangerStrength). The count is the\n" +
                 "one the system started with, fixed when the galaxy was made, so hives spreading later never\n" +
                 "change a number. No effect in peace mode. The home planet keeps OutputMultiplier. Combines\n" +
                 "with MultiplierFromDistance by multiplying.\n" +
@@ -316,71 +313,54 @@ namespace PlanetaryAnomalies
                 false,
                 "Anomalies further from home make more. Star systems are ranked by distance from home: the\n" +
                 "nearest third keep OutputMultiplier, the middle third make one and a half times it, the\n" +
-                "farthest third twice -- x10, x15, x20 at the default (tuned by DistanceMiddlePercent and\n" +
-                "DistanceFarPercent). Systems within 6 light years of home always count as near. The home\n" +
+                "farthest third twice -- x10, x15, x20 at the default (dial:\n" +
+                "DistanceStrength). Systems within 6 light years of home always count as near. The home\n" +
                 "planet keeps OutputMultiplier. Combines with\n" +
                 "MultiplierFromDanger by multiplying. Moves no planet and changes no recipe, so it can be\n" +
                 "switched in a running game; it takes effect on the next load. Any ruleset.\n" +
                 "false: every anomaly makes OutputMultiplier.");
 
-            DifficultyMinPercent = Config.Bind(
+            DifficultyStrength = Config.Bind(
                 "Multiplier tuning",
-                "DifficultyMinPercent",
-                30,
+                "DifficultyStrength",
+                1.0f,
                 new ConfigDescription(
-                "MultiplierFromDifficulty: the lowest share of OutputMultiplier the Dark Fog difficulty can\n" +
-                "give, in percent. Peace mode always gets this. 30 = x3 at the default 10.\n" +
-                "For balancing in play: no effect unless its switch is on, and read when a save loads.",
-                new AcceptableValueRange<int>(1, 1000)));
+                "How strongly the Dark Fog difficulty moves the base multiple. Only matters when\n" +
+                "MultiplierFromDifficulty is on. Examples at OutputMultiplier 10:\n" +
+                "  1   -- as the game's score says: a galaxy scoring 1.5 gives x15, one scoring 0.5 gives x5.\n" +
+                "  2   -- twice as far from x10: the same galaxies give x20 and x1 (never below x1).\n" +
+                "  0.5 -- half as far: x13 and x8.\n" +
+                "  0   -- difficulty changes nothing; every galaxy gets x10.\n" +
+                "Read when a save loads.",
+                new AcceptableValueRange<float>(0f, 10f)));
 
-            DifficultyMaxPercent = Config.Bind(
+            DangerStrength = Config.Bind(
                 "Multiplier tuning",
-                "DifficultyMaxPercent",
-                300,
+                "DangerStrength",
+                1.0f,
                 new ConfigDescription(
-                "MultiplierFromDifficulty: the highest share of OutputMultiplier the Dark Fog difficulty can\n" +
-                "give, in percent. 300 = x30 at the default 10.\n" +
-                "For balancing in play: no effect unless its switch is on, and read when a save loads.",
-                new AcceptableValueRange<int>(1, 10000)));
+                "How much each Dark Fog hive a star system started with adds. Only matters when\n" +
+                "MultiplierFromDanger is on. At most three hives count. Examples at OutputMultiplier 10:\n" +
+                "  1   -- each hive adds x10: one hive x20, three hives x40.\n" +
+                "  1.5 -- each adds x15: one hive x25, three x55.\n" +
+                "  0.5 -- each adds x5: one hive x15, three x25.\n" +
+                "  0   -- hives add nothing.\n" +
+                "Read when a save loads.",
+                new AcceptableValueRange<float>(0f, 10f)));
 
-            DangerStepPercent = Config.Bind(
+            DistanceStrength = Config.Bind(
                 "Multiplier tuning",
-                "DangerStepPercent",
-                100,
+                "DistanceStrength",
+                1.0f,
                 new ConfigDescription(
-                "MultiplierFromDanger: how much each Dark Fog hive a system started with adds, in percent of\n" +
-                "the base. 100 = one hive doubles it, two triple it.\n" +
-                "For balancing in play: no effect unless its switch is on, and read when a save loads.",
-                new AcceptableValueRange<int>(0, 10000)));
-
-            DangerMaxHives = Config.Bind(
-                "Multiplier tuning",
-                "DangerMaxHives",
-                3,
-                new ConfigDescription(
-                "MultiplierFromDanger: the most hives that count. More than this adds nothing further.\n" +
-                "For balancing in play: no effect unless its switch is on, and read when a save loads.",
-                new AcceptableValueRange<int>(0, 50)));
-
-            DistanceMiddlePercent = Config.Bind(
-                "Multiplier tuning",
-                "DistanceMiddlePercent",
-                150,
-                new ConfigDescription(
-                "MultiplierFromDistance: the middle third of star systems by distance from home, in\n" +
-                "percent of the base. 150 = x15 at the default 10.\n" +
-                "For balancing in play: no effect unless its switch is on, and read when a save loads.",
-                new AcceptableValueRange<int>(1, 10000)));
-
-            DistanceFarPercent = Config.Bind(
-                "Multiplier tuning",
-                "DistanceFarPercent",
-                200,
-                new ConfigDescription(
-                "MultiplierFromDistance: the farthest third of star systems by distance from home, in\n" +
-                "percent of the base. 200 = x20 at the default 10.\n" +
-                "For balancing in play: no effect unless its switch is on, and read when a save loads.",
-                new AcceptableValueRange<int>(1, 10000)));
+                "How much being far from home adds. Only matters when MultiplierFromDistance is on.\n" +
+                "Examples at OutputMultiplier 10, for the middle and farthest thirds of star systems:\n" +
+                "  1   -- x15 and x20.\n" +
+                "  1.5 -- x18 and x25.\n" +
+                "  0.5 -- x13 and x15.\n" +
+                "  0   -- distance adds nothing.\n" +
+                "Read when a save loads.",
+                new AcceptableValueRange<float>(0f, 10f)));
 
             ReplicatorFollowsPlanet = Config.Bind(
                 "Effect",

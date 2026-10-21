@@ -43,9 +43,9 @@
   peace mode at x3. Change the Dark Fog's aggressiveness mid-game and the multiple follows within a few
   seconds, with an announcement. It applies everywhere, home included,
   and supersedes the experimental `MultiplierFromCombatSettings`.
-  Every number in these three is a setting of its own, under *Multiplier tuning* -- the difficulty's
-  floor and ceiling, each hive's step and how many count, the middle and far distance bands -- so they
-  can be balanced in play without a new build.
+  Each has a dial under *Multiplier tuning* -- `DifficultyStrength`, `DangerStrength`,
+  `DistanceStrength`, 1 by default -- to turn its effect up or down in play: 1.5 half as strong again,
+  0.5 half as strong, 0 none.
 - `ReplicatorFollowsPlanet` (on by default, for now): standing on an anomalous world, Icarus's
   replicator makes that world's anomalous recipe at the same multiple its machines do, and the
   replicator queue shows the multiplied count.
