@@ -1520,6 +1520,23 @@ family, on the same seam, with the same obligation to say so on the machine.
 **It pairs with the monolith.** A relic on the surface is a natural reason a place is strange. The
 monolith could be the Krell's -- see *Candidate for 1.0: the monolith*.
 
+**The legendary world is a Krell world** (21 Oct). Paul, while varied multipliers were being
+discussed: "maybe the legendary world is a krell world. with big buffs and weird debuffs." So the
+one x100 world per galaxy (*Varied multipliers: the proposal as of 21 Oct*) stops being a bigger
+number and becomes the galaxy's one strange place: a Krell shortcut, an absurd multiple, and a price
+that is strange rather than merely steep (*Candidate for 1.0: debuffs that bite*).
+
+- *It gathers the strange ideas onto one world.* Krell recipes, a second anomaly on one planet, debuffs
+  -- each risks muddying a whole galaxy if dealt everywhere. On one world the rest of the galaxy stays
+  as readable as it is now (*Add one variable at a time*), and each idea gets tried where it is easy to
+  find and judge.
+- *It answers "Rare" above by construction*: exactly one, so it is always a find.
+- *Where it sits is part of it.* Far out, or in a hive system, so the trip is an expedition; the
+  monolith could mark it.
+- *Weird, not punishing.* The debuff should read like the world's nature, not a tax: machines that
+  draw five times the power, or work only on the night side, or a recipe that eats five times its
+  inputs to make a hundred. Each still has to be stated on the machine and the planet panel.
+
 ### Candidate for 1.0: debuffs that bite -- the price on the thing you came for
 
 An idea for the list, recorded 23 Sep; not a decision. Paul, returning to something from much
