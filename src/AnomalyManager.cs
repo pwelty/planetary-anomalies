@@ -128,6 +128,11 @@ namespace PlanetaryAnomalies
         {
             int configured = ConfiguredMultiplier();
 
+            if (Plugin.MultiplierFromDifficulty != null && Plugin.MultiplierFromDifficulty.Value)
+            {
+                return MultiplierFromDifficulty(configured, desc, out reason);
+            }
+
             if (Plugin.MultiplierFromCombatSettings == null || !Plugin.MultiplierFromCombatSettings.Value)
             {
                 reason = "from config";
@@ -152,6 +157,109 @@ namespace PlanetaryAnomalies
             reason = (peaceMode ? "peace mode" : "enemies are passive") +
                      ", so PeacefulOutputMultiplier applies (EXPERIMENTAL)";
             return peaceful;
+        }
+
+        /// <summary>Lowest and highest share of OutputMultiplier the difficulty can give.</summary>
+        private const float DifficultyFloor = 0.3f;
+        private const float DifficultyCeiling = 3.0f;
+
+        /// <summary>
+        /// OutputMultiplier scaled by the galaxy's Dark Fog difficulty, the game's own score
+        /// (<c>CombatSettings.difficulty</c>) against the default settings' score. Paul: "I don't mind
+        /// using the global DF difficulty, because even if you find a planet with no DF. On a high
+        /// setting, they'll be there soon enough."
+        ///
+        /// The score is read live. Aggressiveness is the one Dark Fog setting a player can change in play
+        /// (<c>GameHistoryData.Increase/DecreaseDFAggressiveness</c>), and when it changes the multiple
+        /// follows -- Paul: "if the difficulty changes, so be it. your buffs change. that's the whole
+        /// point." <see cref="WatchDifficulty"/> notices and rebuilds.
+        /// </summary>
+        private static int MultiplierFromDifficulty(int configured, GameDesc desc, out string reason)
+        {
+            if (desc == null)
+            {
+                reason = "from config; no game description to read the Dark Fog settings from";
+                return configured;
+            }
+
+            float share;
+            if (desc.isPeaceMode)
+            {
+                share = DifficultyFloor;
+                reason = "peace mode counts as the lowest Dark Fog difficulty: x" + configured + " scaled by " + share.ToString("0.00");
+            }
+            else
+            {
+                CombatSettings here = desc.combatSettings;
+                CombatSettings standard = new CombatSettings();
+                standard.SetDefault();
+                float score = here.difficulty;
+                float reference = standard.difficulty;
+                share = reference > 0f ? score / reference : 1f;
+                if (share < DifficultyFloor)
+                {
+                    share = DifficultyFloor;
+                }
+                if (share > DifficultyCeiling)
+                {
+                    share = DifficultyCeiling;
+                }
+
+                reason = "Dark Fog difficulty " + score.ToString("0.00") + " against " + reference.ToString("0.00") +
+                         " for the default settings: x" + configured + " scaled by " + share.ToString("0.00");
+            }
+
+            int multiplier = (int)Math.Round(configured * share, MidpointRounding.AwayFromZero);
+            _baseFromDifficulty = true;
+            return multiplier < 1 ? 1 : multiplier;
+        }
+
+        private static bool _baseFromDifficulty;
+        private static int _difficultyCountdown;
+
+        /// <summary>Ticks between checks of the live difficulty: five seconds at normal speed.</summary>
+        private const int DifficultyCheckTicks = 300;
+
+        /// <summary>
+        /// Main thread, from the production hook. Every few seconds, re-reads the Dark Fog difficulty;
+        /// if the base multiple it gives has changed, drops every cached anomaly so each is rebuilt at
+        /// the new number -- the production sweep re-attaches machines because the data is a new
+        /// object -- and says so on screen.
+        /// </summary>
+        internal static void WatchDifficulty()
+        {
+            if (!_baseFromDifficulty || !_galaxyKnown)
+            {
+                return;
+            }
+
+            if (_difficultyCountdown > 0)
+            {
+                _difficultyCountdown--;
+                return;
+            }
+
+            _difficultyCountdown = DifficultyCheckTicks;
+            GameData data = GameMain.data;
+            if (data == null || data.gameDesc == null)
+            {
+                return;
+            }
+
+            string reason;
+            int now = MultiplierFromDifficulty(ConfiguredMultiplier(), data.gameDesc, out reason);
+            if (now == _outputMultiplier)
+            {
+                return;
+            }
+
+            int before = _outputMultiplier;
+            _outputMultiplier = now;
+            _byPlanet.Clear();
+            RefreshStormMultiplier();
+            Plugin.Log.LogInfo("Dark Fog difficulty changed: anomalies go from x" + before + " to x" + now + " at base (" + reason + ").");
+            TechUnlockPatch.Announce("ANOMALY: the Dark Fog's threat has " + (now > before ? "risen" : "fallen") +
+                                     ". Anomalies now make ×" + now + (MultipliersVary ? " at base" : "") + ", from ×" + before + ".");
         }
 
         /// <summary>
@@ -236,6 +344,7 @@ namespace PlanetaryAnomalies
             _birthPlanetId = -1;
             _galaxyKnown = false;
             _outputMultiplier = 10;
+            _baseFromDifficulty = false;
             ResetMultiplierTables();
             _byPlanet.Clear();
             _chosenRecipe.Clear();
@@ -532,6 +641,7 @@ namespace PlanetaryAnomalies
             _densityPercent = ResolveDensity(seed);
 
             string multiplierReason;
+            _baseFromDifficulty = false;
             _outputMultiplier = ResolveOutputMultiplier(data.gameDesc, out multiplierReason);
             BuildMultiplierTables(galaxy, data.gameDesc);
 
@@ -2658,6 +2768,11 @@ namespace PlanetaryAnomalies
             }
 
             int multiplier = AnomalyMath.VariedMultiplier(baseMultiplier, danger, tenths);
+            if (_baseFromDifficulty)
+            {
+                why = "base ×" + baseMultiplier + " from the Dark Fog difficulty; " + why;
+            }
+
             reason = "×" + multiplier + ": " + why + ".";
             return Math.Max(1, multiplier);
         }
@@ -2833,6 +2948,28 @@ namespace PlanetaryAnomalies
         private static long StormMinutesLeft(long tick)
         {
             return (_stormEnd - tick + TicksPerMinute - 1) / TicksPerMinute;
+        }
+
+        /// <summary>
+        /// After the multiples change, the storm takes its source world's new number. Machines holding the
+        /// old data are re-attached by the next storm sweep while it lasts; once it has passed, none do.
+        /// </summary>
+        private static void RefreshStormMultiplier()
+        {
+            if (_stormRecipe <= 0 || _stormSource <= 0)
+            {
+                return;
+            }
+
+            PlanetAnomaly source = AnomalyFor(_stormSource, false);
+            RecipeExecuteData shared;
+            if (source == null || !RecipeProto.recipeExecuteData.TryGetValue(_stormRecipe, out shared) || shared == null)
+            {
+                return;
+            }
+
+            _stormMultiplier = source.OutputMultiplier;
+            _stormData = BuildAnomalousExecuteData(shared, _stormMultiplier);
         }
 
         /// <summary>The storm's multiple: the source world's own, so the preview is the real thing.</summary>

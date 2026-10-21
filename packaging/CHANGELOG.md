@@ -38,6 +38,11 @@
   planet keeps x10. The planet panel says why each number is what it is, and the star map labels,
   tooltips, announcements and the storm use each world's own number. Neither moves any planet or
   changes any recipe, so either can be switched in a running game, on any ruleset.
+  `MultiplierFromDifficulty` (off by default) scales the base by the galaxy's Dark Fog difficulty --
+  the score the game shows at creation, against 1.0 for the default settings -- from x3 to x30, with
+  peace mode at x3. Change the Dark Fog's aggressiveness mid-game and the multiple follows within a few
+  seconds, with an announcement. It applies everywhere, home included,
+  and supersedes the experimental `MultiplierFromCombatSettings`.
 - `ReplicatorFollowsPlanet` (on by default, for now): standing on an anomalous world, Icarus's
   replicator makes that world's anomalous recipe at the same multiple its machines do, and the
   replicator queue shows the multiplied count.

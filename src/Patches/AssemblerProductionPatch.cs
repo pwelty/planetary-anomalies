@@ -85,6 +85,7 @@ namespace PlanetaryAnomalies
             }
 
             // The storm first: it can be over a home planet that has no anomaly of its own.
+            AnomalyManager.WatchDifficulty();
             AnomalyManager.ApplyStorm(__instance);
 
             PlanetAnomaly anomaly = AnomalyManager.AnomalyFor(planet.id);

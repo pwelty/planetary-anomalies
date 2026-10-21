@@ -36,6 +36,7 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<bool> Storm;
         internal static ConfigEntry<bool> ReplicatorFollowsPlanet;
         internal static ConfigEntry<int> OutputMultiplier;
+        internal static ConfigEntry<bool> MultiplierFromDifficulty;
         internal static ConfigEntry<bool> MultiplierFromDanger;
         internal static ConfigEntry<bool> MultiplierFromDistance;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
@@ -275,6 +276,19 @@ namespace PlanetaryAnomalies
                     "at a glance. Changing this affects neither which planets are anomalous nor " +
                     "which recipe each one affects.",
                     new AcceptableValueRange<int>(2, 1000)));
+
+            MultiplierFromDifficulty = Config.Bind(
+                "Effect",
+                "MultiplierFromDifficulty",
+                false,
+                "Scales OutputMultiplier by the galaxy's Dark Fog difficulty -- the score the game shows when\n" +
+                "you create a galaxy, against 1.0 for the default settings -- between 0.3 and 3 times: x3 to\n" +
+                "x30 at the default 10. Peace mode counts as the floor, x3. Change the Dark Fog's\n" +
+                "aggressiveness mid-game and the multiple follows within a few seconds, announced. Applies to\n" +
+                "every anomaly, home included, and combines with MultiplierFromDanger and\n" +
+                "MultiplierFromDistance by multiplying. Supersedes the experimental\n" +
+                "MultiplierFromCombatSettings. Any ruleset; switching it on or off takes effect on the next load.\n" +
+                "false: OutputMultiplier as configured.");
 
             MultiplierFromDanger = Config.Bind(
                 "Effect",
