@@ -317,7 +317,11 @@ namespace PlanetaryAnomalies
                 return;
             }
 
-            string techName = string.IsNullOrEmpty(tech.name) ? "technology " + entry.TechId : tech.name;
+            string techName = AnomalyManager.LiveName(tech);
+            if (string.IsNullOrEmpty(techName))
+            {
+                techName = "technology " + entry.TechId;
+            }
             int recipeCount = tech.UnlockRecipes != null ? tech.UnlockRecipes.Length : 0;
             bool enabled = Plugin.AnnounceOnResearch == null || Plugin.AnnounceOnResearch.Value;
 

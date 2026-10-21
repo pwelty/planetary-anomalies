@@ -408,7 +408,7 @@ namespace PlanetaryAnomalies
                 return null;
             }
 
-            string name = recipe.preTech.name;
+            string name = LiveName(recipe.preTech);
             return string.IsNullOrEmpty(name) ? null : name;
         }
 
@@ -662,7 +662,7 @@ namespace PlanetaryAnomalies
                 RecipeProto r = _eligible[i];
                 string name = (r.Results != null && r.Results.Length > 0)
                     ? PlayerFacingItemName(r.Results[0])
-                    : r.name;
+                    : LiveName(r);
 
                 line += (onLine > 0 ? ", " : "") + name + " [" + r.Type + ", recipe " + r.ID + "]";
                 onLine++;
@@ -1988,18 +1988,101 @@ namespace PlanetaryAnomalies
                 return null;
             }
 
-            string named = CleanRecipeName(recipe.name);
-            if (named != null)
+            string named = CleanRecipeName(LiveName(recipe));
+            if (named != null && !LooksUntranslated(named))
             {
                 return named;
             }
 
+            // A recipe another mod added may have no translation of its own while its item does.
             if (recipe.Results != null && recipe.Results.Length > 0)
             {
-                return PlayerFacingItemName(recipe.Results[0]);
+                string item = PlayerFacingItemName(recipe.Results[0]);
+                if (named == null || !LooksUntranslated(item))
+                {
+                    return item;
+                }
             }
 
-            return null;
+            return named;
+        }
+
+        /// <summary>
+        /// A proto's name in the player's language, translated now rather than read from the cache.
+        ///
+        /// <c>Proto.name</c> is filled once, by <c>RefreshTranslation</c> when the proto loads. A mod that
+        /// adds recipes and registers their English afterwards -- More Mega Structures, reported by a
+        /// player -- leaves that cache holding the untranslated key, so star map labels read 恒星炮组件
+        /// in an English game while the mod's own UI, which translates as it draws, reads correctly.
+        /// Prefers whichever of the live and cached names is actually translated.
+        /// </summary>
+        internal static string LiveName(Proto proto)
+        {
+            if (proto == null)
+            {
+                return null;
+            }
+
+            string cached = proto.name;
+            string live = null;
+            try
+            {
+                if (!string.IsNullOrEmpty(proto.Name) && Localization.CanTranslate(proto.Name))
+                {
+                    live = Localization.Translate(proto.Name);
+                }
+            }
+            catch (Exception)
+            {
+                live = null;
+            }
+
+            if (!string.IsNullOrEmpty(live) && !LooksUntranslated(live))
+            {
+                return live;
+            }
+
+            if (!string.IsNullOrEmpty(cached) && !LooksUntranslated(cached))
+            {
+                return cached;
+            }
+
+            return !string.IsNullOrEmpty(live) ? live : (string.IsNullOrEmpty(cached) ? null : cached);
+        }
+
+        /// <summary>
+        /// True for Chinese characters in a game not set to a CJK language: the mark of a name nobody
+        /// translated. DSP's untranslated keys are its Chinese source strings.
+        /// </summary>
+        internal static bool LooksUntranslated(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return false;
+            }
+
+            try
+            {
+                if (Localization.isCJK)
+                {
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if ((c >= '\u4E00' && c <= '\u9FFF') || (c >= '\u3400' && c <= '\u4DBF'))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>Localized item name with no ids, for display to the player.</summary>
@@ -2044,9 +2127,10 @@ namespace PlanetaryAnomalies
             if (items != null && items.Exist(itemId))
             {
                 ItemProto item = items.Select(itemId);
-                if (item != null && !string.IsNullOrEmpty(item.name))
+                string name = item != null ? LiveName(item) : null;
+                if (!string.IsNullOrEmpty(name))
                 {
-                    return item.name;
+                    return name;
                 }
             }
 

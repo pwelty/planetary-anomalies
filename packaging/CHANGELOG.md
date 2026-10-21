@@ -33,6 +33,10 @@
 - `ReplicatorFollowsPlanet` (on by default, for now): standing on an anomalous world, Icarus's
   replicator makes that world's anomalous recipe at the same multiple its machines do, and the
   replicator queue shows the multiplied count.
+- Names from other mods' recipes no longer show in Chinese. A recipe added by another mod -- More Mega
+  Structures' star cannon parts, reported by a player -- could appear on star map labels, the planet
+  panel and announcements as its untranslated Chinese name in an English game. Names are now
+  translated as they are shown, falling back to the item's name when the recipe has no translation.
 - The survey log (`LogEveryAnomaly`) now says MARKER for an anomaly Marker mode is showing, instead
   of HIDDEN.
 
