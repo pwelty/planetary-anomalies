@@ -236,6 +236,7 @@ namespace PlanetaryAnomalies
             _birthPlanetId = -1;
             _galaxyKnown = false;
             _outputMultiplier = 10;
+            ResetMultiplierTables();
             _byPlanet.Clear();
             _chosenRecipe.Clear();
             ResetStorm();
@@ -532,6 +533,7 @@ namespace PlanetaryAnomalies
 
             string multiplierReason;
             _outputMultiplier = ResolveOutputMultiplier(data.gameDesc, out multiplierReason);
+            BuildMultiplierTables(galaxy, data.gameDesc);
 
             _galaxyKnown = true;
 
@@ -615,7 +617,8 @@ namespace PlanetaryAnomalies
                             ", " + (researched
                                 ? "researched"
                                 : "NOT researched" + TechSuffix(anomaly.RecipeId)) +
-                            " -> " + SurveyVisibility(scanned, anomaly.RecipeId) + "]");
+                            " -> " + SurveyVisibility(scanned, anomaly.RecipeId) + "]" +
+                            (MultipliersVary ? "  " + MultiplierReasonFor(planet.id) : ""));
                         continue;
                     }
 
@@ -1519,8 +1522,10 @@ namespace PlanetaryAnomalies
                 return null;
             }
 
+            string unusedReason;
+            int multiplier = MultiplierFor(planetId, out unusedReason);
             return new PlanetAnomaly(
-                planetId, recipe.ID, OutputMultiplier, BuildAnomalousExecuteData(shared));
+                planetId, recipe.ID, multiplier, BuildAnomalousExecuteData(shared, multiplier));
         }
 
         /// <summary>
@@ -1834,12 +1839,12 @@ namespace PlanetaryAnomalies
         /// copied: sharing even one of them with the global data would leak the anomaly to every
         /// planet, which is the exact failure this project forbids.
         /// </summary>
-        private static RecipeExecuteData BuildAnomalousExecuteData(RecipeExecuteData shared)
+        private static RecipeExecuteData BuildAnomalousExecuteData(RecipeExecuteData shared, int multiplier)
         {
             int[] productCounts = new int[shared.productCounts.Length];
             for (int i = 0; i < productCounts.Length; i++)
             {
-                productCounts[i] = shared.productCounts[i] * OutputMultiplier;
+                productCounts[i] = shared.productCounts[i] * multiplier;
             }
 
             return new RecipeExecuteData(
@@ -1906,7 +1911,9 @@ namespace PlanetaryAnomalies
                 return null;
             }
 
-            return "ANOMALY\n" + body;
+            string why;
+            MultiplierFor(planetId, out why);
+            return "ANOMALY\n" + body + (why != null ? "\n" + why : "");
         }
 
         /// <summary>
@@ -2273,7 +2280,8 @@ namespace PlanetaryAnomalies
                     total++;
                     if (named < TooltipMaxNamed)
                     {
-                        names += (named > 0 ? ", " : "") + planet.displayName;
+                        names += (named > 0 ? ", " : "") + planet.displayName +
+                                 (MultipliersVary ? " ×" + anomaly.OutputMultiplier : "");
                         named++;
                     }
                 }
@@ -2289,7 +2297,7 @@ namespace PlanetaryAnomalies
                 // The place is known; the recipe is not yet. Say that much and no more. The number
                 // is the one in force, never the word "ten": the multiplier is the player's dial.
                 return "Anomaly: " + (total == 1 ? "a world you have scanned makes this" : total + " worlds you have scanned make this") +
-                       " ×" + OutputMultiplier + ", on a recipe you have not researched yet.";
+                       (MultipliersVary ? "" : " ×" + OutputMultiplier) + ", on a recipe you have not researched yet.";
             }
 
             if (total > named)
@@ -2299,7 +2307,7 @@ namespace PlanetaryAnomalies
 
             string recipeName = PlayerFacingRecipeName(recipe);
             return "Anomaly: " + (string.IsNullOrEmpty(recipeName) ? "" : recipeName + " ") +
-                   "×" + OutputMultiplier + " on " + names;
+                   (MultipliersVary ? "" : "×" + OutputMultiplier + " ") + "on " + names;
         }
 
         /// <summary>
@@ -2320,7 +2328,15 @@ namespace PlanetaryAnomalies
                 return null;
             }
 
-            return name + " ×" + OutputMultiplier;
+            // When multiples vary, the number belongs to each world, so a recipe alone has none.
+            return MultipliersVary ? name : name + " ×" + OutputMultiplier;
+        }
+
+        /// <summary>The multiple this planet's anomaly makes, or the base when it has none.</summary>
+        internal static int MultiplierOf(int planetId)
+        {
+            PlanetAnomaly anomaly = planetId > 0 ? AnomalyFor(planetId, false) : null;
+            return anomaly != null ? anomaly.OutputMultiplier : OutputMultiplier;
         }
 
         /// <summary>
@@ -2373,7 +2389,8 @@ namespace PlanetaryAnomalies
                     total++;
                     if (named < maxNamed)
                     {
-                        names += (named > 0 ? ", " : "") + planet.displayName;
+                        names += (named > 0 ? ", " : "") + planet.displayName +
+                                 (MultipliersVary ? " ×" + anomaly.OutputMultiplier : "");
                         named++;
                     }
                 }
@@ -2437,6 +2454,228 @@ namespace PlanetaryAnomalies
         }
 
         // ---------------------------------------------------------------------------------------
+        // Varied multipliers.
+        //
+        // A multiplier never decides which planet is anomalous or which recipe it carries, so these
+        // move no planet: the draw, the golden test and every ruleset are untouched, and a player can
+        // switch them in a running game. Paul: "these are all gonna have to be optional. so a player
+        // can just retain the old experience if they want."
+        // ---------------------------------------------------------------------------------------
+
+        private static readonly Dictionary<int, int> _starHives = new Dictionary<int, int>();
+        private static readonly Dictionary<int, int> _starDistanceTenths = new Dictionary<int, int>();
+        private static readonly Dictionary<int, double> _starLy = new Dictionary<int, double>();
+        private static bool _dangerApplies;
+        private static bool _distanceApplies;
+
+        /// <summary>True when anomalies may differ in their multiple, so a number must be said per world.</summary>
+        internal static bool MultipliersVary
+        {
+            get { return _dangerApplies || _distanceApplies; }
+        }
+
+        private static void ResetMultiplierTables()
+        {
+            _starHives.Clear();
+            _starDistanceTenths.Clear();
+            _starLy.Clear();
+            _dangerApplies = false;
+            _distanceApplies = false;
+        }
+
+        /// <summary>
+        /// Reads each star's distance from home and the Dark Fog hives it started with. Both are fixed
+        /// when the galaxy is made -- <c>StarData.initialHiveCount</c> is written only by
+        /// <c>StarGen.CreateStar</c> and <c>CreateBirthStar</c> -- so a number never moves in play.
+        /// </summary>
+        private static void BuildMultiplierTables(GalaxyData galaxy, GameDesc desc)
+        {
+            ResetMultiplierTables();
+            bool dangerOn = Plugin.MultiplierFromDanger != null && Plugin.MultiplierFromDanger.Value;
+            bool distanceOn = Plugin.MultiplierFromDistance != null && Plugin.MultiplierFromDistance.Value;
+            if ((!dangerOn && !distanceOn) || galaxy == null || galaxy.stars == null)
+            {
+                return;
+            }
+
+            StarData home = galaxy.StarById(galaxy.birthStarId);
+            if (home == null)
+            {
+                Plugin.Log.LogWarning("Varied multipliers: no home star found, so every anomaly keeps x" + OutputMultiplier + ".");
+                return;
+            }
+
+            List<StarData> others = new List<StarData>();
+            for (int i = 0; i < galaxy.stars.Length; i++)
+            {
+                StarData star = galaxy.stars[i];
+                if (star == null)
+                {
+                    continue;
+                }
+
+                double dx = star.uPosition.x - home.uPosition.x;
+                double dy = star.uPosition.y - home.uPosition.y;
+                double dz = star.uPosition.z - home.uPosition.z;
+                _starLy[star.id] = Math.Sqrt(dx * dx + dy * dy + dz * dz) / AnomalyMath.LightYear;
+                if (star.id != home.id)
+                {
+                    others.Add(star);
+                }
+            }
+
+            if (distanceOn)
+            {
+                others.Sort(delegate(StarData a, StarData b)
+                {
+                    int byDistance = _starLy[a.id].CompareTo(_starLy[b.id]);
+                    return byDistance != 0 ? byDistance : a.id.CompareTo(b.id);
+                });
+
+                double middleFrom = -1.0;
+                double farFrom = -1.0;
+                for (int i = 0; i < others.Count; i++)
+                {
+                    int tenths = AnomalyMath.DistanceTenths(i, others.Count);
+                    if (_starLy[others[i].id] <= AnomalyMath.NearLightYears)
+                    {
+                        tenths = 10;
+                    }
+
+                    _starDistanceTenths[others[i].id] = tenths;
+                    if (tenths == 15 && middleFrom < 0)
+                    {
+                        middleFrom = _starLy[others[i].id];
+                    }
+
+                    if (tenths == 20 && farFrom < 0)
+                    {
+                        farFrom = _starLy[others[i].id];
+                    }
+                }
+
+                _distanceApplies = true;
+                Plugin.Log.LogInfo("MultiplierFromDistance: " + others.Count + " other star systems ranked by distance from home. " +
+                                   "Nearest third x1, middle third x1.5" + (middleFrom >= 0 ? " (from " + middleFrom.ToString("0.0") + " ly)" : "") +
+                                   ", farthest third x2" + (farFrom >= 0 ? " (from " + farFrom.ToString("0.0") + " ly)" : "") + ".");
+            }
+
+            if (dangerOn)
+            {
+                if (desc != null && desc.isPeaceMode)
+                {
+                    Plugin.Log.LogInfo("MultiplierFromDanger: peace mode, so no system counts as dangerous and every anomaly keeps its distance multiple.");
+                }
+                else
+                {
+                    int[] bySteps = new int[AnomalyMath.DangerMaxHives + 1];
+                    string withHives = "";
+                    for (int i = 0; i < galaxy.stars.Length; i++)
+                    {
+                        StarData star = galaxy.stars[i];
+                        if (star == null)
+                        {
+                            continue;
+                        }
+
+                        int hives = Math.Max(0, star.initialHiveCount);
+                        _starHives[star.id] = hives;
+                        bySteps[Math.Min(hives, AnomalyMath.DangerMaxHives)]++;
+                        if (hives > 0)
+                        {
+                            withHives += (withHives.Length > 0 ? ", " : "") + star.displayName + " " + hives;
+                        }
+                    }
+
+                    _dangerApplies = true;
+                    Plugin.Log.LogInfo("MultiplierFromDanger: Dark Fog hives at the start, by star system -- " + bySteps[0] + " with none, " +
+                                       bySteps[1] + " with one, " + bySteps[2] + " with two, " + bySteps[3] + " with three or more" +
+                                       (withHives.Length > 0 ? ": " + withHives : "") + ".");
+                }
+            }
+        }
+
+        /// <summary>
+        /// The multiple an anomaly on this planet makes, and why, when multipliers vary. The home
+        /// planet always keeps the base: the early game is where ruleset 3 already decided what home
+        /// gives, and the storm previews other worlds there.
+        /// </summary>
+        private static int MultiplierFor(int planetId, out string reason)
+        {
+            reason = null;
+            int baseMultiplier = OutputMultiplier;
+            if (!MultipliersVary)
+            {
+                return baseMultiplier;
+            }
+
+            if (planetId == _birthPlanetId)
+            {
+                reason = "×" + baseMultiplier + ": the home planet keeps the base multiple.";
+                return baseMultiplier;
+            }
+
+            GameData data = GameMain.data;
+            PlanetData planet = (data != null && data.galaxy != null) ? data.galaxy.PlanetById(planetId) : null;
+            if (planet == null || planet.star == null)
+            {
+                return baseMultiplier;
+            }
+
+            int starId = planet.star.id;
+            string why = "";
+
+            int danger = 1;
+            int hives;
+            if (_dangerApplies && _starHives.TryGetValue(starId, out hives))
+            {
+                danger = AnomalyMath.DangerFactor(hives);
+                why += hives == 0
+                    ? "no Dark Fog hives in this system at the start"
+                    : hives + (hives == 1 ? " Dark Fog hive" : " Dark Fog hives") + " in this system at the start";
+            }
+
+            int tenths = 10;
+            if (_distanceApplies)
+            {
+                if (!_starDistanceTenths.TryGetValue(starId, out tenths))
+                {
+                    tenths = 10;
+                }
+
+                double ly;
+                string far = tenths >= 20 ? "far from home" : (tenths >= 15 ? "mid-way out" : "near home");
+                if (_starLy.TryGetValue(starId, out ly) && starId != planet.galaxy.birthStarId)
+                {
+                    far += " (" + ly.ToString("0") + " ly)";
+                }
+                else if (starId == planet.galaxy.birthStarId)
+                {
+                    far = "in the home system";
+                }
+
+                why += (why.Length > 0 ? "; " : "") + far;
+            }
+
+            int multiplier = AnomalyMath.VariedMultiplier(baseMultiplier, danger, tenths);
+            reason = "×" + multiplier + ": " + why + ".";
+            return Math.Max(1, multiplier);
+        }
+
+        /// <summary>Why this planet's anomaly makes the multiple it does, or null when multipliers do not vary.</summary>
+        internal static string MultiplierReasonFor(int planetId)
+        {
+            if (!MultipliersVary || AnomalyFor(planetId, false) == null)
+            {
+                return null;
+            }
+
+            string reason;
+            MultiplierFor(planetId, out reason);
+            return reason;
+        }
+
+        // ---------------------------------------------------------------------------------------
         // The storm.
         // ---------------------------------------------------------------------------------------
 
@@ -2455,6 +2694,7 @@ namespace PlanetaryAnomalies
         private static long _stormStart;
         private static long _stormEnd;
         private static int _stormRecipe = -1;
+        private static int _stormMultiplier;
         private static int _stormSource = -1;
         private static RecipeExecuteData _stormData;
         private static int _stormPhase;
@@ -2473,6 +2713,7 @@ namespace PlanetaryAnomalies
             _stormStart = 0;
             _stormEnd = 0;
             _stormRecipe = -1;
+            _stormMultiplier = 0;
             _stormSource = -1;
             _stormData = null;
             _stormPhase = 0;
@@ -2561,7 +2802,8 @@ namespace PlanetaryAnomalies
 
                 _stormRecipe = recipe.ID;
                 _stormSource = planetId;
-                _stormData = BuildAnomalousExecuteData(shared);
+                _stormMultiplier = anomaly.OutputMultiplier;
+                _stormData = BuildAnomalousExecuteData(shared, _stormMultiplier);
                 break;
             }
 
@@ -2576,7 +2818,7 @@ namespace PlanetaryAnomalies
             _stormEnd = _stormStart + StormMinutes * TicksPerMinute;
 
             long now = GameMain.gameTick;
-            Plugin.Log.LogInfo("Storm: from " + PlanetName(_stormSource) + " (" + RecipeLabel(_stormRecipe) + "), reaching " +
+            Plugin.Log.LogInfo("Storm: from " + PlanetName(_stormSource) + " (" + StormLabel() + "), reaching " +
                                PlanetName(_birthPlanetId) + " at minute " + (_stormStart / TicksPerMinute) + " of game time for " +
                                StormMinutes + " minutes. This save is at minute " + (now / TicksPerMinute) +
                                (now >= _stormEnd ? ", so it has already passed." : now >= _stormStart ? ", so it is here now." : "."));
@@ -2591,6 +2833,19 @@ namespace PlanetaryAnomalies
         private static long StormMinutesLeft(long tick)
         {
             return (_stormEnd - tick + TicksPerMinute - 1) / TicksPerMinute;
+        }
+
+        /// <summary>The storm's multiple: the source world's own, so the preview is the real thing.</summary>
+        internal static int StormMultiplier
+        {
+            get { return _stormMultiplier > 0 ? _stormMultiplier : OutputMultiplier; }
+        }
+
+        private static string StormLabel()
+        {
+            RecipeProtoSet recipes = LDB.recipes;
+            string name = (recipes != null && recipes.Exist(_stormRecipe)) ? PlayerFacingRecipeName(recipes.Select(_stormRecipe)) : null;
+            return (string.IsNullOrEmpty(name) ? "recipe " + _stormRecipe : name) + " ×" + StormMultiplier;
         }
 
         /// <summary>The storm's recipe if it is over this planet right now, otherwise -1.</summary>
@@ -2612,7 +2867,7 @@ namespace PlanetaryAnomalies
                 return null;
             }
 
-            return RecipeLabel(_stormRecipe) + ", " + StormMinutesLeft(GameMain.gameTick) + " min";
+            return StormLabel() + ", " + StormMinutesLeft(GameMain.gameTick) + " min";
         }
 
         /// <summary>The planet panel's storm line, or null.</summary>
@@ -2623,7 +2878,7 @@ namespace PlanetaryAnomalies
                 return null;
             }
 
-            return "STORM\nFrom " + PlanetName(_stormSource) + ": " + RecipeLabel(_stormRecipe) + " here for " +
+            return "STORM\nFrom " + PlanetName(_stormSource) + ": " + StormLabel() + " here for " +
                    StormMinutesLeft(GameMain.gameTick) + " more minutes.";
         }
 
@@ -2651,7 +2906,7 @@ namespace PlanetaryAnomalies
                 {
                     _stormPhase = 1;
                     TechUnlockPatch.Announce("ANOMALY: a storm from " + PlanetName(_stormSource) + " has reached " +
-                                             PlanetName(_birthPlanetId) + ". " + RecipeLabel(_stormRecipe) +
+                                             PlanetName(_birthPlanetId) + ". " + StormLabel() +
                                              " here for the next " + StormMinutesLeft(tick) + " minutes.");
                 }
 
@@ -2662,7 +2917,7 @@ namespace PlanetaryAnomalies
             {
                 _stormPhase = 2;
                 TechUnlockPatch.Announce("ANOMALY: the storm has passed. " + PlanetName(_stormSource) + " still makes " +
-                                         RecipeLabel(_stormRecipe) + ".");
+                                         StormLabel() + ".");
             }
         }
 
@@ -2737,7 +2992,7 @@ namespace PlanetaryAnomalies
             if (changed > 0)
             {
                 Plugin.Log.LogInfo("Storm: " + changed + " machine(s) on " + factory.planet.displayName +
-                                   (active ? " now make " + RecipeLabel(_stormRecipe) + "." : " are back to normal."));
+                                   (active ? " now make " + StormLabel() + "." : " are back to normal."));
             }
 
             _stormAttached = active;
@@ -2787,7 +3042,7 @@ namespace PlanetaryAnomalies
                                    " -> " + DescribeSide(here.products, here.productCounts));
             }
 
-            Plugin.Log.LogInfo("  Effect:       output x" + OutputMultiplier + " on this planet only");
+            Plugin.Log.LogInfo("  Effect:       output x" + anomaly.OutputMultiplier + " on this planet only");
         }
 
         /// <summary>
@@ -2802,7 +3057,7 @@ namespace PlanetaryAnomalies
             Plugin.Log.LogInfo(
                 "Anomaly attached to " + machineCount + (machineCount == 1 ? " machine on " : " machines on ") +
                 planetName + " (planet id " + planetId + "). " +
-                (machineCount == 1 ? "Its" : "Their") + " output is now x" + OutputMultiplier + ".");
+                (machineCount == 1 ? "Its" : "Their") + " output is now x" + MultiplierOf(planetId) + ".");
         }
 
         private static string DescribeSide(int[] itemIds, int[] counts)

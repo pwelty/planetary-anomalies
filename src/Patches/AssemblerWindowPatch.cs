@@ -91,7 +91,7 @@ namespace PlanetaryAnomalies
                 }
                 else if (stormRecipe > 0 && recipe == stormRecipe)
                 {
-                    marker = "   ·   STORM ×" + AnomalyManager.OutputMultiplier;
+                    marker = "   ·   STORM ×" + AnomalyManager.StormMultiplier;
                 }
                 else
                 {

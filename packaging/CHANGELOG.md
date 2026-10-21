@@ -30,6 +30,14 @@
   the machine window, and under the small globe in the top-right corner, with the minutes left, while
   it lasts. With `ReplicatorFollowsPlanet` on, the replicator at home makes it at the same multiple.
   Nothing is saved; it follows the save's own clock, so a reload mid-storm finds it still blowing.
+- Varied multipliers, two settings, both off by default so the flat x10 stays unless you choose
+  otherwise. `MultiplierFromDanger`: a world in a star system that started with Dark Fog hives makes
+  more -- x20 with one hive, x30 with two, x40 with three or more. `MultiplierFromDistance`: the
+  farther from home, the more -- the nearest third of star systems x10, the middle third x15, the
+  farthest third x20. Together they multiply, so a far system thick with hives reaches x80. The home
+  planet keeps x10. The planet panel says why each number is what it is, and the star map labels,
+  tooltips, announcements and the storm use each world's own number. Neither moves any planet or
+  changes any recipe, so either can be switched in a running game, on any ruleset.
 - `ReplicatorFollowsPlanet` (on by default, for now): standing on an anomalous world, Icarus's
   replicator makes that world's anomalous recipe at the same multiple its machines do, and the
   replicator queue shows the multiplied count.

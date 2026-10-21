@@ -179,6 +179,40 @@
         /// </summary>
         internal const double NearLightYears = 6.0;
 
+        /// <summary>
+        /// MultiplierFromDanger: one more step of the base multiplier per Dark Fog hive the star system
+        /// started with, up to <see cref="DangerMaxHives"/> -- x1, x2, x3, x4.
+        /// </summary>
+        internal const int DangerMaxHives = 3;
+
+        internal static int DangerFactor(int hives)
+        {
+            int clamped = hives < 0 ? 0 : (hives > DangerMaxHives ? DangerMaxHives : hives);
+            return 1 + clamped;
+        }
+
+        /// <summary>
+        /// MultiplierFromDistance, in tenths: the nearest third of the other star systems by distance
+        /// from home 10 (x1), the middle third 15, the farthest third 20. By rank rather than light
+        /// years, so it reads the same in a small galaxy and a huge one.
+        /// </summary>
+        internal static int DistanceTenths(int rank, int count)
+        {
+            if (count <= 0 || rank < 0)
+            {
+                return 10;
+            }
+
+            int third = (int)((long)rank * 3 / count);
+            return third <= 0 ? 10 : (third == 1 ? 15 : 20);
+        }
+
+        /// <summary>The base multiplier with both factors applied, rounded to the nearest whole.</summary>
+        internal static int VariedMultiplier(int baseMultiplier, int dangerFactor, int distanceTenths)
+        {
+            return (int)(((long)baseMultiplier * dangerFactor * distanceTenths + 5) / 10);
+        }
+
         /// <summary>The game's light year, in its own position units (the star map uses the same).</summary>
         internal const double LightYear = 2400000.0;
 

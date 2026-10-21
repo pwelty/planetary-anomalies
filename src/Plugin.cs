@@ -36,6 +36,8 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<bool> Storm;
         internal static ConfigEntry<bool> ReplicatorFollowsPlanet;
         internal static ConfigEntry<int> OutputMultiplier;
+        internal static ConfigEntry<bool> MultiplierFromDanger;
+        internal static ConfigEntry<bool> MultiplierFromDistance;
         internal static ConfigEntry<StarmapLabelMode> StarmapLabel;
         internal static ConfigEntry<UnresearchedDisplay> UnresearchedAnomalies;
         internal static ConfigEntry<bool> AnnounceOnResearch;
@@ -273,6 +275,31 @@ namespace PlanetaryAnomalies
                     "at a glance. Changing this affects neither which planets are anomalous nor " +
                     "which recipe each one affects.",
                     new AcceptableValueRange<int>(2, 1000)));
+
+            MultiplierFromDanger = Config.Bind(
+                "Effect",
+                "MultiplierFromDanger",
+                false,
+                "Anomalies in star systems that start with Dark Fog hives make more: one more step of\n" +
+                "OutputMultiplier per hive, up to three -- x20 with one hive, x30 with two, x40 with three or\n" +
+                "more, at the default 10. The count is the one the system started with, fixed when the galaxy\n" +
+                "was made, so hives spreading later never change a number. No effect in peace mode. The home\n" +
+                "planet keeps OutputMultiplier. Combines with MultiplierFromDistance by multiplying.\n" +
+                "Moves no planet and changes no recipe, so it can be switched in a running game; it takes\n" +
+                "effect on the next load. Any ruleset.\n" +
+                "false: every anomaly makes OutputMultiplier.");
+
+            MultiplierFromDistance = Config.Bind(
+                "Effect",
+                "MultiplierFromDistance",
+                false,
+                "Anomalies further from home make more. Star systems are ranked by distance from home: the\n" +
+                "nearest third keep OutputMultiplier, the middle third make one and a half times it, the\n" +
+                "farthest third twice -- x10, x15, x20 at the default. Systems within 6 light years of home\n" +
+                "always count as near. The home planet keeps OutputMultiplier. Combines with\n" +
+                "MultiplierFromDanger by multiplying. Moves no planet and changes no recipe, so it can be\n" +
+                "switched in a running game; it takes effect on the next load. Any ruleset.\n" +
+                "false: every anomaly makes OutputMultiplier.");
 
             ReplicatorFollowsPlanet = Config.Bind(
                 "Effect",

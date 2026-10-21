@@ -214,6 +214,17 @@ if ($null -eq $asmWindow) {
     }
 }
 
+# MultiplierFromDanger reads each star's starting hive count, and skips peace mode.
+$starType = $gameAsm.MainModule.GetType('StarData')
+$hiveField = if ($starType) { $starType.Fields | Where-Object { $_.Name -eq 'initialHiveCount' -and $_.IsPublic -and $_.FieldType.FullName -eq 'System.Int32' } } else { $null }
+$descType = $gameAsm.MainModule.GetType('GameDesc')
+$peace = if ($descType) { @($descType.Properties | Where-Object { $_.Name -eq 'isPeaceMode' }) + @($descType.Fields | Where-Object { $_.Name -eq 'isPeaceMode' }) | Select-Object -First 1 } else { $null }
+if (-not $hiveField -or -not $peace) {
+    $failures.Add("StarData.initialHiveCount (public int) or GameDesc.isPeaceMode is gone; MultiplierFromDanger cannot read danger.")
+} else {
+    Write-Host "OK  StarData.initialHiveCount is a public int and GameDesc.isPeaceMode exists (MultiplierFromDanger)"
+}
+
 # The storm's corner line: UIPlanetGlobe._OnUpdate writes the climate line into geoInfoText, and the
 # postfix appends to it.
 $globe = $gameAsm.MainModule.GetType('UIPlanetGlobe')

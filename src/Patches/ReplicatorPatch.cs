@@ -66,7 +66,7 @@ namespace PlanetaryAnomalies
                 }
                 else if (AnomalyManager.ActiveStormRecipe(planet.id) == __result.recipeId)
                 {
-                    multiplier = AnomalyManager.OutputMultiplier;
+                    multiplier = AnomalyManager.StormMultiplier;
                     source = "storm";
                 }
                 else
