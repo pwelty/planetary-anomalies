@@ -1339,6 +1339,13 @@ nothing in saves. And a short *Upgrading to 1.0* section in the README.
 
 ### Candidate for 1.0: say what a Dark Fog recipe is waiting on
 
+**Off the 1.0 list** (21 Oct). Paul: "I don't know why we really need, do you? that's part of
+core game". Agreed: base levels and drops are the game's facts, true with or without this mod, and
+explaining them makes the mod a Dark Fog guide rather than a story about recipes. The only part that
+is the mod's own -- an anomaly the player cannot act on yet -- is what the planet panel already says
+for research, and at most earns a line there. What follows is kept as research: the ladder, the
+drops and where each goes ten times as far are still true and still useful context.
+
 Found on 23 Sep, chasing a question that looked small: Paul could not find where to research Dark Fog
 Lens. The answer turned out to reach well past that recipe. An idea for the list, not a decision.
 
