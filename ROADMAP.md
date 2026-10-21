@@ -1544,6 +1544,26 @@ that is strange rather than merely steep (*Candidate for 1.0: debuffs that bite*
   that never ends, which a player can find and build on. Not inspected: whether a machine's position
   against the sun is cheap to read per tick (solar panels must compute something like it), and the
   machine window has to say "night: the Krell machines are consuming" or it reads as a broken factory.
+- *Unknown debuffs, a mystery like the film's.* Paul: "there are RANDOM, UNKNOWN debuffs we don't tell
+  you about. It's a _mystery_ like FP." Kept, with one change: say *that* something is wrong, never
+  *what*. A debuff nobody mentions gets reported as a bug -- players report anything odd as the mod
+  breaking, as the 0.5.2 name report showed -- and the mod's rule is that strangeness belongs to the
+  place, which a player can only see if the place owns up to it. The film works the same way: the
+  crew knew something was killing them, not what. So the nature is discovered by watching -- steel in,
+  nothing out, at a certain hour -- and once it has happened the world admits it: the panel adds
+  "Observed: after dark, the machines consume and produce nothing." It extends *Softer descriptions*
+  on the README's list (existence free, magnitude discovered) from the number to the curse.
+- *Relics on the surface: the mystery has a place.* Paul: "can we have relics on a planet? and then
+  if you look at it, it says 'it's doing something but we don't know what'" -- and "this is def
+  adding to the fun of exploration!" A relic is the monolith's prop (*Candidate for 1.0: the
+  monolith*: a visual object on `PlanetData.bodyObject`, recreated each load, nothing saved). The
+  cheap way to "look at it" is proximity -- Icarus within some 50 m fires an announcement, the one
+  surface proven to be seen: *A Krell relic. It is doing something, but we don't know what.* A click
+  would need the mod's own raycast and UI, not inspected. So the Krell world's signature becomes:
+  relics found by walking the world, a mystery stated on contact, debuffs learned by observation, and
+  a planet panel that grows as the player learns -- "Krell relics: purpose unknown", then what was
+  observed. A machine that ate its steel overnight then reads as *the relic*, not as a broken mod.
+  Open, as for the monolith: whether a prop can look like it belongs, and building straight through it.
 
 ### Candidate for 1.0: debuffs that bite -- the price on the thing you came for
 
