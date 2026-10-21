@@ -350,6 +350,11 @@ reachable, which is the one stretch where this mod has nothing to say. A home pl
 anomalous, drawn from what you can actually build early, would change that. `HomePlanetNeverAnomalous
 = false` is the blunt version of it today.
 
+**A storm in the first half hour.** Early in a new game, an anomalous storm from a nearby world
+reaches home: for thirty minutes your machines there make that world's recipe at its multiple, and
+then it passes, leaving you knowing exactly where to go to have it for good. A taste of ten to one,
+in the hours before any anomaly is reachable.
+
 **Recipes with a by-product.** Antimatter and plasma refining are excluded only because hydrogen
 falls out alongside. The single-output rule is standing in for "one clear product", and those two
 are where it comes apart.

@@ -1113,6 +1113,9 @@ part. Three things cost a run each:
 
 ### Candidate for 1.0: the visit
 
+**Built as the storm** (`b535282`, setting `Storm`), tested in play on 20 Oct -- see *1.0 in
+development*. The reasoning below is kept as the design record.
+
 Paul: "what if in the early game, you get 'visited' by an alien from an anomalous planet, and you
 get their buff on home planet for like 30 mins."
 
@@ -1959,7 +1962,8 @@ deciding with the rest of the 1.0 bundle, not now.
 Built between 24 and 28 Sep in a play-and-tweak loop on one fresh galaxy (seed 84201727, 75% density):
 Paul played, said what felt off, and reloaded after each change. Everything below is ruleset 3 only
 except the replicator, and every behaviour is a setting. Commits `c9e09b1` to `db3180c`; details in
-LOG.md.
+LOG.md. Continued in October: by-product recipes, the lab output limit, and the storm -- the first
+feature built for a fresh run rather than tuned in one (seed 12261908, 20 Oct).
 
 | Setting | Default | What it does | Came from |
 | --- | --- | --- | --- |
@@ -1971,6 +1975,8 @@ LOG.md.
 | `NoRepeatsInGalaxy` | off | every recipe once in the galaxy, nearest first | Paul: "no repeats anywhere" |
 | `ResearchCubes` | on | matrices can be anomalies, x10 in that world's labs | the 1.0 list; flat x10 for now |
 | `ReplicatorFollowsPlanet` | on, for now | hand-crafting on an anomalous world makes its multiple | *Candidate: does Icarus's replicator obey the anomaly?* |
+| `MultiOutputRecipes` | on | recipes with a by-product can be anomalies; every product multiplied | the 1.0 list |
+| `Storm` | on | once, at minute 10-20, the nearest no-research anomaly visits home for 30 minutes | *Candidate for 1.0: the visit* |
 
 **What the loop taught.**
 
@@ -1992,11 +1998,20 @@ LOG.md.
 - *Surfaces keep reading the prototype.* The replicator queue multiplied crafts by the global recipe's
   output and said "1" while delivering ten -- the same UI-lies defect as the tooltip and the planet
   panel, on a new surface, fixed the same way.
+- *The storm worked as the visit candidate argued.* Paul, after it passed: "it was cool." He saw
+  every disclosure except one: the planet panel only refreshes when opened, so he could not tell the
+  storm was on until he found it ("I don't see a sign that the storm is active"). Hence the corner
+  globe line. A timed effect needs a surface that is always on screen; the panel suits permanent facts.
+- *Early means the replicator.* This run's storm was Gear, and at minute 11 gears are hand-crafted. An
+  early-game effect that only reaches machines misses half of early play, so the replicator follows
+  the storm too.
+- *One storm read as a mechanic, not a tutorial.* Paul waited for the second one. Recorded as
+  *Candidate for 1.0 or later: more than one storm*.
 
 **Still open before 1.0.** Release defaults (the replicator above all); whether x8 and a 75% nearby early
 share are right; whether the home draw should skip cubes as well as combat (the blue matrix counts as
-early); varied multipliers, which cubes were meant to wait for; a lab-window marker; locking ruleset 3's
-draw in the golden test when 1.0 ships; and the README.
+early); varied multipliers, which cubes were meant to wait for; ~~a lab-window marker~~ (built,
+`9cd6b5d`); locking ruleset 3's draw in the golden test when 1.0 ships; and the README.
 
 ## The one re-roll
 

@@ -28,8 +28,8 @@
   For 30 minutes your machines there make that recipe at its multiple; then it passes, and you are
   told which world has it for good. Announced at both ends, and shown on the home planet's panel, in
   the machine window, and under the small globe in the top-right corner, with the minutes left, while
-  it lasts. With `ReplicatorFollowsPlanet` on, the replicator at home
-  makes it at the same multiple. Nothing is saved; it follows the save's own clock.
+  it lasts. With `ReplicatorFollowsPlanet` on, the replicator at home makes it at the same multiple.
+  Nothing is saved; it follows the save's own clock, so a reload mid-storm finds it still blowing.
 - `ReplicatorFollowsPlanet` (on by default, for now): standing on an anomalous world, Icarus's
   replicator makes that world's anomalous recipe at the same multiple its machines do, and the
   replicator queue shows the multiplied count.

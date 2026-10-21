@@ -48,18 +48,20 @@ meant for a fresh one. Ruleset 3 only, every behaviour a config setting, changel
   x10), reaching γ Ursae Majoris III at minute 11 ... This save is at minute 0". Paul saw the arrival
   announcement, STORM x10 in the assembler window, the STORM line in the planet description, and the
   end announcement. The log shows three assemblers switched to x10 as he built them and all three
-  "back to normal" when it passed. Still unseen: a reload during and after a storm, gears visibly
-  back to one per craft, and two later additions (`5d550a8` the replicator follows the storm,
-  `010a8be` a storm line under the corner globe) built and verified but not yet installed.
+  "back to normal" when it passed. Paul's verdict: "it was cool." A reload after it (a save at
+  minute 43) logged "it has already passed" and announced nothing. Two additions made during that
+  run are installed but unseen, since they need a storm in progress: the replicator following the
+  storm (`5d550a8`) and a storm line under the corner globe (`010a8be`), added after Paul asked
+  whether it could be seen without opening the planet panel. A reload *during* a storm is unseen too.
 - ~~The lab limit fix in play~~ -- confirmed by Paul on 20 Oct: the Green Matrix lab on Sadira I
   "was fine" after the fix.
 - Which tech appeared at Dark Fog level 15.
 
-**Where the next session starts.** Paul starts a new run (ruleset 3) to test the storm. The load log
-names it: "Storm: from X (...), reaching Home at minute N ... This save is at minute M" -- M should be
-0 for a new game. Then build something that X's recipe uses on home before minute N, and watch it go
-x10 and back. After that, the remaining 1.0 list is Paul's to choose from (ROADMAP, "1.0 in
-development").
+**Where the next session starts.** The storm is tested (above). On the next new game -- seed 12261908
+brings Gear at minute 11 -- check the corner-globe line, the replicator during the storm, and a reload
+mid-storm; the load log's "This save is at minute M" says whether a save falls inside it. Paul
+expected a second storm; that is a roadmap candidate (*more than one storm*), not a decision. Beyond
+that, the remaining 1.0 list is Paul's to choose from (ROADMAP, "1.0 in development").
 
 ---
 
