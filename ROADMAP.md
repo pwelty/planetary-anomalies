@@ -1964,6 +1964,24 @@ Two things this taught.
 that new game recipes then never become anomalies for anyone on the default until they opt in. Worth
 deciding with the rest of the 1.0 bundle, not now.
 
+## 0.5.2: another mod's names
+
+A player on 0.4 with More Mega Structures sent a star map label reading 恒星炮组件 -- star cannon
+component -- in an English game. `Proto.name` is not a lookup but a cache, filled once by
+`RefreshTranslation` when the proto loads; a mod that adds recipes and registers their English later
+leaves the cache holding the Chinese key, and the mod read the cache. 0.5.2 translates `Proto.Name`
+when it shows a name, prefers whichever of live and cached is actually translated, and falls back to
+the item's name for a recipe with no translation at all.
+
+Built on a branch from the 0.5.1 tag (`release-0.5.x`) so it carries nothing from 1.0 development;
+the same fix is on main. Generator unchanged, all 201 golden results. For vanilla recipes the live
+lookup is the very call `RefreshTranslation` made, so their names cannot change; the modded case is
+reasoned from the IL and was not reproduced, since More Mega Structures is not installed here.
+
+The lesson is about compatibility, which "Roadmap now" already lists as ongoing work: this mod is played among
+others -- Galactic Scale came up the same day, in a separate report still being chased -- and any
+value the game computes once at load is a value another mod may have changed or missed since.
+
 ## 1.0 in development: ruleset 3 so far
 
 Built between 24 and 28 Sep in a play-and-tweak loop on one fresh galaxy (seed 84201727, 75% density):

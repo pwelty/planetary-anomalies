@@ -40,6 +40,17 @@
 - The survey log (`LogEveryAnomaly`) now says MARKER for an anomaly Marker mode is showing, instead
   of HIDDEN.
 
+## 0.5.2
+
+**Recipe names from other mods now show in your language.** With a mod that adds recipes -- More
+Mega Structures' star cannon parts, reported by a player -- an anomaly on one of them could be labelled
+with its untranslated Chinese name in an English game. Nothing else changes: every planet keeps the
+anomaly it had.
+
+- Names are translated when they are shown rather than read from the game's cache, which another mod's
+  recipe can leave holding its Chinese key. A recipe with no translation at all falls back to its
+  item's name. Star map labels, the planet panel, tooltips and announcements all use the same names.
+
 ## 0.5.1
 
 **Handles Dark Fog Lens, the recipe Dyson Sphere Program 0.10.35 just added.** By default it stays

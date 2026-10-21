@@ -6,6 +6,42 @@ what the next session should pick up. Facts that outlive a session belong in
 
 ---
 
+## 2026-10-21 — 0.5.2 prepared: other mods' recipe names; a Galactic Scale report
+
+Two player reports arrived. Varied multipliers were under discussion and wait on Paul; the Dark Fog
+disclosure candidate came off the 1.0 list at his word ("that's part of core game").
+
+**What changed.**
+
+- *Chinese names from another mod* (`2415335` on main). A player on 0.4 with More Mega Structures sent a
+  star map label reading 恒星炮组件 in an English game. `Proto.name` is a translation cached at load;
+  a mod registering its English later leaves the Chinese key there. `AnomalyManager.LiveName`
+  translates `Proto.Name` when shown and prefers whichever of live and cached is translated; a recipe
+  with no translation falls back to its item's name. Facts in `docs/inspection.md`.
+- *0.5.2* on branch `release-0.5.x`, cut from the `v0.5.1` tag: that fix only, version 0.5.2, changelog
+  and README notes. Zip built: `dist/PlanetaryAnomalies-0.5.2.zip`. Main's changelog and roadmap record it.
+- *Galactic Scale* (Reddit, u/pduck820, on 0.5.1): the `LogEveryAnomaly` survey lists planets that do
+  not exist in their game. Not yet diagnosed; Paul has asked for their LogOutput.log. Leading guess:
+  the survey runs once, when the galaxy first looks ready, and is redone only if seed or home planet
+  change -- if Galactic Scale builds or replaces the galaxy in steps, the survey may describe a
+  provisional one. In-game anomalies are per planet id, so rulesets 1 and 2 should be unaffected
+  in play; ruleset 3's distance tables would be.
+
+**What is actually proven.** Build and verify pass on both branches against 0.10.35.29151; golden
+results unchanged (201 on 0.5.2, 202 on main). For vanilla names the live lookup is the same call
+`RefreshTranslation` made, so they cannot change.
+
+**What is not.** The modded-name fix has not been seen working: More Mega Structures is not installed
+here. 0.5.2 has not been loaded in game. Nothing about Galactic Scale is confirmed.
+
+**Where the next session starts.** Paul uploads 0.5.2; then, on his word, push main and
+`release-0.5.x` and tag `v0.5.2` on the branch. Then the Galactic Scale log when it arrives -- a
+cheap hardening is ready to propose either way: remember the galaxy object, not only its seed, and
+put star and planet counts in the survey header. Varied multipliers: three questions to Paul are
+open (what made a world worth the trip; whether anything goes below x10; surprise or explainable).
+
+---
+
 ## 2026-10-11 to 2026-10-20 — by-products, the lab limit, Dark Fog from play, the storm
 
 The same play-and-tweak loop on seed 84201727 until Paul had exhausted the run, then the first feature
