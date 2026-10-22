@@ -659,6 +659,7 @@ namespace PlanetaryAnomalies
             _ruleset = ResolveRuleVersion(out ruleReason);
 
             LoadExclusions();
+            LoadRecipeWeights(recipes);
             _eligible = BuildEligibleRecipes(recipes);
             ReportExclusions();
             ReportRulesetPool(recipes);
@@ -1562,9 +1563,7 @@ namespace PlanetaryAnomalies
                 }
 
                 List<int> pick = earlyFree.Count > 0 ? earlyFree : (allowRepeat ? early : earlyFree);
-                return pick.Count > 0
-                    ? AnomalyMath.ChooseRecipeId(_galaxySeed, planetId, AnomalySystemVersion, pick.ToArray())
-                    : -1;
+                return pick.Count > 0 ? Draw(planetId, pick.ToArray(), null) : -1;
             }
 
             List<int> free = new List<int>();
@@ -1601,10 +1600,141 @@ namespace PlanetaryAnomalies
                     weights[i] = _earlyRecipes.Contains(ids[i]) ? AnomalyMath.EarlyRecipeWeight : 1;
                 }
 
-                return AnomalyMath.ChooseRecipeIdWeighted(_galaxySeed, planetId, AnomalySystemVersion, ids, weights);
+                return Draw(planetId, ids, weights);
             }
 
-            return AnomalyMath.ChooseRecipeId(_galaxySeed, planetId, AnomalySystemVersion, ids);
+            return Draw(planetId, ids, null);
+        }
+
+        /// <summary>
+        /// The draw itself. Without RecipeWeights, exactly the functions every earlier build used, so
+        /// nothing moves for a player who never sets it. With it, the tuned draw, which scores every
+        /// unweighted recipe the same as those functions do.
+        /// </summary>
+        private static int Draw(int planetId, int[] ids, int[] leanWeights)
+        {
+            if (_userEntries.Count == 0)
+            {
+                return leanWeights != null
+                    ? AnomalyMath.ChooseRecipeIdWeighted(_galaxySeed, planetId, AnomalySystemVersion, ids, leanWeights)
+                    : AnomalyMath.ChooseRecipeId(_galaxySeed, planetId, AnomalySystemVersion, ids);
+            }
+
+            int[] entries = new int[ids.Length];
+            int[] rarity = new int[ids.Length];
+            for (int i = 0; i < ids.Length; i++)
+            {
+                int user;
+                int lean = leanWeights != null ? leanWeights[i] : 1;
+                entries[i] = lean * (_userEntries.TryGetValue(ids[i], out user) && user > 0 ? user : 1);
+                rarity[i] = _userRarity.TryGetValue(ids[i], out user) ? user : 1;
+            }
+
+            return AnomalyMath.ChooseRecipeIdTuned(_galaxySeed, planetId, AnomalySystemVersion, ids, entries, rarity,
+                                                  leanWeights != null);
+        }
+
+        /// <summary>RecipeWeights, by recipe id: entries for weights of 1 and up (0 = never), rarity for fractions.</summary>
+        private static readonly Dictionary<int, int> _userEntries = new Dictionary<int, int>();
+        private static readonly Dictionary<int, int> _userRarity = new Dictionary<int, int>();
+
+        /// <summary>
+        /// Parses RecipeWeights once per galaxy against the recipe list, matching names the way
+        /// ExcludedRecipes does, and says in the log what each entry did -- a silent typo would look
+        /// exactly like a weight that worked.
+        /// </summary>
+        private static void LoadRecipeWeights(RecipeProtoSet recipes)
+        {
+            _userEntries.Clear();
+            _userRarity.Clear();
+            string raw = Plugin.RecipeWeights != null ? Plugin.RecipeWeights.Value : null;
+            if (string.IsNullOrEmpty(raw) || recipes == null || recipes.dataArray == null)
+            {
+                return;
+            }
+
+            string applied = "";
+            string[] parts = raw.Split(',');
+            for (int p = 0; p < parts.Length; p++)
+            {
+                string entry = parts[p].Trim();
+                if (entry.Length == 0)
+                {
+                    continue;
+                }
+
+                int colon = entry.LastIndexOf(':');
+                double weight;
+                if (colon <= 0 || !double.TryParse(entry.Substring(colon + 1).Trim(),
+                        System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out weight) ||
+                    weight < 0)
+                {
+                    Plugin.Log.LogWarning("RecipeWeights entry \"" + entry + "\" is not name: weight (a number, 0 or more); ignored.");
+                    continue;
+                }
+
+                string name = entry.Substring(0, colon).Trim().ToLowerInvariant();
+                int matched = 0;
+                RecipeProto[] all = recipes.dataArray;
+                for (int i = 0; i < all.Length; i++)
+                {
+                    if (all[i] == null || !RecipeAnswersTo(all[i], name))
+                    {
+                        continue;
+                    }
+
+                    matched++;
+                    if (weight == 0)
+                    {
+                        _userEntries[all[i].ID] = 0;
+                    }
+                    else if (weight >= 1)
+                    {
+                        _userEntries[all[i].ID] = (int)Math.Round(weight, MidpointRounding.AwayFromZero);
+                    }
+                    else
+                    {
+                        _userRarity[all[i].ID] = Math.Max(1, (int)Math.Round(1.0 / weight, MidpointRounding.AwayFromZero));
+                    }
+                }
+
+                if (matched == 0)
+                {
+                    Plugin.Log.LogWarning("RecipeWeights entry \"" + entry + "\" matched no recipe. Use the name as it appears in game, or the recipe's numeric id.");
+                }
+                else
+                {
+                    applied += (applied.Length > 0 ? ", " : "") + entry.Substring(0, colon).Trim() + " " +
+                               (weight == 0 ? "never" : (weight >= 1
+                                   ? "x" + (int)Math.Round(weight, MidpointRounding.AwayFromZero)
+                                   : "1/" + Math.Max(1, (int)Math.Round(1.0 / weight, MidpointRounding.AwayFromZero))));
+                }
+            }
+
+            if (applied.Length > 0)
+            {
+                Plugin.Log.LogInfo("RecipeWeights: " + applied + ". Every other recipe is weight 1.");
+            }
+        }
+
+        /// <summary>The names a player might type for a recipe: its id, its name, its proto name, the name labels show.</summary>
+        private static bool RecipeAnswersTo(RecipeProto recipe, string key)
+        {
+            if (recipe.ID.ToString() == key)
+            {
+                return true;
+            }
+
+            string[] candidates = new string[] { recipe.name, recipe.Name, PlayerFacingRecipeName(recipe) };
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                if (!string.IsNullOrEmpty(candidates[i]) && candidates[i].Trim().ToLowerInvariant() == key)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static PlanetAnomaly Derive(int planetId)
@@ -1755,6 +1885,12 @@ namespace PlanetaryAnomalies
                 if (!AnomalyMath.InRulesetPool(_ruleset, all[i].ID))
                 {
                     _outsideRuleset.Add(all[i]);
+                    continue;
+                }
+
+                int userWeightEntries;
+                if (_userEntries.TryGetValue(all[i].ID, out userWeightEntries) && userWeightEntries == 0)
+                {
                     continue;
                 }
 

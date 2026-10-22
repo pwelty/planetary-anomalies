@@ -257,6 +257,69 @@
             return best;
         }
 
+        /// <summary>
+        /// Rendezvous selection with a player's rarity weights (RecipeWeights) on top. A recipe with
+        /// <paramref name="entries"/> n enters n times and keeps its best entry, as in
+        /// <see cref="ChooseRecipeIdWeighted"/>, so it is n times as likely. A recipe with
+        /// <paramref name="rarity"/> k has its best entry, as a fraction u in (0, 1), raised to the
+        /// k-th power: u^k is distributed as the best of 1/k entries would be, so it is k times less
+        /// likely. Raising to an integer power is plain multiplication, which rounds the same on every
+        /// machine -- unlike the logarithm the textbook method needs.
+        ///
+        /// Stability is the point. A recipe left at weight 1 scores exactly what it scored before, so
+        /// changing one recipe's weight moves only the planets that recipe wins or loses.
+        /// <paramref name="entryHashes"/> picks which hash entry 0 uses: false for the plain draw
+        /// (<see cref="RecipeWeight"/>, as <see cref="ChooseRecipeId"/>), true for the weighted one
+        /// (<see cref="EntryWeight"/>, as <see cref="ChooseRecipeIdWeighted"/>). With every weight at 1
+        /// each returns exactly what the function it stands in for returns.
+        /// </summary>
+        internal static int ChooseRecipeIdTuned(int seed, int planetId, int version, int[] ids, int[] entries,
+                                                int[] rarity, bool entryHashes)
+        {
+            if (ids == null || ids.Length == 0 || entries == null || entries.Length != ids.Length ||
+                rarity == null || rarity.Length != ids.Length)
+            {
+                return -1;
+            }
+
+            int best = -1;
+            double bestScore = -1.0;
+
+            for (int i = 0; i < ids.Length; i++)
+            {
+                int candidate = ids[i];
+                int n = entries[i] < 1 ? 1 : entries[i];
+                uint top = 0;
+                for (int k = 0; k < n; k++)
+                {
+                    uint h = (k == 0 && !entryHashes)
+                        ? RecipeWeight(seed, planetId, version, candidate)
+                        : EntryWeight(seed, planetId, version, candidate, k);
+                    if (k == 0 || h > top)
+                    {
+                        top = h;
+                    }
+                }
+
+                // (top + 0.5) / 2^32 is exact in a double and keeps the integer order.
+                double u = (top + 0.5) / 4294967296.0;
+                double score = u;
+                int power = rarity[i] < 1 ? 1 : rarity[i];
+                for (int p = 1; p < power; p++)
+                {
+                    score *= u;
+                }
+
+                if (best < 0 || score > bestScore || (score == bestScore && candidate < best))
+                {
+                    best = candidate;
+                    bestScore = score;
+                }
+            }
+
+            return best;
+        }
+
         /// <summary>One entry's weight for <see cref="ChooseRecipeIdWeighted"/>.</summary>
         internal static uint EntryWeight(int seed, int planetId, int version, int recipeId, int entry)
         {

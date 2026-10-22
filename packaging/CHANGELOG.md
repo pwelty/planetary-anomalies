@@ -51,6 +51,9 @@
   players had been pasting every building's name into `ExcludedRecipes`. Read from the game, so new
   buildings from updates or other mods are covered too. Only the planets that carried a building
   recipe change.
+- `RecipeWeights` (empty by default, any ruleset), for players who want to tune rarity: `Crystal Silicon:
+  0.1, Gear: 3, Sorter Mk.I: 0` makes Crystal Silicon a tenth as likely, Gear three times, and never a
+  sorter. Changing a weight moves only the planets that recipe wins or loses. Suggested on Reddit.
 - `ReplicatorFollowsPlanet` (on by default, for now): standing on an anomalous world, Icarus's
   replicator makes that world's anomalous recipe at the same multiple its machines do, and the
   replicator queue shows the multiplied count.

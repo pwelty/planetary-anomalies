@@ -59,6 +59,7 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<bool> TestAnnouncement;
         internal static ConfigEntry<string> ExcludedRecipes;
         internal static ConfigEntry<bool> ExcludeBuildings;
+        internal static ConfigEntry<string> RecipeWeights;
         internal static ConfigEntry<string> AnomalyRules;
 
         private Harmony _harmony;
@@ -431,6 +432,22 @@ namespace PlanetaryAnomalies
                 "Like ExcludedRecipes, switching it changes only the planets that carry a building recipe; the\n" +
                 "rest of your galaxy is untouched. Any ruleset. The log names what was left out.\n" +
                 "false: buildings can be anomalies.");
+
+            RecipeWeights = Config.Bind(
+                "Generation",
+                "RecipeWeights",
+                "",
+                "For players who want to tune rarity; everyone else can leave it empty. How likely particular\n" +
+                "recipes are to be drawn, comma separated, as name: weight. Use the name as it appears in game,\n" +
+                "or a recipe's numeric id:\n" +
+                "  RecipeWeights = Crystal Silicon: 0.1, Gear: 3, Sorter Mk.I: 0\n" +
+                "  1   -- normal, the same as leaving a recipe out of the list.\n" +
+                "  3   -- three times as likely. Whole numbers above 1; 2.5 counts as 3.\n" +
+                "  0.5 -- half as likely; 0.1 a tenth; 0.3 a third (one over a whole number).\n" +
+                "  0   -- never, the same as ExcludedRecipes.\n" +
+                "Changing a weight moves only the planets that recipe wins or loses; the rest of your galaxy\n" +
+                "is untouched. Your galaxy then differs from another player's with the same seed. Entries that\n" +
+                "match no recipe are named in the log. Any ruleset.");
 
             UnresearchedAnomalies = Config.Bind(
                 "Display",
