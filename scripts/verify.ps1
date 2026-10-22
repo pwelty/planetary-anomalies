@@ -214,6 +214,15 @@ if ($null -eq $asmWindow) {
     }
 }
 
+# ExcludeBuildings reads the game's own building flag on each product.
+$itemType = $gameAsm.MainModule.GetType('ItemProto')
+$canBuild = if ($itemType) { $itemType.Fields | Where-Object { $_.Name -eq 'CanBuild' -and $_.IsPublic -and $_.FieldType.FullName -eq 'System.Boolean' } } else { $null }
+if (-not $canBuild) {
+    $failures.Add("ItemProto.CanBuild (public bool) is gone; ExcludeBuildings cannot tell a building from an item.")
+} else {
+    Write-Host "OK  ItemProto.CanBuild is a public bool (ExcludeBuildings)"
+}
+
 # MultiplierFromDanger reads each star's starting hive count, and skips peace mode.
 $starType = $gameAsm.MainModule.GetType('StarData')
 $hiveField = if ($starType) { $starType.Fields | Where-Object { $_.Name -eq 'initialHiveCount' -and $_.IsPublic -and $_.FieldType.FullName -eq 'System.Int32' } } else { $null }

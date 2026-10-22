@@ -1741,6 +1741,8 @@ namespace PlanetaryAnomalies
             RecipeProto[] all = recipes.dataArray;
 
             _outsideRuleset.Clear();
+            int buildings = 0;
+            string buildingNames = "";
             for (int i = 0; i < all.Length; i++)
             {
                 if (!IsEligible(all[i]))
@@ -1756,7 +1758,23 @@ namespace PlanetaryAnomalies
                     continue;
                 }
 
+                if (Plugin.ExcludeBuildings != null && Plugin.ExcludeBuildings.Value && MakesBuilding(all[i]))
+                {
+                    buildings++;
+                    if (buildings <= 80)
+                    {
+                        buildingNames += (buildingNames.Length > 0 ? ", " : "") + PlayerFacingRecipeName(all[i]);
+                    }
+
+                    continue;
+                }
+
                 eligible.Add(all[i]);
+            }
+
+            if (buildings > 0)
+            {
+                Plugin.Log.LogInfo("ExcludeBuildings: " + buildings + " building recipes left out of the draw: " + buildingNames + ".");
             }
 
             // Ascending id, so the list does not depend on how the game happened to load its
@@ -1765,6 +1783,30 @@ namespace PlanetaryAnomalies
             eligible.Sort(delegate(RecipeProto a, RecipeProto b) { return a.ID.CompareTo(b.ID); });
 
             return eligible.ToArray();
+        }
+
+        /// <summary>
+        /// True when any of the recipe's products is something the player places: the game's own
+        /// <c>ItemProto.CanBuild</c>, so buildings from game updates and other mods count too.
+        /// </summary>
+        private static bool MakesBuilding(RecipeProto recipe)
+        {
+            ItemProtoSet items = LDB.items;
+            if (recipe == null || recipe.Results == null || items == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < recipe.Results.Length; i++)
+            {
+                ItemProto item = items.Exist(recipe.Results[i]) ? items.Select(recipe.Results[i]) : null;
+                if (item != null && item.CanBuild)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>Recipes eligible by shape that the ruleset in force does not draw.</summary>

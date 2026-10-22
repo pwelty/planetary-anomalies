@@ -58,6 +58,7 @@ namespace PlanetaryAnomalies
         internal static ConfigEntry<bool> LogEveryAnomaly;
         internal static ConfigEntry<bool> TestAnnouncement;
         internal static ConfigEntry<string> ExcludedRecipes;
+        internal static ConfigEntry<bool> ExcludeBuildings;
         internal static ConfigEntry<string> AnomalyRules;
 
         private Harmony _harmony;
@@ -417,6 +418,19 @@ namespace PlanetaryAnomalies
                 "Excluding a recipe only changes the planets that currently carry it; the rest of\n" +
                 "your galaxy is untouched. It does mean your galaxy differs from another player's\n" +
                 "with the same seed.");
+
+            ExcludeBuildings = Config.Bind(
+                "Generation",
+                "ExcludeBuildings",
+                false,
+                "No anomaly is ever on a recipe that makes a building -- power, belts, sorters, storage,\n" +
+                "logistics, miners, smelters, assemblers, labs, turrets and the rest -- so every anomaly is on\n" +
+                "something you make to use or ship rather than to place. Read from the game, so it also covers\n" +
+                "buildings a game update or another mod adds. Asked for on Reddit, where players had been\n" +
+                "pasting every building's name into ExcludedRecipes.\n" +
+                "Like ExcludedRecipes, switching it changes only the planets that carry a building recipe; the\n" +
+                "rest of your galaxy is untouched. Any ruleset. The log names what was left out.\n" +
+                "false: buildings can be anomalies.");
 
             UnresearchedAnomalies = Config.Bind(
                 "Display",

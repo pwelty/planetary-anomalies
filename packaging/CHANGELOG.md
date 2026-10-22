@@ -46,6 +46,11 @@
   Each has a dial under *Multiplier tuning* -- `DifficultyStrength`, `DangerStrength`,
   `DistanceStrength`, 1 by default -- to turn its effect up or down in play: 1.5 half as strong again,
   0.5 half as strong, 0 none.
+- `ExcludeBuildings` (off by default, any ruleset): no anomaly on a recipe that makes a building --
+  power, belts, sorters, storage, logistics, miners, factories, labs, turrets. Asked for on Reddit, where
+  players had been pasting every building's name into `ExcludedRecipes`. Read from the game, so new
+  buildings from updates or other mods are covered too. Only the planets that carried a building
+  recipe change.
 - `ReplicatorFollowsPlanet` (on by default, for now): standing on an anomalous world, Icarus's
   replicator makes that world's anomalous recipe at the same multiple its machines do, and the
   replicator queue shows the multiplied count.
