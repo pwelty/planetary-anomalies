@@ -1826,6 +1826,31 @@ industrial stories*), which is close to the monolith's idea, reached from the ot
 **As a setting:** a chance for a second anomaly (`SecondAnomalyChancePercent`, 0 = today), not a count,
 so a second one stays notable.
 
+### Candidate: an anomaly table for power users
+
+An idea for the list, from Reddit, recorded 22 Oct; not a decision. Paul: "i think it's fine to give
+power users some extra tools that the 99% of players can just ignore."
+
+A player proposed replacing the blocklist with a full table, one line per recipe and effect:
+`<recipe>|<variance type>|<variance amount>|<weight>|<distance curve>` -- for example
+`Crystal Silicon|Products|5|1000|0.5,1,0.5`. Four ideas are folded into it:
+
+1. *A second anomaly on some planets*, as a percentage -- already a candidate (*more than one anomaly
+   per planet*), in the same form.
+2. *Rarity weights instead of a blocklist* -- **built** as `RecipeWeights` (`name: weight`, only the
+   recipes you change). The full-table form was set aside because a 160-line config is unwieldy, and
+   because a plain weighted pick would reshuffle the whole galaxy on every edit; the rendezvous draw
+   moves only the planets a changed recipe wins or loses.
+3. *Each recipe its own spread of multiples and effects* -- Crystal Silicon usually x2, sometimes x5,
+   rarely x10, or a speed-up. This is the per-recipe lottery the varied-multiplier discussion set
+   aside in favour of numbers that come from the place (difficulty, danger, distance); as a power-user
+   override it would not replace those. The speed half is *speed instead of output*.
+4. *Per-recipe distance curves* -- a recipe rare near home and common far out, by a curve the player
+   writes. The nearby-early lean (`NearbyFavorsEarlyRecipes`) is this idea for one class of recipe.
+
+If built, it belongs in its own file rather than one config line, and only once speed exists, since
+half of its value is mixing effects.
+
 ### The multiplier is not a number, it is a price
 
 Paul, asked whether ×10 was too high: *"it's generally a LOT of work to set stuff up. For me anyway.
